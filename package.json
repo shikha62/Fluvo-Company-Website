@@ -1,10 +1,29 @@
-{
-  "name": "fluvo-in-root",
-  "version": "1.0.0",
+ {
+  "name": "company",
+  "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "dev": "npm --prefix reachora-main run dev",
-    "server": "npm --prefix reachora-main run server",
-    "start": "npm --prefix reachora-main run start"
+    "dev": "vite",
+    "server": "node server.js",
+    "start": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.0"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "chart.js": "^4.5.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "lucide": "^1.28.0",
+    "papaparse": "^5.6.0"
   }
 }
