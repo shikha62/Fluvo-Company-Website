@@ -1,0 +1,10 @@
+{
+  "name": "fluvo-in-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix reachora-main run dev",
+    "server": "npm --prefix reachora-main run server",
+    "start": "npm --prefix reachora-main run start"
+  }
+}
