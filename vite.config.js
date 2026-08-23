@@ -19,8 +19,24 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin.html'),
+        staffLogin: resolve(__dirname, 'staff-login.html'),
+        adminOps: resolve(__dirname, 'fluvo-ops-2026.html'),
+        owner: resolve(__dirname, 'owner/index.html'),
+        ownerHtml: resolve(__dirname, 'owner.html'),
       },
     },
   },
+  plugins: [
+    {
+      name: 'owner-route-rewrite',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/owner' || req.url === '/owner/') {
+            req.url = '/owner/index.html';
+          }
+          next();
+        });
+      },
+    },
+  ],
 });

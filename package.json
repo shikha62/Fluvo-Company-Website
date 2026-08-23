@@ -1,4 +1,4 @@
- {
+{
   "name": "company",
   "version": "0.0.0",
   "private": true,
@@ -17,6 +17,8 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
     "canvas-confetti": "^1.9.4",
     "chart.js": "^4.5.1",
     "cors": "^2.8.6",

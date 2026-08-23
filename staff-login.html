@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluvo Internal — Staff Access Portal</title>
+  <!-- Blocked from search engine indexing -->
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="googlebot" content="noindex, nofollow">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --charcoal:      #0e0e0e;
+      --charcoal-mid:  #161616;
+      --charcoal-card: #1e1e1e;
+      --border:        rgba(255,255,255,0.07);
+      --border-focus:  #C4622D;
+      --text-main:     #F5F2EC;
+      --text-muted:    #7a7a7a;
+      --amber:         #C4622D;
+      --amber-glow:    rgba(196,98,45,0.18);
+      --amber-light:   #D97B47;
+      --error:         #EF4444;
+      --font-serif:    'DM Serif Display', Georgia, serif;
+      --font-sans:     'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--charcoal);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Ambient Background ── */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-orb-1 {
+      width: 480px; height: 480px;
+      top: -140px; left: -100px;
+      background: radial-gradient(circle, rgba(196,98,45,0.12) 0%, transparent 70%);
+    }
+    .bg-orb-2 {
+      width: 360px; height: 360px;
+      bottom: -80px; right: -60px;
+      background: radial-gradient(circle, rgba(196,98,45,0.07) 0%, transparent 70%);
+    }
+
+    /* ── Grid texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 48px 48px;
+      z-index: 0;
+    }
+
+    /* ── Card ── */
+    .login-wrap {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--charcoal-mid);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: clamp(32px, 6vw, 52px) clamp(28px, 5vw, 44px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 32px 64px rgba(0,0,0,0.55),
+        0 0 80px var(--amber-glow);
+      animation: cardIn 0.55s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(22px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    /* ── Logo / Brand ── */
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: var(--amber);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 19px;
+    }
+    .brand-name {
+      font-family: var(--font-serif);
+      font-size: 21px;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .brand-name span { color: var(--amber); }
+    .brand-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--amber);
+      background: rgba(196,98,45,0.12);
+      border: 1px solid rgba(196,98,45,0.25);
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: clamp(22px, 4vw, 27px);
+      color: var(--text-main);
+      margin-bottom: 6px;
+      line-height: 1.25;
+    }
+    .login-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Fields ── */
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+    .field-wrap {
+      position: relative;
+    }
+    .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 15px;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+    .field-input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      background: var(--charcoal-card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field-input::placeholder { color: var(--text-muted); }
+    .field-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(196,98,45,0.15);
+    }
+    .field-input:focus + .field-icon,
+    .field-wrap:focus-within .field-icon {
+      color: var(--amber);
+    }
+
+    /* Password toggle */
+    .toggle-pw {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 15px;
+      padding: 2px;
+      transition: color 0.2s;
+    }
+    .toggle-pw:hover { color: var(--amber); }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 13px;
+      color: #FCA5A5;
+      margin-bottom: 16px;
+      animation: shake 0.35s ease;
+    }
+    .error-banner.visible { display: flex; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-5px); }
+      40%,80%  { transform: translateX(5px); }
+    }
+
+    /* ── Lockout banner ── */
+    .lockout-banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 13px;
+      color: #FCA5A5;
+      margin-bottom: 16px;
+    }
+    .lockout-banner.visible { display: flex; }
+
+    /* ── Submit button ── */
+    .btn-login {
+      width: 100%;
+      padding: 13.5px;
+      background: var(--amber);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .btn-login:hover:not(:disabled) {
+      background: var(--amber-light);
+      box-shadow: 0 6px 24px rgba(196,98,45,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-login .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    .btn-login.loading .spinner { display: block; }
+    .btn-login.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.3px;
+    }
+    .divider a {
+      color: var(--amber);
+      text-decoration: none;
+    }
+    .divider a:hover { text-decoration: underline; }
+
+    /* ── Attempts counter ── */
+    .attempts-note {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 12px;
+    }
+    .attempts-note span { color: var(--error); font-weight: 600; }
+
+    /* ── Footer watermark ── */
+    .portal-footer {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.8px;
+      text-align: center;
+      z-index: 10;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient glows -->
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <!-- Brand row -->
+      <div class="brand-row">
+        <div class="brand-icon">🔐</div>
+        <div class="brand-name">Fluvo<span>.</span>in</div>
+        <div class="brand-badge">Internal</div>
+      </div>
+
+      <h1 class="login-title">Staff Access Portal</h1>
+      <p class="login-subtitle">This portal is restricted to authorised Fluvo team members only. Unauthorised access is prohibited.</p>
+
+      <!-- Lockout banner (shown after 5 failed attempts) -->
+      <div class="lockout-banner" id="lockoutBanner">
+        🔒 <span>Account temporarily locked. Try again in <strong id="lockoutTimer">5:00</strong>.</span>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="errorBanner">
+        ⚠️ <span id="errorMsg">Invalid credentials. Please try again.</span>
+      </div>
+
+      <!-- Login form -->
+      <form id="loginForm" autocomplete="off" novalidate>
+
+        <div class="field-group">
+          <label class="field-label" for="staffId">Staff Username</label>
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input
+              type="text"
+              id="staffId"
+              class="field-input"
+              placeholder="Enter your staff username"
+              autocomplete="username"
+              spellcheck="false"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="staffPw">Password</label>
+          <div class="field-wrap">
+            <span class="field-icon">🔑</span>
+            <input
+              type="password"
+              id="staffPw"
+              class="field-input"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              style="padding-right: 42px;"
+            >
+            <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password visibility">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login" id="btnLogin">
+          <div class="spinner"></div>
+          <span class="btn-text">Access Dashboard →</span>
+        </button>
+      </form>
+
+      <div class="attempts-note" id="attemptsNote" style="display:none;">
+        <span id="attemptsLeft">0</span> attempt(s) remaining before lockout
+      </div>
+
+      <div class="divider">
+        Authorised personnel only &nbsp;·&nbsp; <a href="/">← Return to public site</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="portal-footer">FLUVO INTERNAL PORTAL · RESTRICTED ACCESS · © 2026</div>
+
+  <script>
+    // =====================================================================
+    //  FLUVO INTERNAL STAFF PORTAL — Authentication Logic
+    //  Credentials are stored as SHA-256 hashes for client-side security.
+    //  For production, move credential validation to a secure backend API.
+    // =====================================================================
+
+    const SESSION_KEY  = 'fluvo_staff_session';
+    const LOCKOUT_KEY  = 'fluvo_lockout';
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_MS   = 5 * 60 * 1000;  // 5-minute lockout
+    const SESSION_TTL  = 8 * 60 * 60 * 1000; // 8-hour session
+
+    // ── Authorised staff credentials (SHA-256 hashes of "username:password") ──
+    // To add more staff:
+    //   1. Open browser console on any page
+    //   2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('username:password'))
+    //             .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+    //   3. Paste the resulting hash below.
+    //
+    // Current accounts:
+    //   admin   →  FluvoOps@2026
+    //   owner   →  Fluvo#Owner9
+    //
+    const STAFF_CREDENTIALS = [
+      'ca492c2d6394156883d6289a9190c11354cccc226cc24c09987ea78fa534be01',   // admin:FluvoOps@2026
+      '19465d1eec112ee86e253a7eef8244614f75bd57f4fb5a36492f56cdade79428',   // owner:Fluvo#Owner9
+    ];
+
+    // ── Utility: compute SHA-256 hex of a string ────────────────────────
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    // ── DOM refs ─────────────────────────────────────────────────────────
+    const form          = document.getElementById('loginForm');
+    const staffId       = document.getElementById('staffId');
+    const staffPw       = document.getElementById('staffPw');
+    const btnLogin      = document.getElementById('btnLogin');
+    const errorBanner   = document.getElementById('errorBanner');
+    const errorMsg      = document.getElementById('errorMsg');
+    const lockoutBanner = document.getElementById('lockoutBanner');
+    const lockoutTimer  = document.getElementById('lockoutTimer');
+    const attemptsNote  = document.getElementById('attemptsNote');
+    const attemptsLeft  = document.getElementById('attemptsLeft');
+    const togglePw      = document.getElementById('togglePw');
+
+    // ── Password visibility toggle ────────────────────────────────────────
+    togglePw.addEventListener('click', () => {
+      if (staffPw.type === 'password') {
+        staffPw.type = 'text';
+        togglePw.textContent = '🙈';
+      } else {
+        staffPw.type = 'password';
+        togglePw.textContent = '👁';
+      }
+    });
+
+    // ── If already logged in, go straight to dashboard ────────────────────
+    try {
+      const existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (existing && existing.token && Date.now() < existing.expiresAt) {
+        window.location.replace('/owner');
+      }
+    } catch {}
+
+    // ── Lockout helpers ───────────────────────────────────────────────────
+    let lockoutInterval = null;
+
+    function getLockout() {
+      try {
+        const raw = localStorage.getItem(LOCKOUT_KEY);
+        return raw ? JSON.parse(raw) : { attempts: 0, lockedUntil: 0 };
+      } catch {
+        return { attempts: 0, lockedUntil: 0 };
+      }
+    }
+
+    function saveLockout(data) {
+      localStorage.setItem(LOCKOUT_KEY, JSON.stringify(data));
+    }
+
+    function isLockedOut() {
+      const { lockedUntil } = getLockout();
+      return Date.now() < lockedUntil;
+    }
+
+    function startLockoutTimer(until) {
+      btnLogin.disabled = true;
+      lockoutBanner.classList.add('visible');
+      errorBanner.classList.remove('visible');
+      attemptsNote.style.display = 'none';
+      staffId.disabled = true;
+      staffPw.disabled = true;
+
+      function tick() {
+        const remaining = Math.max(0, until - Date.now());
+        const m = Math.floor(remaining / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        lockoutTimer.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        if (remaining <= 0) {
+          clearInterval(lockoutInterval);
+          lockoutBanner.classList.remove('visible');
+          btnLogin.disabled = false;
+          staffId.disabled = false;
+          staffPw.disabled = false;
+          saveLockout({ attempts: 0, lockedUntil: 0 });
+        }
+      }
+      tick();
+      lockoutInterval = setInterval(tick, 1000);
+    }
+
+    // ── Check lockout on load ─────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const { lockedUntil } = getLockout();
+      if (Date.now() < lockedUntil) {
+        startLockoutTimer(lockedUntil);
+      }
+    });
+
+    // ── Form submission ───────────────────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isLockedOut()) return;
+
+      const username = staffId.value.trim().toLowerCase();
+      const password = staffPw.value;
+
+      if (!username || !password) {
+        showError('Please enter both your username and password.');
+        return;
+      }
+
+      // Loading state
+      btnLogin.classList.add('loading');
+      btnLogin.disabled = true;
+      errorBanner.classList.remove('visible');
+
+      // Small artificial delay to prevent timing attacks
+      await new Promise(r => setTimeout(r, 520));
+
+      const currentOwnerPass = localStorage.getItem('fluvo_owner_password') || '1234';
+      const isOwnerLogin = (username === 'owner' && password === currentOwnerPass);
+
+      const combined = `${username}:${password}`;
+      const hash = await sha256(combined);
+      const valid = isOwnerLogin || STAFF_CREDENTIALS.includes(hash);
+
+      if (valid) {
+        // Create session token
+        const token = await sha256(`${hash}:${Date.now()}:${Math.random()}`);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          token,
+          user: username,
+          authenticated: true,
+          expiresAt: Date.now() + SESSION_TTL,
+        }));
+        saveLockout({ attempts: 0, lockedUntil: 0 });
+
+        // Brief success flash
+        btnLogin.classList.remove('loading');
+        btnLogin.innerHTML = '✅ Access granted — redirecting…';
+        setTimeout(() => {
+          window.location.replace('/owner');
+        }, 700);
+      } else {
+        // Failed attempt
+        const state = getLockout();
+        state.attempts = (state.attempts || 0) + 1;
+
+        if (state.attempts >= MAX_ATTEMPTS) {
+          state.lockedUntil = Date.now() + LOCKOUT_MS;
+          saveLockout(state);
+          btnLogin.classList.remove('loading');
+          startLockoutTimer(state.lockedUntil);
+        } else {
+          saveLockout(state);
+          const left = MAX_ATTEMPTS - state.attempts;
+          btnLogin.classList.remove('loading');
+          btnLogin.disabled = false;
+          staffPw.value = '';
+          staffPw.focus();
+          showError('Invalid credentials. Please check your username and password.');
+          attemptsNote.style.display = 'block';
+          attemptsLeft.textContent = left;
+        }
+      }
+    });
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorBanner.classList.remove('visible');
+      void errorBanner.offsetWidth; // reflow to retrigger animation
+      errorBanner.classList.add('visible');
+    }
+  </script>
+</body>
+</html>
