@@ -264,5 +264,5 @@ if (fs.existsSync(DIST_DIR)) {
 // ── Start ──────────────────────────────────────────────────────────────────────
 ensureStorage();
 app.listen(PORT, () => {
-  console.log(`✅  Fluvo.in API server running at http://localhost:${PORT}`);
+  console.log(`✅  Fluvo API server running at http://localhost:${PORT}`);
 });

@@ -23,6 +23,7 @@ export default defineConfig({
         adminOps: resolve(__dirname, 'fluvo-ops-2026.html'),
         owner: resolve(__dirname, 'owner/index.html'),
         ownerHtml: resolve(__dirname, 'owner.html'),
+        offer: resolve(__dirname, 'offer.html'),
       },
     },
   },

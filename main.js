@@ -3,7 +3,6 @@ import confetti from 'canvas-confetti';
 import { submitInquiry } from './src/supabase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-
   // ==========================================================================
   // 1. TOAST NOTIFICATION UTILITY
   // ==========================================================================
@@ -56,49 +55,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const dropdownNavItems = document.querySelectorAll('.nav-item:has(.nav-mega)');
+  dropdownNavItems.forEach((navItem) => {
+    const navLink = navItem.querySelector('.nav-link');
+    const navMenu = navItem.querySelector('.nav-mega');
+    if (!navLink || !navMenu) return;
+    navLink.setAttribute('aria-expanded', 'false');
+
+    navLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      const isOpen = navItem.classList.contains('open');
+      dropdownNavItems.forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.nav-link')?.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        navItem.classList.add('open');
+        navLink.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.nav-item:has(.nav-mega)')) return;
+    dropdownNavItems.forEach((item) => {
+      item.classList.remove('open');
+      item.querySelector('.nav-link')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    dropdownNavItems.forEach((item) => {
+      item.classList.remove('open');
+      item.querySelector('.nav-link')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
   // ==========================================================================
-  // 4. HERO BANNER & BACKGROUND AUTO-SLIDER
+  // 4. HERO BACKGROUND AUTO-SLIDER
   // ==========================================================================
-  const slides = document.querySelectorAll('.hero-slide');
   const bgSlides = document.querySelectorAll('.hero-bg-slide');
-  const dots = document.querySelectorAll('.hero-dot');
   let currentSlide = 0;
   let slideInterval = null;
 
   function goToSlide(idx) {
-    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-    bgSlides.forEach((b, i) => b.classList.toggle('active', i === idx));
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    currentSlide = idx;
-  }
-
-  function nextSlide() {
-    goToSlide((currentSlide + 1) % slides.length);
-  }
-
-  function startSlideTimer() {
-    if (slides.length > 1) {
-      slideInterval = setInterval(nextSlide, 5000);
+    if (bgSlides.length > 0) {
+      bgSlides.forEach((b, i) => b.classList.toggle('active', i === idx));
+      currentSlide = idx;
     }
   }
 
-  function stopSlideTimer() {
-    clearInterval(slideInterval);
+  function nextSlide() {
+    if (bgSlides.length > 1) {
+      goToSlide((currentSlide + 1) % bgSlides.length);
+    }
   }
 
-  dots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      stopSlideTimer();
-      const idx = parseInt(dot.dataset.dot || '0', 10);
-      goToSlide(idx);
-      startSlideTimer();
-    });
-  });
-
-  const sliderWrap = document.getElementById('heroSlider');
-  if (sliderWrap) {
-    sliderWrap.addEventListener('mouseenter', stopSlideTimer);
-    sliderWrap.addEventListener('mouseleave', startSlideTimer);
+  function startSlideTimer() {
+    if (bgSlides.length > 1) {
+      slideInterval = setInterval(nextSlide, 6000);
+    }
   }
 
   startSlideTimer();
@@ -149,11 +166,46 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             };
             window.requestAnimationFrame(step);
+
           }, delay);
         });
       }
     });
   }, { threshold: 0.3 });
+
+  const heroHeading = document.querySelector('.hero-heading');
+  if (heroHeading) {
+    let wordIndex = 0;
+    const wrapTextWords = (node) => {
+      [...node.childNodes].forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const fragment = document.createDocumentFragment();
+          child.textContent.split(/(\s+)/).forEach((part) => {
+            if (!part || /\s+/.test(part)) {
+              fragment.appendChild(document.createTextNode(part));
+              return;
+            }
+            const wordSpan = document.createElement('span');
+            wordSpan.className = 'intelligence-word';
+            wordSpan.textContent = part;
+            wordSpan.style.setProperty('--word-delay', `${wordIndex * 0.18}s`);
+            fragment.appendChild(wordSpan);
+            wordIndex += 1;
+          });
+          child.replaceWith(fragment);
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          wrapTextWords(child);
+        }
+      });
+    };
+
+    wrapTextWords(heroHeading);
+    heroHeading.classList.add('intelligence-heading');
+    document.querySelector('.hero-label')?.classList.add('intelligence-label');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => heroHeading.classList.add('intelligence-start'));
+    });
+  }
 
   const statsSection = document.getElementById('stats');
   if (statsSection) countObserver.observe(statsSection);
@@ -475,6 +527,104 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const searchResults = document.getElementById('searchResults');
 
+  const offerCatalog = [
+    ['What We Offer', 'Growth & Marketing Strategy', 'Turn ambitious growth goals into a focused plan for positioning, channels, investment, and measurement. We align leadership around the choices that matter most and create a practical roadmap your team can execute.'],
+    ['What We Offer', 'AI Services', 'Put AI to work in the parts of marketing where it can create real leverage. We identify the right opportunities, design useful workflows, and help your team adopt them with confidence and clear guardrails.'],
+    ['What We Offer', 'Paid Social', 'Build paid social campaigns around the audiences, creative angles, and signals most likely to drive profitable action. Continuous testing and reliable reporting make it easier to scale what works.'],
+    ['What We Offer', 'Paid Search', 'Capture high-intent demand with account structures, keywords, ads, landing pages, and bids connected to commercial outcomes. We improve efficiency while protecting the quality of the pipeline.'],
+    ['What We Offer', 'B2B Advertising', 'Reach valuable business audiences across a longer buying journey with account-based targeting, demand generation, and content that earns attention. We connect campaign activity to lead quality and revenue progress.'],
+    ['What We Offer', 'Affiliate Partnerships', 'Create a partner channel that extends your reach without compromising brand fit or measurement. We shape the program, recruit the right partners, and optimize contribution over time.'],
+    ['What We Offer', 'Search Engine Optimization', 'Build durable organic visibility through technical site health, search-intent mapping, useful content, and authority growth. The work is grounded in qualified traffic, not vanity rankings.'],
+    ['What We Offer', 'Generative Engine Optimization', 'Help modern answer engines understand and recommend your brand. We strengthen entity signals, schema, semantic authority, and measurement so your visibility is ready for AI-led discovery.'],
+    ['What We Offer', 'Product Marketing', 'Make your product easier to understand, choose, and adopt. We clarify positioning and messaging, support launches, and give sales and marketing teams the tools to tell one consistent story.'],
+    ['What We Offer', 'Product-Led Growth', 'Design experiences that let product value create momentum. We improve activation, retention, and expansion through lifecycle insight and experiments tied to the customer journey.'],
+    ['What We Offer', 'Podcast, Radio, TV', 'Bring your brand into high-attention channels with a clear audience strategy and creative built for the format. We pair memorable reach with practical ways to understand response and impact.'],
+    ['What We Offer', 'Amazon Marketing', 'Improve discovery and conversion across the Amazon marketplace. We combine retail search strategy, listing optimization, creative improvements, and performance tracking to grow marketplace demand.'],
+    ['What We Offer', 'Ecommerce Marketplaces', 'Create a repeatable marketplace growth system across merchandising, acquisition, conversion, and retention. The focus stays on profitable catalog and channel expansion.'],
+    ['What We Offer', 'Content Marketing', 'Create distinctive content that answers real customer questions and moves people toward action. Editorial strategy, production systems, distribution, and measurement work as one system.'],
+    ['What We Offer', 'Social Media & Community', 'Build a useful, recognizable presence through consistent storytelling and genuine conversation. We turn community signals into better content, stronger relationships, and clearer brand momentum.'],
+    ['What We Offer', 'Influencer & Creator Marketing', 'Partner with credible creators whose audience and voice fit your brand. We manage the path from selection and collaboration design to performance learning and repeatable results.'],
+    ['What We Offer', 'Lifecycle Marketing', 'Give customers the right message at the right moment from first signal through long-term value. Journey mapping, CRM programs, and retention experiments make communication more relevant and measurable.'],
+    ['What We Offer', 'Conversion Rate Optimization', 'Find and remove friction across the funnel with evidence-led research and testing. We turn behavioral insight into clearer experiences, stronger conversion, and better economics.'],
+    ['What We Offer', 'Direct Mail', 'Use physical touchpoints to create memorable moments for high-value audiences. We connect offer strategy, production, and response measurement to the wider customer acquisition system.'],
+    ['What We Offer', 'Creative Services', 'Develop a clear creative point of view that gives every channel more impact. From direction to production and testing, we create assets that communicate quickly and learn continuously.'],
+    ['What We Offer', 'Analytics & Attribution', 'Replace fragmented reporting with a dependable view of demand, conversion, and profitable growth. We build measurement architecture and dashboards that help teams make better decisions faster.'],
+    ['What We Offer', 'Marketing Operations', 'Connect the people, processes, data, and platforms behind effective marketing. We simplify workflows, integrate systems, and create operating habits that make growth easier to scale.'],
+    ['What We Offer', 'All Capabilities', 'Bring strategy, media, creative, technology, lifecycle, and measurement together around one growth objective. We assemble the right combination of capabilities for the problem in front of your business.'],
+    ['Who We Work With', 'Early Stage', 'Create a practical foundation for finding product-market fit and generating early demand. We prioritize clear positioning, lean acquisition loops, and measurement that supports fast learning.'],
+    ['Who We Work With', 'High Growth', 'Turn momentum into a repeatable growth system without losing the speed that created it. We help strengthen channels, conversion, retention, and the operating rhythm behind continued scale.'],
+    ['Who We Work With', 'Enterprise', 'Coordinate complex teams, markets, and systems around durable growth. We bring structure to portfolio alignment, governance, measurement, and executive-level decision making.'],
+    ['Who We Work With', 'Investors', 'Give portfolio companies sharper growth insight and practical execution capacity. Diagnostics, shared playbooks, benchmarks, and embedded support help teams move from uncertainty to action.'],
+    ['Ways to Engage', 'Freelancers', 'Add senior growth thinking or specialist execution when a project needs more range or momentum. Support can flex around the work, team, and timeline you already have.'],
+    ['Ways to Engage', 'Agency Teams', 'Extend your delivery capability with technical growth expertise that fits your client model. We can support strategy, specialist execution, measurement, or the full delivery layer behind the scenes.'],
+    ['Ways to Engage', 'Full-Time Employees', 'Strengthen your internal growth function with practical systems, insight, and hands-on support. We help teams plan better, build capability, and execute with greater confidence.'],
+    ['Ways to Engage', 'Advisors', 'Give clients or portfolio companies an experienced partner for complex marketing decisions. We provide clear assessments, strategic advice, and roadmaps that can move directly into execution.']
+  ];
+
+  const allOffersList = document.getElementById('allOffersList');
+  if (allOffersList) {
+    allOffersList.innerHTML = offerCatalog.map(([category, title, description], index) => `
+      <article class="offer-row">
+        <button class="offer-row-toggle" type="button" aria-expanded="false" aria-controls="offer-detail-${index}">
+          <span class="offer-row-copy"><strong>${title}</strong></span>
+          <span class="offer-row-action" aria-hidden="true">+</span>
+        </button>
+        <div class="offer-row-detail" id="offer-detail-${index}" hidden>
+          <p>${description}</p>
+          <p class="offer-detail-support">We start with the current state of your business, identify the highest-impact opportunities, and shape the work around the customers, channels, and commercial goals that matter most. The result is a practical plan your team can use, measure, and improve over time.</p>
+          <div class="offer-detail-label">What you can expect</div>
+          <ul class="offer-detail-list">
+            <li>A focused assessment of your priorities, audience, and growth constraints.</li>
+            <li>Clear recommendations, milestones, and measurable success signals.</li>
+            <li>Practical collaboration with your team from strategy through execution.</li>
+          </ul>
+        </div>
+      </article>
+    `).join('');
+
+    allOffersList.addEventListener('click', (event) => {
+      const toggle = event.target.closest('.offer-row-toggle');
+      if (!toggle) return;
+      const detail = document.getElementById(toggle.getAttribute('aria-controls'));
+      const expanded = detail.hidden;
+      if (expanded) {
+        allOffersList.querySelectorAll('.offer-row-detail:not([hidden])').forEach((openDetail) => {
+          openDetail.hidden = true;
+          const openToggle = openDetail.closest('.offer-row').querySelector('.offer-row-toggle');
+          openToggle.setAttribute('aria-expanded', 'false');
+          openToggle.querySelector('.offer-row-action').textContent = '+';
+        });
+      }
+      detail.hidden = !expanded;
+      const rowToggle = detail.closest('.offer-row').querySelector('.offer-row-toggle');
+      rowToggle.setAttribute('aria-expanded', String(expanded));
+      rowToggle.querySelector('.offer-row-action').textContent = expanded ? '−' : '+';
+    });
+
+    document.querySelectorAll('.mega-service').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const titleAliases = {
+          SEO: 'Search Engine Optimization',
+          GEO: 'Generative Engine Optimization',
+          CRO: 'Conversion Rate Optimization'
+        };
+        const requestedTitle = titleAliases[link.textContent.trim()] || link.textContent.trim();
+        const row = [...allOffersList.querySelectorAll('.offer-row')].find(item =>
+          item.querySelector('.offer-row-copy strong').textContent.trim() === requestedTitle
+        );
+        if (!row) return;
+        const toggle = row.querySelector('.offer-row-toggle');
+        if (toggle.getAttribute('aria-expanded') !== 'true') toggle.click();
+        dropdownNavItems.forEach((item) => {
+          item.classList.remove('open');
+          item.querySelector('.nav-link')?.setAttribute('aria-expanded', 'false');
+        });
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
+  }
+
   const siteSearchIndex = [
     { title: 'Card 01: BUILD AUTHORITY (Technical SEO, Core Web Vitals & GEO)', section: 'Capabilities', href: '#services', icon: '📝' },
     { title: 'Card 02: EXPAND REACH (Performance Marketing & Meta CAPI)', section: 'Capabilities', href: '#services', icon: '📢' },
@@ -486,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { title: 'Stage 04: Channel Scaling & Generative Engine Optimization (GEO)', section: 'Methodology', href: '#process', icon: '04' },
     { title: 'Case Study: Scalable Digital Growth Engine (+133% Revenue)', section: 'Case Studies', href: '#case-study', icon: '📈' },
     { title: 'Why Us: Unified Growth Architecture vs Legacy Agencies', section: 'Operating Model', href: '#why-us', icon: '⚖️' },
-    { title: 'About Fluvo.in: Growth Systems, Strategy & Performance', section: 'About Us', href: '#about', icon: '🎯' },
+    { title: 'About Fluvo: Growth Systems, Strategy & Performance', section: 'About Us', href: '#about', icon: '🎯' },
     { title: 'Our Approach: Diagnose, Engineer, Accelerate, Compound', section: 'About Us', href: '#about', icon: '🧭' },
     { title: 'Technical Growth Diagnostic Strategy Call', section: 'Schedule', href: '#schedule', icon: '📅' },
     { title: 'Frequently Asked Questions (Technical SEO, CAPI, GEO)', section: 'Support', href: '#faq', icon: '❓' },

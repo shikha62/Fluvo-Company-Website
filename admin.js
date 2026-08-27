@@ -5,7 +5,6 @@ import autoTable from 'jspdf-autotable';
 import { fetchAllQueries, updateQueryRecord, deleteQueryRecord, supabase } from './src/supabase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-
   // ==========================================================================
   // 1. OWNER PASSWORD & SESSION-TOKEN AUTHENTICATION GATE
   //    Default password is "1234". Can be updated anytime in Settings.
@@ -836,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.setTextColor(245, 241, 234);
-    doc.text('FLUVO.IN — EXECUTIVE PERFORMANCE REPORT', 14, 18);
+    doc.text('FLUVO — EXECUTIVE PERFORMANCE REPORT', 14, 18);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
