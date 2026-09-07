@@ -211,7 +211,96 @@ document.addEventListener('DOMContentLoaded', () => {
   if (statsSection) countObserver.observe(statsSection);
 
   // ==========================================================================
-  // 7. PROCESS TIMELINE — SEQUENTIAL ORANGE LINE + STEP REVEAL
+  // 7. TESTIMONIAL CAROUSEL CHARACTER — reacts to the active scroll direction
+  // ==========================================================================
+  const testimonialWrap = document.querySelector('.testimonials-track-wrap');
+  const testimonialCharacter = document.querySelector('.carousel-character');
+  if (testimonialWrap && testimonialCharacter) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let lastScrollLeft = testimonialWrap.scrollLeft;
+    let settleTimer = null;
+    let lastPointerX = null;
+
+    const setCharacterDirection = (direction) => {
+      if (!testimonialCharacter) return;
+      const safeDirection = reducedMotion ? 'center' : direction;
+      testimonialCharacter.dataset.direction = safeDirection;
+    };
+
+    const settleCharacter = () => {
+      if (reducedMotion) {
+        setCharacterDirection('center');
+        return;
+      }
+
+      clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        setCharacterDirection('center');
+      }, 340);
+    };
+
+    const handleDirectionChange = (nextDirection) => {
+      if (!nextDirection || nextDirection === 'center') {
+        settleCharacter();
+        return;
+      }
+
+      clearTimeout(settleTimer);
+      setCharacterDirection(nextDirection);
+    };
+
+    testimonialWrap.addEventListener('scroll', () => {
+      const currentScrollLeft = testimonialWrap.scrollLeft;
+      // A larger scrollLeft value means the track has moved left, revealing more cards on the left.
+      const direction = currentScrollLeft > lastScrollLeft ? 'left' : currentScrollLeft < lastScrollLeft ? 'right' : 'center';
+
+      if (direction !== 'center') {
+        handleDirectionChange(direction);
+      }
+
+      lastScrollLeft = currentScrollLeft;
+      if (direction === 'center') {
+        settleCharacter();
+      }
+    }, { passive: true });
+
+    testimonialWrap.addEventListener('pointerdown', (event) => {
+      lastPointerX = event.clientX;
+    }, { passive: true });
+
+    testimonialWrap.addEventListener('pointermove', (event) => {
+      if (lastPointerX === null) return;
+      const deltaX = event.clientX - lastPointerX;
+      if (Math.abs(deltaX) > 6) {
+        // Dragging the track toward the right makes the cards move left, so the companion faces left.
+        const dragDirection = deltaX > 0 ? 'left' : 'right';
+        handleDirectionChange(dragDirection);
+        lastPointerX = event.clientX;
+      }
+    }, { passive: true });
+
+    testimonialWrap.addEventListener('pointerup', () => {
+      lastPointerX = null;
+      settleCharacter();
+    }, { passive: true });
+
+    testimonialWrap.addEventListener('pointerleave', () => {
+      lastPointerX = null;
+      settleCharacter();
+    }, { passive: true });
+
+    testimonialWrap.addEventListener('wheel', (event) => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        // Horizontal wheel movement is interpreted by the visual content direction: a right wheel shifts cards left.
+        handleDirectionChange(event.deltaX > 0 ? 'left' : 'right');
+      }
+    }, { passive: true });
+
+    setCharacterDirection('center');
+  }
+
+  // ==========================================================================
+  // 8. PROCESS TIMELINE — SEQUENTIAL ORANGE LINE + STEP REVEAL
   // ==========================================================================
   const timelineWrapper = document.getElementById('timelineWrapper');
   const timelineTrackFill = document.getElementById('timelineTrackFill');
@@ -335,22 +424,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }
-    });
-  }
-
-  // ==========================================================================
-  // 9. TESTIMONIALS CAROUSEL SCROLL CONTROLS
-  // ==========================================================================
-  const tTrack = document.getElementById('testimonialTrack');
-  const tPrev = document.getElementById('tPrev');
-  const tNext = document.getElementById('tNext');
-
-  if (tTrack && tPrev && tNext) {
-    tNext.addEventListener('click', () => {
-      tTrack.scrollBy({ left: 404, behavior: 'smooth' });
-    });
-    tPrev.addEventListener('click', () => {
-      tTrack.scrollBy({ left: -404, behavior: 'smooth' });
     });
   }
 
@@ -592,13 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
           openDetail.hidden = true;
           const openToggle = openDetail.closest('.offer-row').querySelector('.offer-row-toggle');
           openToggle.setAttribute('aria-expanded', 'false');
-          openToggle.querySelector('.offer-row-action').textContent = '+';
         });
       }
       detail.hidden = !expanded;
       const rowToggle = detail.closest('.offer-row').querySelector('.offer-row-toggle');
       rowToggle.setAttribute('aria-expanded', String(expanded));
-      rowToggle.querySelector('.offer-row-action').textContent = expanded ? '−' : '+';
     });
 
     document.querySelectorAll('.mega-service').forEach((link) => {
