@@ -244,6 +244,19 @@
   </div>
 
   <main>
+
+  <video
+    class="capability-background-video"
+    id="capabilityBackgroundVideo"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    aria-hidden="true"
+  >
+    <source src="/videos/capability-background.mp4" type="video/mp4">
+  </video>
     <!-- =========================================================================
          2. HERO SECTION — EDITORIAL ASYMMETRIC LAYOUT + BACKGROUND VIDEO
          ========================================================================= -->
@@ -531,7 +544,7 @@
               <span class="service-subtitle">Search Intent &amp; Audience Segmentation</span>
             </div>
             <h3 class="service-name">AUDIENCE INTELLIGENCE</h3>
-            <p class="service-desc">Analyze first-party customer data, search intent, and audience cohorts to map friction-free buyer journeys and unit-economic viability before deploying spend.</p>
+            <p class="service-desc">Unify CRM, GA4, firmographic, and search-intent data to define high-LTV ICP cohorts, map buyer signals, and validate CAC-to-LTV viability before media spend.</p>
             <div class="stat-card-footer">
               <span class="stat-action-icon" aria-label="Open service details">
                 <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
@@ -546,7 +559,7 @@
               <span class="service-subtitle">Multi-Touch Paid &amp; Organic Inbound</span>
             </div>
             <h3 class="service-name">DEMAND ARCHITECTURE</h3>
-            <p class="service-desc">Unify brand positioning, technical SEO, Generative Engine Optimization (GEO), and programmatic media to capture high-intent demand efficiently.</p>
+            <p class="service-desc">Connect technical SEO, GEO answer content, Google and Meta campaigns, and cross-channel attribution into one demand system for measurable commercial intent.</p>
             <div class="stat-card-footer">
               <span class="stat-action-icon" aria-label="Open service details">
                 <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
@@ -561,7 +574,7 @@
               <span class="service-subtitle">Web Engineering &amp; Marketing Automation</span>
             </div>
             <h3 class="service-name">JOURNEY ORCHESTRATION</h3>
-            <p class="service-desc">Coordinate high-performance web experiences, API webhooks, automated CRM lead routing, and dynamic retargeting so prospects experience a frictionless conversion path.</p>
+            <p class="service-desc">Engineer fast conversion pages, webhook APIs, CRM routing, nurture automation, and retargeting triggers so every qualified lead moves through the funnel without delay.</p>
             <div class="stat-card-footer">
               <span class="stat-action-icon" aria-label="Open service details">
                 <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
@@ -576,7 +589,7 @@
               <span class="service-subtitle">GA4 Attribution &amp; Funnel Optimization</span>
             </div>
             <h3 class="service-name">MEASUREMENT &amp; CRO</h3>
-            <p class="service-desc">Deploy GA4 event tracking, server-side CAPI attribution, A/B funnel experimentation, and unit-economic analytics to continuously optimize CAC and maximize lifetime value.</p>
+            <p class="service-desc">Instrument GA4 and server-side CAPI, test each funnel stage, and model CAC, LTV, ROAS, and contribution margin to turn performance data into budget decisions.</p>
             <div class="stat-card-footer">
               <span class="stat-action-icon" aria-label="Open service details">
                 <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
@@ -875,12 +888,6 @@
         </div>
 
         <div class="testimonials-track-wrap reveal-up" data-delay="200" aria-label="Executive testimonials carousel">
-          <div class="carousel-character" data-direction="center" aria-hidden="true">
-            <div class="carousel-character__shadow"></div>
-            <video class="carousel-character__video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-              <source src="/assets/videos/testimonial-character.mp4" type="video/mp4">
-            </video>
-          </div>
           <div class="testimonials-track" id="testimonialTrack">
             <!-- Card 1 -->
             <div class="t-card">
@@ -942,6 +949,9 @@
          11. ABOUT US / FLUVO GROWTH SYSTEM
          ========================================================================= -->
     <section class="about-section" id="about">
+      <video class="about-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <source src="/videos/orange-bubbles.mp4" type="video/mp4">
+      </video>
       <div class="about-inner">
         <!-- Section Hero Intro -->
         <div class="about-hero">
@@ -1340,97 +1350,59 @@
       <!-- Scrollable Modal Content Body -->
       <div class="pillar-modal-scroll-body" id="pmScrollBody">
         
-        <!-- Hero Header -->
-        <div class="pm-hero-section">
+        <!-- Summary-first editorial capability page -->
+        <section class="pm-hero-section">
           <div class="pm-hero-eyebrow" id="pmTagline">Engineered for durable search dominance &amp; AI retrieval</div>
           <h1 class="pm-hero-title" id="pmTitle">BUILD AUTHORITY</h1>
-          <p class="pm-hero-lead" id="pmOverview">
-            Create search authority with crawlability audits, Core Web Vitals optimization, schema markup, search intent mapping, and Generative Engine Optimization (GEO).
-          </p>
+          <p class="pm-hero-lead" id="pmOverview">Create search authority with technical SEO, performance engineering, structured data and GEO.</p>
+          <div class="pm-highlights-row" id="pmHighlights"></div>
+        </section>
 
-          <!-- 3 Quick Highlight Pills -->
-          <div class="pm-highlights-row" id="pmHighlights">
-            <!-- Injected via JS -->
+        <section class="pm-editorial-section pm-outcomes-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">KEY OUTCOMES</span>
+            <h2 class="pm-section-title">The signal that matters.</h2>
           </div>
-        </div>
+          <div class="pm-benchmarks-grid" id="pmBenchmarks"></div>
+        </section>
 
-        <!-- 2-Column Content Grid -->
-        <div class="pm-grid-2col">
-          
-          <!-- Left Column: Core Technical Deliverables -->
-          <div class="pm-col-card">
-            <div class="pm-card-header">
-              <div class="pm-card-icon">⚡</div>
-              <div>
-                <h3 class="pm-card-title">Core Technical Deliverables</h3>
-                <p class="pm-card-subtitle">Engineered execution capabilities &amp; architecture</p>
-              </div>
-            </div>
-
-            <div class="pm-deliverables-list" id="pmDeliverables">
-              <!-- Injected via JS -->
-            </div>
+        <section class="pm-editorial-section pm-capabilities-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">CORE CAPABILITIES</span>
+            <h2 class="pm-section-title">Focused execution, built to compound.</h2>
           </div>
+          <div class="pm-deliverables-list" id="pmDeliverables"></div>
+        </section>
 
-          <!-- Right Column: Enterprise Tech Stack & Live Benchmark Results -->
-          <div style="display: flex; flex-direction: column; gap: 24px;">
-            
-            <!-- Tool Stack Card -->
-            <div class="pm-col-card">
-              <div class="pm-card-header">
-                <div class="pm-card-icon">🛠️</div>
-                <div>
-                  <h3 class="pm-card-title">Enterprise Technology Stack</h3>
-                  <p class="pm-card-subtitle">Tools, platforms, and API telemetry</p>
-                </div>
-              </div>
-
-              <div class="pm-tool-chips" id="pmToolStack">
-                <!-- Injected via JS -->
-              </div>
-            </div>
-
-            <!-- Live Benchmark Results Card -->
-            <div class="pm-col-card">
-              <div class="pm-card-header">
-                <div class="pm-card-icon">📈</div>
-                <div>
-                  <h3 class="pm-card-title">Verified Benchmark Impact</h3>
-                  <p class="pm-card-subtitle">Measured outcomes across enterprise client engagements</p>
-                </div>
-              </div>
-
-              <div class="pm-benchmarks-grid" id="pmBenchmarks">
-                <!-- Injected via JS -->
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- 90-Day Sprint Implementation Roadmap -->
-        <div class="pm-col-card pm-roadmap-card">
-          <div class="pm-card-header">
-            <div class="pm-card-icon">🧭</div>
+        <section class="pm-editorial-section pm-tech-section">
+          <div class="pm-section-intro pm-section-intro-inline">
             <div>
-              <h3 class="pm-card-title">90-Day Sprint Implementation Framework</h3>
-              <p class="pm-card-subtitle">Sequential execution milestones from discovery to compounding scale</p>
+              <span class="pm-section-label">TECHNOLOGY ECOSYSTEM</span>
+              <h2 class="pm-section-title">The stack behind the system.</h2>
             </div>
+            <span class="pm-section-note">Selected tools, revealed on demand</span>
           </div>
+          <details class="pm-disclosure pm-stack-disclosure">
+            <summary><span>View full technology stack</span><span class="pm-summary-arrow">+</span></summary>
+            <div class="pm-tool-chips" id="pmToolStack"></div>
+          </details>
+        </section>
 
-          <div class="pm-sprint-steps-grid" id="pmRoadmap">
-            <!-- Injected via JS -->
+        <section class="pm-editorial-section pm-roadmap-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">90-DAY FRAMEWORK</span>
+            <h2 class="pm-section-title">From discovery to compounding scale.</h2>
           </div>
-        </div>
+          <div class="pm-sprint-steps-grid" id="pmRoadmap"></div>
+        </section>
 
       </div>
 
       <!-- Modal Bottom Action Bar -->
       <footer class="pillar-modal-footer">
         <div class="pm-footer-left">
-          <span style="font-size: 13px; color: rgba(255,255,255,0.7);">Ready to deploy this capability?</span>
-          <strong style="color: #FFF; font-size: 13.5px;" id="pmFooterPillarName">01: Build Authority</strong>
+          <span class="pm-footer-kicker">Ready to deploy this capability?</span>
+          <strong id="pmFooterPillarName">01: Build Authority</strong>
         </div>
 
         <div class="pm-footer-actions">
@@ -1452,7 +1424,11 @@
        14.6 FULL-SCREEN SERVICES / EXPERTISE MODAL
        ========================================================================= -->
   <div class="pillar-modal-overlay" id="serviceModal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="pillar-modal-dialog">
+    <div class="pillar-modal-dialog service-modal-dialog">
+
+      <video class="service-expansion-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <source src="/videos/capability-background.mp4" type="video/mp4">
+      </video>
 
       <!-- Top Navigation & Control Bar -->
       <header class="pillar-modal-topbar">
@@ -1489,77 +1465,67 @@
       <!-- Scrollable Modal Content Body -->
       <div class="pillar-modal-scroll-body" id="smScrollBody">
 
-        <!-- Hero Header -->
-        <div class="pm-hero-section">
+        <!-- Summary-first editorial service page -->
+        <section class="pm-hero-section">
           <div class="pm-hero-eyebrow" id="smTagline">Deep audience intelligence for scalable growth</div>
           <h1 class="pm-hero-title" id="smTitle">AUDIENCE INTELLIGENCE</h1>
-          <p class="pm-hero-lead" id="smOverview">
-            Analyze first-party customer data to uncover buyer journeys and unlock growth.
-          </p>
+          <p class="pm-hero-lead" id="smOverview">Analyze first-party customer data to uncover buyer journeys and unlock growth.</p>
           <div class="pm-highlights-row" id="smHighlights"><!-- Injected via JS --></div>
-        </div>
+        </section>
 
-        <!-- 2-Column Content Grid -->
-        <div class="pm-grid-2col">
-
-          <!-- Left Column: Core Deliverables -->
-          <div class="pm-col-card">
-            <div class="pm-card-header">
-              <div class="pm-card-icon">📋</div>
-              <div>
-                <h3 class="pm-card-title">Core Service Deliverables</h3>
-                <p class="pm-card-subtitle">What we build, deploy, and measure for you</p>
-              </div>
-            </div>
-            <div class="pm-deliverables-list" id="smDeliverables"><!-- Injected via JS --></div>
+        <section class="pm-editorial-section pm-outcomes-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">KEY OUTCOMES</span>
+            <h2 class="pm-section-title">The signal that matters.</h2>
           </div>
+          <div class="pm-benchmarks-grid" id="smBenchmarks"></div>
+        </section>
 
-          <!-- Right Column: Tech Stack & Benchmarks -->
-          <div style="display: flex; flex-direction: column; gap: 24px;">
-            <div class="pm-col-card">
-              <div class="pm-card-header">
-                <div class="pm-card-icon">🛠️</div>
-                <div>
-                  <h3 class="pm-card-title">Enterprise Technology Stack</h3>
-                  <p class="pm-card-subtitle">Tools, platforms, and API integrations</p>
-                </div>
-              </div>
-              <div class="pm-tool-chips" id="smToolStack"><!-- Injected via JS --></div>
-            </div>
-
-            <div class="pm-col-card">
-              <div class="pm-card-header">
-                <div class="pm-card-icon">📈</div>
-                <div>
-                  <h3 class="pm-card-title">Verified Benchmark Impact</h3>
-                  <p class="pm-card-subtitle">Measured outcomes across client engagements</p>
-                </div>
-              </div>
-              <div class="pm-benchmarks-grid" id="smBenchmarks"><!-- Injected via JS --></div>
-            </div>
+        <section class="pm-editorial-section pm-technical-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">TECHNICAL IMPLEMENTATION</span>
+            <h2 class="pm-section-title">The system behind the service.</h2>
           </div>
+          <div class="pm-technical-grid" id="smTechnicalGrid"></div>
+        </section>
 
-        </div>
+        <section class="pm-editorial-section pm-capabilities-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">CORE CAPABILITIES</span>
+            <h2 class="pm-section-title">Focused execution, built to compound.</h2>
+          </div>
+          <div class="pm-deliverables-list" id="smDeliverables"></div>
+        </section>
 
-        <!-- 90-Day Sprint Implementation Roadmap -->
-        <div class="pm-col-card pm-roadmap-card">
-          <div class="pm-card-header">
-            <div class="pm-card-icon">🧭</div>
+        <section class="pm-editorial-section pm-tech-section">
+          <div class="pm-section-intro pm-section-intro-inline">
             <div>
-              <h3 class="pm-card-title">90-Day Sprint Implementation Framework</h3>
-              <p class="pm-card-subtitle">Sequential execution milestones from research to scale</p>
+              <span class="pm-section-label">TECHNOLOGY ECOSYSTEM</span>
+              <h2 class="pm-section-title">The stack behind the system.</h2>
             </div>
+            <span class="pm-section-note">Selected tools, revealed on demand</span>
           </div>
-          <div class="pm-sprint-steps-grid" id="smRoadmap"><!-- Injected via JS --></div>
-        </div>
+          <details class="pm-disclosure pm-stack-disclosure">
+            <summary><span>View full technology stack</span><span class="pm-summary-arrow">+</span></summary>
+            <div class="pm-tool-chips" id="smToolStack"></div>
+          </details>
+        </section>
+
+        <section class="pm-editorial-section pm-roadmap-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">90-DAY FRAMEWORK</span>
+            <h2 class="pm-section-title">From discovery to compounding scale.</h2>
+          </div>
+          <div class="pm-sprint-steps-grid" id="smRoadmap"></div>
+        </section>
 
       </div>
 
       <!-- Modal Bottom Action Bar -->
       <footer class="pillar-modal-footer">
         <div class="pm-footer-left">
-          <span style="font-size: 13px; color: rgba(255,255,255,0.7);">Ready to activate this service?</span>
-          <strong style="color: #FFF; font-size: 13.5px;" id="smFooterServiceName">01: Audience Intelligence</strong>
+          <span class="pm-footer-kicker">Ready to activate this service?</span>
+          <strong id="smFooterServiceName">01: Audience Intelligence</strong>
         </div>
         <div class="pm-footer-actions">
           <a href="#case-study" class="btn btn-outline-white btn-sm" id="smBtnCaseStudy">

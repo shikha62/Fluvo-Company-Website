@@ -1447,11 +1447,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const pmFooterPillarName = document.getElementById('pmFooterPillarName');
   const pmBtnSchedule = document.getElementById('pmBtnSchedule');
   const pmBtnCaseStudy = document.getElementById('pmBtnCaseStudy');
+  const capabilityBackgroundVideo = document.getElementById('capabilityBackgroundVideo');
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function setCapabilityVideoActive(isActive) {
+    if (!capabilityBackgroundVideo) return;
+    const shouldPlay = isActive && !reducedMotionQuery.matches;
+    capabilityBackgroundVideo.classList.toggle('is-active', isActive);
+
+    if (shouldPlay) {
+      capabilityBackgroundVideo.play().catch(() => {
+        capabilityBackgroundVideo.classList.add('video-fallback');
+      });
+    } else {
+      capabilityBackgroundVideo.pause();
+    }
+  }
+
+  function syncCapabilityVideoState() {
+    setCapabilityVideoActive(Boolean(document.querySelector('#pillarModal.open, #serviceModal.open')));
+  }
 
   function renderCapability(id) {
     const data = capabilityData[id];
     if (!data) return;
     currentCapabilityId = id;
+
+    const shortDescription = (text, maxLength = 118) => {
+      const sentence = text.split(/(?<=[.!?])\s+/)[0];
+      if (sentence.length <= maxLength) return sentence;
+      return `${sentence.slice(0, maxLength).replace(/\s+\S*$/, '')}...`;
+    };
 
     // Top Bar & Hero
     if (pmBadge) pmBadge.innerText = data.badge;
@@ -1463,29 +1489,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Highlights
     if (pmHighlights) {
-      pmHighlights.innerHTML = data.highlights.map(h => `
-        <div class="pm-highlight-chip">${h}</div>
+      pmHighlights.innerHTML = data.highlights.slice(0, 3).map(h => `
+        <div class="pm-highlight-chip">${h.replace(/^[^\w%<]+\s*/, '')}</div>
       `).join('');
     }
 
-    // Deliverables List
+    // Compact capability rows with full technical detail available on demand.
     if (pmDeliverables) {
-      pmDeliverables.innerHTML = data.deliverables.map(d => `
-        <div class="pm-deliverable-item">
-          <div class="pm-deliv-title">
-            <span>${d.icon}</span>
-            <span>${d.title}</span>
+      pmDeliverables.innerHTML = data.deliverables.map((d, index) => `
+        <details class="pm-deliverable-item pm-disclosure">
+          <summary>
+            <span class="pm-deliv-index">${String(index + 1).padStart(2, '0')}</span>
+            <span class="pm-deliv-copy">
+              <span class="pm-deliv-title">${d.title}</span>
+              <span class="pm-deliv-desc">${shortDescription(d.desc)}</span>
+            </span>
+            <span class="pm-summary-arrow">+</span>
+          </summary>
+          <div class="pm-detail-content">
+            <p>${d.desc}</p>
+            <span class="pm-detail-label">Technical detail</span>
           </div>
-          <p class="pm-deliv-desc">${d.desc}</p>
-        </div>
+        </details>
       `).join('');
     }
 
-    // Tool Stack Chips
+    // Keep the complete stack available, but out of the first viewport.
     if (pmToolStack) {
       pmToolStack.innerHTML = data.tools.map(t => `
         <div class="pm-tool-chip">
-          <span style="color: var(--amber);">✦</span>
           <span>${t}</span>
         </div>
       `).join('');
@@ -1502,14 +1534,23 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
     }
 
-    // Sprint Implementation Roadmap
+    // Framework stages stay concise until a stage is opened.
     if (pmRoadmap) {
-      pmRoadmap.innerHTML = data.roadmap.map(r => `
-        <div class="pm-sprint-step">
-          <span class="pm-sprint-badge">${r.badge}</span>
-          <h4 class="pm-sprint-title">${r.title}</h4>
-          <p class="pm-sprint-desc">${r.desc}</p>
-        </div>
+      pmRoadmap.innerHTML = data.roadmap.map((r, index) => `
+        <details class="pm-sprint-step pm-disclosure">
+          <summary>
+            <span class="pm-sprint-badge">${String(index + 1).padStart(2, '0')}</span>
+            <span class="pm-sprint-copy">
+              <span class="pm-sprint-title">${r.title}</span>
+              <span class="pm-sprint-desc">${shortDescription(r.desc)}</span>
+            </span>
+            <span class="pm-summary-arrow">+</span>
+          </summary>
+          <div class="pm-detail-content">
+            <p>${r.desc}</p>
+            <span class="pm-detail-label">${r.badge}</span>
+          </div>
+        </details>
       `).join('');
     }
 
@@ -1526,13 +1567,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openCapability(id) {
+    serviceModal?.classList.remove('open');
+    serviceModal?.setAttribute('aria-hidden', 'true');
     renderCapability(id);
     pillarModal?.classList.add('open');
+    setCapabilityVideoActive(true);
     document.body.style.overflow = 'hidden';
   }
 
   function closeCapability() {
     pillarModal?.classList.remove('open');
+    syncCapabilityVideoState();
     document.body.style.overflow = '';
   }
 
@@ -1547,23 +1592,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         const pid = parseInt(card.getAttribute('data-pillar-id') || '1', 10);
-        openCapability(pid);
-      }
-    });
-  });
-
-  // Attach click events to Service Cards (.service-card)
-  document.querySelectorAll('.service-card').forEach((card, idx) => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      const pid = (idx % 4) + 1;
-      openCapability(pid);
-    });
-
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        const pid = (idx % 4) + 1;
         openCapability(pid);
       }
     });
@@ -1641,6 +1669,24 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'AUDIENCE INTELLIGENCE',
       tagline: 'Deep first-party data analysis to map buyer journeys before deploying any spend',
       overview: 'We analyze your first-party customer data, behavioral signals, and search intent patterns to build high-fidelity audience cohorts. Every campaign begins with a forensic understanding of who your buyers are, what drives them, and which acquisition channels deliver the highest lifetime value — eliminating wasted spend before it starts.',
+      technical: {
+        architecture: {
+          title: 'Data sources & pipeline',
+          body: 'Connect CRM records, GA4 behavioral events, Search Console queries, firmographic enrichment, first-party website behavior, campaign data, and conversion events through APIs and webhooks. The operating path is Data Sources -> Collection -> ETL/ELT -> SQL warehouse -> Identity Resolution -> Segmentation -> Activation.'
+        },
+        flow: {
+          title: 'Audience segmentation logic',
+          body: 'Resolve anonymous and known identities into account and contact profiles, then calculate ICP, lead, and account scores from firmographics, intent, engagement frequency, recency/frequency, page views, solution-page visits, pricing visits, form submissions, returning sessions, and conversion events.'
+        },
+        systems: {
+          title: 'Outputs & activation',
+          body: 'Produce high-LTV cohorts, ICP segments, intent-based lists, lead/account scores, and activation audiences for CRM, paid media, nurture, and sales workflows. CDP patterns keep schemas, consent, identity keys, and audience membership synchronized.'
+        },
+        metrics: {
+          title: 'Measurement layer',
+          body: 'Evaluate cohort quality with CAC, LTV, LTV:CAC, conversion rate, MQL-to-SQL rate, payback period, and customer acquisition efficiency. Segment performance is compared against control cohorts before budget is expanded.'
+        }
+      },
       highlights: [
         '🔍 First-Party Data Cohort Mapping',
         '📊 Intent-Cluster Keyword Research',
@@ -1710,6 +1756,24 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'DEMAND ARCHITECTURE',
       tagline: 'Unified paid + organic demand engine engineered for compounding pipeline growth',
       overview: 'Demand Architecture is the strategic unification of brand positioning, technical SEO, Generative Engine Optimization (GEO), and programmatic performance media. We build a demand engine that captures high-intent buyers across every touchpoint — from first Google search to retargeting sequence — engineered for maximum pipeline efficiency.',
+      technical: {
+        architecture: {
+          title: 'Connected channel architecture',
+          body: 'Join technical SEO, GEO answer content, Google Ads, Meta Ads, organic search, landing pages, CRM lifecycle data, and analytics in one demand graph. UTM governance and shared campaign taxonomy connect impression -> click -> landing page -> engagement -> lead -> qualification -> opportunity -> customer.'
+        },
+        flow: {
+          title: 'SEO, GEO & paid media system',
+          body: 'Technical audits improve crawlability, indexation, internal linking, schema, and entity signals. Search-intent mapping drives content clusters and answer-oriented pages, while conversion tracking, Meta Pixel/CAPI, server-side events, audience syncing, retargeting, and lookalike audiences coordinate paid activation.'
+        },
+        systems: {
+          title: 'Integration & attribution',
+          body: 'APIs and webhooks connect ad platforms, GA4, CRM, marketing automation, and the data warehouse. First-touch, last-touch, and multi-touch models preserve cross-channel touchpoints and expose channel-level and campaign-level pipeline contribution.'
+        },
+        metrics: {
+          title: 'Demand outputs',
+          body: 'The system produces qualified inbound demand, durable intent signals, retargeting audiences, channel-level attribution, and verified pipeline contribution rather than isolated platform metrics.'
+        }
+      },
       highlights: [
         '⚡ Unified Paid + Organic Demand Engine',
         '🤖 Generative Engine Optimization (GEO)',
@@ -1779,6 +1843,24 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'JOURNEY ORCHESTRATION',
       tagline: 'Frictionless buyer experiences from first click through confirmed booking or purchase',
       overview: 'Journey Orchestration eliminates every friction point between a qualified prospect and a conversion. We engineer high-performance web architecture, automated CRM lead routing, webhook API integrations, and dynamic retargeting sequences — ensuring no buyer falls through the cracks from awareness to closed revenue.',
+      technical: {
+        architecture: {
+          title: 'Conversion infrastructure',
+          body: 'Build high-performance landing pages with responsive frontend architecture, technical SEO, resilient form handling, and API integrations. Core Web Vitals, page-load performance, API latency, and automation latency are treated as conversion inputs.'
+        },
+        flow: {
+          title: 'Event-driven journey flow',
+          body: 'User action -> Event Capture -> Identification -> Scoring -> CRM Routing -> Automation -> Sales/Retargeting -> Conversion. For example, a pricing-page visit triggers qualification logic, updates the CRM record, raises lead score, and starts a personalized follow-up.'
+        },
+        systems: {
+          title: 'APIs, webhooks & CRM routing',
+          body: 'REST APIs and JSON webhooks connect forms, commerce, booking, CRM, email, Slack, and ad platforms. Enrichment, qualification rules, assignment logic, lifecycle stages, synchronization, validation, error handling, and retry logic keep event-driven integrations reliable.'
+        },
+        metrics: {
+          title: 'Automation performance',
+          body: 'Measure form completion, speed-to-lead, API response time, workflow latency, Core Web Vitals, nurture engagement, funnel drop-off, and conversion rate. Trigger-based workflows use behavioral segmentation, lead nurturing, retargeting, and lifecycle automation.'
+        }
+      },
       highlights: [
         '⚡ Sub-Second Web Performance Engineering',
         '🔄 Zero-Latency CRM Webhook Automation',
@@ -1848,6 +1930,24 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'MEASUREMENT & CRO',
       tagline: 'Full-funnel analytics telemetry and conversion rate experimentation for maximum ROI clarity',
       overview: 'Measurement & CRO transforms your analytics stack into a decision engine. We deploy server-side GA4 event tracking, cross-channel CAPI attribution, and systematic A/B funnel experimentation — giving you verified, bias-free performance data to confidently scale budget behind what actually drives revenue growth.',
+      technical: {
+        architecture: {
+          title: 'Analytics implementation',
+          body: 'Instrument GA4 and Google Tag Manager with custom events, conversion events, user properties, custom dimensions, and funnel exploration. The tracked path is Landing Page -> Engagement -> CTA Click -> Form Start -> Form Submission -> MQL -> SQL -> Opportunity -> Customer.'
+        },
+        flow: {
+          title: 'Server-side measurement',
+          body: 'Use server-side GA4 Measurement Protocol and server-side conversion tracking to validate event payloads, reduce dependency on browser-only tracking, and preserve reliable conversion signals for analytics and ad platforms.'
+        },
+        systems: {
+          title: 'Attribution & experimentation',
+          body: 'Compare first-touch, last-touch, data-driven, and multi-touch attribution to quantify channel and campaign contribution. CRO combines A/B testing, funnel and drop-off analysis, heatmaps, session behavior, CTA optimization, form optimization, and landing-page experimentation.'
+        },
+        metrics: {
+          title: 'Optimization loop & business metrics',
+          body: 'Measure -> Identify Drop-off -> Form Hypothesis -> Run Experiment -> Analyze Results -> Implement Winner -> Measure Again. Track conversion rate, CAC, LTV, LTV:CAC, ROAS, CPL, CPA, MQL rate, SQL rate, pipeline contribution, and revenue attribution.'
+        }
+      },
       highlights: [
         '📊 Server-Side GA4 & CAPI Attribution',
         '🧪 A/B Funnel Experimentation Engine',
@@ -1926,6 +2026,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!svc || !serviceModal) return;
     currentServiceId = id;
 
+    const shortDescription = (text, maxLength = 118) => {
+      const sentence = text.split(/(?<=[.!?])\s+/)[0];
+      if (sentence.length <= maxLength) return sentence;
+      return `${sentence.slice(0, maxLength).replace(/\s+\S*$/, '')}...`;
+    };
+
     // Update topbar
     const smBadge = document.getElementById('smBadge');
     const smCategory = document.getElementById('smCategory');
@@ -1933,6 +2039,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const smTitle = document.getElementById('smTitle');
     const smOverview = document.getElementById('smOverview');
     const smHighlights = document.getElementById('smHighlights');
+    const smTechnicalGrid = document.getElementById('smTechnicalGrid');
     const smDeliverables = document.getElementById('smDeliverables');
     const smToolStack = document.getElementById('smToolStack');
     const smBenchmarks = document.getElementById('smBenchmarks');
@@ -1946,27 +2053,47 @@ document.addEventListener('DOMContentLoaded', () => {
     if (smOverview) smOverview.textContent = svc.overview;
     if (smFooterServiceName) smFooterServiceName.textContent = `${svc.badge}: ${svc.title.charAt(0) + svc.title.slice(1).toLowerCase()}`;
 
-    // Highlights
-    if (smHighlights) {
-      smHighlights.innerHTML = svc.highlights.map(h =>
-        `<span class="pm-highlight-chip">${h}</span>`
-      ).join('');
-    }
-
-    // Deliverables
-    if (smDeliverables) {
-      smDeliverables.innerHTML = svc.deliverables.map(d => `
-        <div class="pm-deliverable-item">
-          <div class="pm-deliv-title"><span>${d.icon}</span> ${d.title}</div>
-          <p class="pm-deliv-desc">${d.desc}</p>
-        </div>
+    if (smTechnicalGrid && svc.technical) {
+      smTechnicalGrid.innerHTML = Object.values(svc.technical).map((section, index) => `
+        <article class="pm-technical-card">
+          <span class="pm-technical-index">${String(index + 1).padStart(2, '0')}</span>
+          <h3>${section.title}</h3>
+          <p>${section.body}</p>
+        </article>
       `).join('');
     }
 
-    // Tools
+    // Highlights
+    if (smHighlights) {
+      smHighlights.innerHTML = svc.highlights.slice(0, 3).map(h =>
+        `<span class="pm-highlight-chip">${h.replace(/^[^\w%<]+\s*/, '')}</span>`
+      ).join('');
+    }
+
+    // Compact service rows with the complete description available on demand.
+    if (smDeliverables) {
+      smDeliverables.innerHTML = svc.deliverables.map((d, index) => `
+        <details class="pm-deliverable-item pm-disclosure">
+          <summary>
+            <span class="pm-deliv-index">${String(index + 1).padStart(2, '0')}</span>
+            <span class="pm-deliv-copy">
+              <span class="pm-deliv-title">${d.title}</span>
+              <span class="pm-deliv-desc">${shortDescription(d.desc)}</span>
+            </span>
+            <span class="pm-summary-arrow">+</span>
+          </summary>
+          <div class="pm-detail-content">
+            <p>${d.desc}</p>
+            <span class="pm-detail-label">Technical detail</span>
+          </div>
+        </details>
+      `).join('');
+    }
+
+    // Keep the full stack available without crowding the first view.
     if (smToolStack) {
       smToolStack.innerHTML = svc.tools.map(t =>
-        `<span class="pm-tool-chip">⚙ ${t}</span>`
+        `<span class="pm-tool-chip">${t}</span>`
       ).join('');
     }
 
@@ -1981,14 +2108,23 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
     }
 
-    // Roadmap
+    // Roadmap stages stay concise until opened.
     if (smRoadmap) {
-      smRoadmap.innerHTML = svc.roadmap.map(r => `
-        <div class="pm-sprint-step">
-          <div class="pm-sprint-badge">${r.badge}</div>
-          <div class="pm-sprint-title">${r.title}</div>
-          <p class="pm-sprint-desc">${r.desc}</p>
-        </div>
+      smRoadmap.innerHTML = svc.roadmap.map((r, index) => `
+        <details class="pm-sprint-step pm-disclosure">
+          <summary>
+            <span class="pm-sprint-badge">${String(index + 1).padStart(2, '0')}</span>
+            <span class="pm-sprint-copy">
+              <span class="pm-sprint-title">${r.title}</span>
+              <span class="pm-sprint-desc">${shortDescription(r.desc)}</span>
+            </span>
+            <span class="pm-summary-arrow">+</span>
+          </summary>
+          <div class="pm-detail-content">
+            <p>${r.desc}</p>
+            <span class="pm-detail-label">${r.badge}</span>
+          </div>
+        </details>
       `).join('');
     }
 
@@ -2006,9 +2142,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openService(id) {
     if (!serviceModal) return;
+    pillarModal?.classList.remove('open');
+    pillarModal?.setAttribute('aria-hidden', 'true');
     renderService(id);
     serviceModal.setAttribute('aria-hidden', 'false');
     serviceModal.classList.add('open');
+    setCapabilityVideoActive(true);
     document.body.style.overflow = 'hidden';
   }
 
@@ -2016,6 +2155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!serviceModal) return;
     serviceModal.classList.remove('open');
     serviceModal.setAttribute('aria-hidden', 'true');
+    syncCapabilityVideoState();
     document.body.style.overflow = '';
   }
 
