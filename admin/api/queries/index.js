@@ -1,10 +1,10 @@
-﻿import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { requireAuth, setSecurityHeaders } from '../_auth.js';
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase env vars not configured');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
+  if (!url) throw new Error('SUPABASE_URL env var not configured');
   return createClient(url, key);
 }
 

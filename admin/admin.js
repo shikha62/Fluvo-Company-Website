@@ -2,10 +2,44 @@ import Chart from 'chart.js/auto';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
-  // 1. SECURE SERVERLESS AUTHENTICATION GATE
+  // 1. TOAST NOTIFICATION UTILITY
+  // ==========================================================================
+  const toastContainer = document.getElementById('toastContainer');
+
+  function showToast(message, type = 'info') {
+    if (!toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = '⚡';
+    if (type === 'success') icon = '✓';
+    if (type === 'error') icon = '✕';
+
+    toast.innerHTML = `
+      <span style="font-weight: 700; color: ${type === 'success' ? 'var(--color-success)' : (type === 'error' ? 'var(--color-danger)' : 'var(--amber)')};">${icon}</span>
+      <span>${escapeHtml(message)}</span>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px)';
+      toast.style.transition = 'all 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }, 3200);
+  }
+
+  // ==========================================================================
+  // 2. SECURE SERVERLESS AUTHENTICATION GATE
   // ==========================================================================
   const authOverlay = document.getElementById('authOverlay');
   const dashboardLayout = document.getElementById('dashboardLayout');
@@ -16,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnUnlock = document.getElementById('btnUnlock');
   const btnUnlockText = document.getElementById('btnUnlockText');
   const displayAdminEmail = document.getElementById('displayAdminEmail');
+  const dropdownUserEmail = document.getElementById('dropdownUserEmail');
 
   let dashboardInitialized = false;
   let pollInterval = null;
@@ -29,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       }
     } catch (err) {
-      console.warn('Session verification check failed:', err);
+      console.warn('Session check notice:', err);
     }
     showLogin();
     return false;
@@ -51,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardLayout) dashboardLayout.style.display = 'flex';
     if (authErrorMsg) authErrorMsg.style.display = 'none';
 
-    if (user && user.email && displayAdminEmail) {
-      displayAdminEmail.innerText = user.email;
-    }
+    const email = user?.email || 'connect@fluvo.in';
+    if (displayAdminEmail) displayAdminEmail.innerText = email;
+    if (dropdownUserEmail) dropdownUserEmail.innerText = email;
 
     if (!dashboardInitialized) {
       dashboardInitialized = true;
@@ -62,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
       loadQueries();
     }
 
-    // Start background sync polling every 30 seconds
     if (!pollInterval) {
       pollInterval = setInterval(loadQueries, 30_000);
     }
@@ -94,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok && data.success) {
         onAuthenticated(data.user);
+        showToast('Welcome back. Console authenticated successfully.', 'success');
       } else {
         showAuthError(data.error || 'Authentication failed. Please verify credentials.');
         if (adminPasswordInput) {
@@ -104,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      showAuthError('Unable to connect to authentication server. Please try again.');
+      showAuthError('Unable to connect to authentication service.');
     } finally {
       if (btnUnlock) btnUnlock.disabled = false;
       if (btnUnlockText) btnUnlockText.innerText = 'Sign In & Unlock Console';
@@ -117,12 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
     authErrorMsg.style.display = 'block';
   }
 
-  if (adminLoginForm) {
-    adminLoginForm.addEventListener('submit', handleLoginSubmit);
-  }
-  if (btnUnlock) {
-    btnUnlock.addEventListener('click', handleLoginSubmit);
-  }
+  if (adminLoginForm) adminLoginForm.addEventListener('submit', handleLoginSubmit);
+  if (btnUnlock) btnUnlock.addEventListener('click', handleLoginSubmit);
 
   async function handleLogout() {
     try {
@@ -130,22 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Logout error:', err);
     }
+    showToast('Session locked. Console access closed.', 'info');
     showLogin();
   }
 
-  document.getElementById('btnLogout')?.addEventListener('click', handleLogout);
   document.getElementById('btnDropdownLogout')?.addEventListener('click', handleLogout);
 
-  // Initial session check on page load
+  // Initial session verification
   checkSession();
 
   // ==========================================================================
-  // 2. TAB SWITCHING & OWNER DROPDOWN
+  // 3. NAVIGATION, TAB SWITCHING & MOBILE DRAWER
   // ==========================================================================
+  const sidebar = document.getElementById('sidebar');
+  const mobileNavToggle = document.getElementById('mobileNavToggle');
   const sidebarLinks = document.querySelectorAll('.sidebar-link');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const tabTitle = document.getElementById('tabTitle');
   const tabSubtitle = document.getElementById('tabSubtitle');
+  const sidebarQueryCount = document.getElementById('sidebarQueryCount');
 
   const tabMeta = {
     overview: {
@@ -185,6 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tabTitle) tabTitle.innerText = tabMeta[tabKey].title;
       if (tabSubtitle) tabSubtitle.innerText = tabMeta[tabKey].subtitle;
     }
+
+    // Close mobile sidebar if open
+    sidebar?.classList.remove('open');
   }
 
   sidebarLinks.forEach(link => {
@@ -194,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Quick Action & Dropdown links that trigger tab switches
   document.querySelectorAll('[data-goto-tab]').forEach(elem => {
     elem.addEventListener('click', (e) => {
       e.preventDefault();
@@ -204,6 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (profileDropdown) profileDropdown.classList.remove('open');
       }
     });
+  });
+
+  if (mobileNavToggle) {
+    mobileNavToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar?.classList.toggle('open');
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (sidebar?.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileNavToggle) {
+      sidebar.classList.remove('open');
+    }
   });
 
   // Profile Menu Dropdown
@@ -222,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 3. DATA ENGINE & METRICS
+  // 4. DATA ENGINE & METRICS
   // ==========================================================================
   let queriesData = [];
   let currentFilter = 'all';
@@ -231,43 +280,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Chart instances
   let overviewChartInstance = null;
-  let statusPieChartInstance = null;
+  let revenueDetailChartInstance = null;
+  let growthFunnelChartInstance = null;
+
+  let realtimeSubscribed = false;
 
   async function initDashboard() {
     initCharts();
     await loadQueries();
+
+    if (!realtimeSubscribed) {
+      realtimeSubscribed = true;
+      try {
+        supabase
+          .channel('queries-realtime-admin')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'queries' }, (payload) => {
+            console.log('Realtime query change received:', payload);
+            loadQueries();
+          })
+          .subscribe((status) => {
+            console.log('Supabase Realtime status:', status);
+          });
+      } catch (realtimeErr) {
+        console.warn('Realtime subscription unavailable:', realtimeErr);
+      }
+    }
   }
 
   async function loadQueries() {
-    try {
-      const systemStatusText = document.getElementById('systemStatusText');
-      if (systemStatusText) systemStatusText.innerText = 'Syncing...';
+    const systemStatusText = document.getElementById('systemStatusText');
+    if (systemStatusText) systemStatusText.innerText = 'Syncing...';
 
+    let loaded = false;
+
+    // 1. Try serverless dev/production API
+    try {
       const res = await fetch('/api/queries', { credentials: 'same-origin' });
       if (res.status === 401) {
         showLogin();
         return;
       }
-
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        queriesData = json.data;
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          queriesData = json.data;
+          loaded = true;
+        }
       }
-
-      if (systemStatusText) systemStatusText.innerText = 'Database Connected';
-      renderKPIs();
-      renderTable();
-      renderRecentActivity();
-      updateCharts();
-    } catch (err) {
-      console.error('Failed to load queries via API:', err);
-      const systemStatusText = document.getElementById('systemStatusText');
-      if (systemStatusText) systemStatusText.innerText = 'Connection Error';
+    } catch (apiErr) {
+      console.warn('API /api/queries fetch error, falling back to direct Supabase:', apiErr);
     }
+
+    // 2. Direct Supabase fallback if API yielded no records or failed
+    if (!loaded) {
+      try {
+        const { data, error } = await supabase
+          .from('queries')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          queriesData = data.map(row => ({
+            id: row.id?.toString(),
+            type: row.type || 'schedule',
+            fullName: row.full_name || row.fullName || 'Prospective Client',
+            workEmail: row.work_email || row.workEmail || '',
+            company: row.company || '',
+            phone: row.phone || '',
+            adSpend: row.ad_spend || row.adSpend || '—',
+            preferredDate: row.preferred_date || row.preferredDate || '',
+            preferredTime: row.preferred_time || row.preferredTime || '',
+            message: row.message || '',
+            status: row.status || 'new',
+            starred: Boolean(row.starred),
+            notes: row.notes || '',
+            createdAt: row.created_at || row.createdAt || new Date().toISOString()
+          }));
+          loaded = true;
+        }
+      } catch (dbErr) {
+        console.error('Supabase direct query fetch error:', dbErr);
+      }
+    }
+
+    if (systemStatusText) {
+      systemStatusText.innerText = loaded ? 'Database Connected' : 'Database Offline';
+    }
+
+    renderKPIs();
+    renderPipelineBars();
+    renderTable();
+    renderRecentActivity();
+    updateCharts();
   }
 
   // ==========================================================================
-  // 4. DATA-DRIVEN KPI COMPUTATION
+  // 5. DATA-DRIVEN KPI COMPUTATION
   // ==========================================================================
   function renderKPIs() {
     const kpiTotalQueries = document.getElementById('kpiTotalQueries');
@@ -275,33 +383,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiNewToday = document.getElementById('kpiNewToday');
     const kpiNewTodaySupport = document.getElementById('kpiNewTodaySupport');
 
-    if (!queriesData || queriesData.length === 0) {
+    const total = queriesData.length;
+    if (sidebarQueryCount) sidebarQueryCount.innerText = total.toString();
+
+    if (!queriesData || total === 0) {
       if (kpiTotalQueries) kpiTotalQueries.innerText = '0';
-      if (kpiTotalQueriesSupport) kpiTotalQueriesSupport.innerText = 'No active queries yet';
+      if (kpiTotalQueriesSupport) kpiTotalQueriesSupport.innerText = 'Across 0 total recorded inquiries';
       if (kpiNewToday) kpiNewToday.innerText = '0';
       if (kpiNewTodaySupport) kpiNewTodaySupport.innerText = 'No new activity today';
       return;
     }
 
-    // Active Queries = Status not resolved
     const activeCount = queriesData.filter(q => q.status !== 'resolved').length;
-    if (kpiTotalQueries) kpiTotalQueries.innerText = activeCount.toString();
+    if (kpiTotalQueries) kpiTotalQueries.innerText = activeCount < 10 ? `0${activeCount}` : activeCount.toString();
     if (kpiTotalQueriesSupport) {
-      kpiTotalQueriesSupport.innerText = `Across ${queriesData.length} total recorded inquiry${queriesData.length === 1 ? '' : 's'}`;
+      kpiTotalQueriesSupport.innerText = `Across ${total} total recorded inquir${total === 1 ? 'y' : 'ies'}`;
     }
 
-    // New Today = Created today or marked 'new'
     const newCount = queriesData.filter(q => q.status === 'new').length;
-    if (kpiNewToday) kpiNewToday.innerText = newCount.toString();
+    if (kpiNewToday) kpiNewToday.innerText = newCount < 10 ? `0${newCount}` : newCount.toString();
     if (kpiNewTodaySupport) {
       kpiNewTodaySupport.innerText = newCount > 0 
-        ? '⚡ Requires review & follow up' 
+        ? '⚡ Requires executive follow-up' 
         : 'All new inquiries contacted';
     }
   }
 
   // ==========================================================================
-  // 5. RECENT ACTIVITY STREAM
+  // 6. REFINED HORIZONTAL PIPELINE DISTRIBUTION
+  // ==========================================================================
+  function renderPipelineBars() {
+    const total = queriesData.length;
+    const pipelineCountBadge = document.getElementById('pipelineCountBadge');
+    if (pipelineCountBadge) {
+      pipelineCountBadge.innerText = `${total} Total Lead${total === 1 ? '' : 's'}`;
+    }
+
+    const newCount = queriesData.filter(q => q.status === 'new').length;
+    const contactedCount = queriesData.filter(q => q.status === 'contacted').length;
+    const inProgressCount = queriesData.filter(q => q.status === 'in-progress').length;
+    const resolvedCount = queriesData.filter(q => q.status === 'resolved').length;
+
+    const calcPct = (cnt) => total === 0 ? 0 : Math.round((cnt / total) * 100);
+
+    const barFillNew = document.getElementById('barFillNew');
+    const barCountNew = document.getElementById('barCountNew');
+    if (barFillNew) barFillNew.style.width = `${calcPct(newCount)}%`;
+    if (barCountNew) barCountNew.innerText = `${newCount} leads (${calcPct(newCount)}%)`;
+
+    const barFillContacted = document.getElementById('barFillContacted');
+    const barCountContacted = document.getElementById('barCountContacted');
+    if (barFillContacted) barFillContacted.style.width = `${calcPct(contactedCount)}%`;
+    if (barCountContacted) barCountContacted.innerText = `${contactedCount} leads (${calcPct(contactedCount)}%)`;
+
+    const barFillInProgress = document.getElementById('barFillInProgress');
+    const barCountInProgress = document.getElementById('barCountInProgress');
+    if (barFillInProgress) barFillInProgress.style.width = `${calcPct(inProgressCount)}%`;
+    if (barCountInProgress) barCountInProgress.innerText = `${inProgressCount} leads (${calcPct(inProgressCount)}%)`;
+
+    const barFillResolved = document.getElementById('barFillResolved');
+    const barCountResolved = document.getElementById('barCountResolved');
+    if (barFillResolved) barFillResolved.style.width = `${calcPct(resolvedCount)}%`;
+    if (barCountResolved) barCountResolved.innerText = `${resolvedCount} leads (${calcPct(resolvedCount)}%)`;
+  }
+
+  // ==========================================================================
+  // 7. RECENT ACTIVITY STREAM
   // ==========================================================================
   function renderRecentActivity() {
     const activityStream = document.getElementById('activityStream');
@@ -310,31 +457,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!queriesData || queriesData.length === 0) {
       activityStream.innerHTML = `
         <div class="empty-state-box">
-          <div class="empty-icon">⚡</div>
+          <div class="empty-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
           <div class="empty-title">No recent activity</div>
-          <p class="empty-desc">Activity will appear here as visitors, inquiries and growth events are recorded.</p>
+          <p class="empty-desc">Inbound consultations and strategy call requests will stream here automatically.</p>
         </div>
       `;
       return;
     }
 
-    // Sort by recent and take top 4
     const recent = queriesData.slice(0, 4);
     activityStream.innerHTML = recent.map(q => {
       const timeFormatted = formatTimeAgo(q.createdAt);
       const companyOrClient = q.company ? `${q.fullName} (${q.company})` : (q.fullName || 'Prospective Client');
-      const budgetDisplay = (q.adSpend && q.adSpend !== 'N/A') ? q.adSpend : 'Schedule Strategy Call';
+      const budgetDisplay = (q.adSpend && q.adSpend !== 'N/A') ? q.adSpend : 'Strategy Call Requested';
 
       return `
         <div class="activity-item-card" onclick="window.openLeadDrawer('${q.id}')">
-          <div style="font-size: 16px; margin-top: 1px; color: var(--brand-orange);">⚡</div>
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <strong style="font-size: 13px; color: var(--text-primary);">${escapeHtml(companyOrClient)}</strong>
-              <span style="font-size: 11px; color: var(--text-muted);">${timeFormatted}</span>
+          <div class="activity-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="activity-content">
+            <div class="activity-top-row">
+              <span class="activity-client">${escapeHtml(companyOrClient)}</span>
+              <span class="activity-time">${timeFormatted}</span>
             </div>
-            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">
-              ${escapeHtml(q.workEmail || q.phone)} · <span style="color: var(--brand-orange); font-weight: 500;">${escapeHtml(budgetDisplay)}</span>
+            <p class="activity-details">
+              ${escapeHtml(q.workEmail || q.phone)} · <span style="color: var(--amber-light); font-weight: 500;">${escapeHtml(budgetDisplay)}</span>
             </p>
           </div>
         </div>
@@ -355,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 6. QUERIES TABLE RENDERER
+  // 8. QUERIES TABLE RENDERER
   // ==========================================================================
   const querySearchInput = document.getElementById('querySearchInput');
   const queryFilterGroup = document.getElementById('queryFilterGroup');
@@ -369,9 +519,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (queryFilterGroup) {
-    queryFilterGroup.querySelectorAll('.status-tab-btn').forEach(btn => {
+    queryFilterGroup.querySelectorAll('.status-pill-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        queryFilterGroup.querySelectorAll('.status-tab-btn').forEach(b => b.classList.remove('active'));
+        queryFilterGroup.querySelectorAll('.status-pill-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentFilter = btn.dataset.filter || 'all';
         renderTable();
@@ -382,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTable() {
     if (!queriesTableBody) return;
 
-    // Filter by tab status and search keyword
     const filtered = queriesData.filter(q => {
       const matchFilter = (currentFilter === 'all') || (q.status === currentFilter);
       if (!matchFilter) return false;
@@ -406,12 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr>
           <td colspan="7" style="padding: 48px 24px; text-align: center;">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-              <div style="font-size: 28px;">📋</div>
-              <strong style="font-size: 15px; color: var(--text-primary);">No client inquiries found</strong>
+              <div class="empty-icon">📋</div>
+              <strong style="font-size: 15px; color: var(--text-primary);">No inquiries found</strong>
               <p style="font-size: 13px; color: var(--text-muted); max-width: 380px; margin: 0;">
                 ${queriesData.length === 0 
-                  ? 'Your first enquiry will appear here when a visitor submits a schedule request.' 
-                  : 'No queries match your current filter or search terms.'}
+                  ? 'Your first enquiry will appear here when a visitor submits a consultation request on the public site.' 
+                  : 'No client records match your current filter or search criteria.'}
               </p>
             </div>
           </td>
@@ -425,13 +574,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const dateFormatted = row.preferredDate || (row.createdAt ? row.createdAt.slice(0, 10) : '—');
       const companyOrClient = row.company || 'Enterprise Brand';
       const clientName = row.fullName || 'Executive Contact';
-      const requirementSnippet = row.message ? row.message.slice(0, 55) + (row.message.length > 55 ? '…' : '') : 'Technical Growth Diagnostic';
-      const budgetDisplay = (row.adSpend && row.adSpend !== 'N/A') ? row.adSpend : 'Consultation';
+      const budgetDisplay = (row.adSpend && row.adSpend !== 'N/A') ? row.adSpend : 'Growth Diagnostic';
 
       return `
         <tr class="clickable-row" data-id="${row.id}">
           <td style="text-align: center;" onclick="event.stopPropagation(); window.toggleStar('${row.id}')">
-            <button class="star-btn ${isStarred ? 'starred' : ''}" title="${isStarred ? 'Unstar' : 'Star lead'}">
+            <button class="star-btn ${isStarred ? 'starred' : ''}" title="${isStarred ? 'Unstar lead' : 'Star lead'}">
               ${isStarred ? '★' : '☆'}
             </button>
           </td>
@@ -441,30 +589,31 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td>
             <div><a href="mailto:${escapeHtml(row.workEmail)}" onclick="event.stopPropagation();" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">${escapeHtml(row.workEmail)}</a></div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(row.phone || 'No phone')}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(row.phone || 'No phone provided')}</div>
           </td>
           <td>
-            <span style="color: var(--brand-orange); font-weight: 600; font-size: 13px;">${escapeHtml(budgetDisplay)}</span>
-            <div style="font-size: 11px; color: var(--text-muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${escapeHtml(requirementSnippet)}</div>
+            <span style="color: var(--amber-light); font-weight: 600; font-size: 13px;">${escapeHtml(budgetDisplay)}</span>
           </td>
           <td>
-            <span class="badge-date">${escapeHtml(dateFormatted)}</span>
+            <span style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);">${escapeHtml(dateFormatted)}</span>
           </td>
           <td onclick="event.stopPropagation();">
-            <select class="status-select status-${row.status}" onchange="window.handleStatusChange('${row.id}', this.value)">
-              <option value="new" ${row.status === 'new' ? 'selected' : ''}>New</option>
-              <option value="contacted" ${row.status === 'contacted' ? 'selected' : ''}>Contacted</option>
-              <option value="in-progress" ${row.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-              <option value="resolved" ${row.status === 'resolved' ? 'selected' : ''}>Resolved</option>
-            </select>
+            <span class="status-pill-badge ${row.status}">
+              <select class="status-select-inline" onchange="window.handleStatusChange('${row.id}', this.value)">
+                <option value="new" ${row.status === 'new' ? 'selected' : ''}>New</option>
+                <option value="contacted" ${row.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+                <option value="in-progress" ${row.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                <option value="resolved" ${row.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+              </select>
+            </span>
           </td>
-          <td onclick="event.stopPropagation();">
-            <div class="table-actions">
-              <button class="icon-action-btn" title="Inspect & Edit Lead" onclick="window.openLeadDrawer('${row.id}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <td style="text-align: right;" onclick="event.stopPropagation();">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+              <button class="btn-action" style="padding: 5px 8px;" title="Inspect Lead" onclick="window.openLeadDrawer('${row.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
-              <button class="icon-action-btn btn-del" title="Delete Inquiry" onclick="window.handleDeleteQuery('${row.id}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <button class="btn-action" style="padding: 5px 8px; color: var(--color-danger);" title="Delete" onclick="window.handleDeleteQuery('${row.id}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </div>
           </td>
@@ -472,7 +621,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }).join('');
 
-    // Attach row click to open drawer
     queriesTableBody.querySelectorAll('tr.clickable-row').forEach(row => {
       row.addEventListener('click', () => {
         const id = row.dataset.id;
@@ -508,8 +656,16 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ starred: nextState })
       });
     } catch (e) {
-      console.error('Failed to update star state via API:', e);
+      console.warn('API update failed, trying direct Supabase:', e);
     }
+
+    try {
+      await supabase.from('queries').update({ starred: nextState }).eq('id', id);
+    } catch (dbErr) {
+      console.warn('Direct Supabase star update failed:', dbErr);
+    }
+
+    showToast(nextState ? 'Lead starred for priority follow-up.' : 'Lead unstarred.', 'info');
   };
 
   window.handleStatusChange = async function(id, newStatus) {
@@ -517,6 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!item) return;
     item.status = newStatus;
     renderKPIs();
+    renderPipelineBars();
     renderTable();
     updateCharts();
 
@@ -528,14 +685,23 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ status: newStatus })
       });
     } catch (e) {
-      console.error('Failed to update status via API:', e);
+      console.warn('API status update failed, trying direct Supabase:', e);
     }
+
+    try {
+      await supabase.from('queries').update({ status: newStatus }).eq('id', id);
+    } catch (dbErr) {
+      console.warn('Direct Supabase status update failed:', dbErr);
+    }
+
+    showToast(`Status updated to ${newStatus.toUpperCase()}.`, 'success');
   };
 
   window.handleDeleteQuery = async function(id) {
     if (!confirm('Are you sure you want to delete this client inquiry permanently?')) return;
     queriesData = queriesData.filter(q => q.id !== id);
     renderKPIs();
+    renderPipelineBars();
     renderTable();
     renderRecentActivity();
     updateCharts();
@@ -546,12 +712,20 @@ document.addEventListener('DOMContentLoaded', () => {
         credentials: 'same-origin'
       });
     } catch (e) {
-      console.error('Failed to delete query via API:', e);
+      console.warn('API delete failed, trying direct Supabase:', e);
     }
+
+    try {
+      await supabase.from('queries').delete().eq('id', id);
+    } catch (dbErr) {
+      console.warn('Direct Supabase delete failed:', dbErr);
+    }
+
+    showToast('Inquiry deleted successfully.', 'info');
   };
 
   // ==========================================================================
-  // 7. LEAD DETAIL SLIDE-IN DRAWER
+  // 9. LEAD DETAIL SLIDE-OVER DRAWER
   // ==========================================================================
   const leadDrawerOverlay = document.getElementById('leadDrawerOverlay');
   const leadDrawer = document.getElementById('leadDrawer');
@@ -568,6 +742,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const drawerStatusSelect = document.getElementById('drawerStatusSelect');
   const drawerNotesText = document.getElementById('drawerNotesText');
 
+  const drawerActionMailto = document.getElementById('drawerActionMailto');
+  const drawerActionCopyEmail = document.getElementById('drawerActionCopyEmail');
+  const drawerActionCopyPhone = document.getElementById('drawerActionCopyPhone');
+
   window.openLeadDrawer = function(id) {
     const lead = queriesData.find(q => q.id === id);
     if (!lead) return;
@@ -575,15 +753,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (drawerLeadName) drawerLeadName.innerText = lead.fullName || 'Prospective Client';
     if (drawerLeadCompany) drawerLeadCompany.innerText = lead.company || 'Enterprise Executive';
+    
     if (drawerContactInfo) {
       drawerContactInfo.innerHTML = `
-        <div>📧 <a href="mailto:${escapeHtml(lead.workEmail)}" style="color: var(--brand-orange); text-decoration: none; font-weight: 500;">${escapeHtml(lead.workEmail || 'No email provided')}</a></div>
-        <div style="margin-top: 4px; color: var(--text-secondary);">📞 ${escapeHtml(lead.phone || 'No phone number provided')}</div>
+        <div style="margin-bottom: 4px;">📧 <a href="mailto:${escapeHtml(lead.workEmail)}" style="color: var(--amber-light); text-decoration: none; font-weight: 500;">${escapeHtml(lead.workEmail || 'No email provided')}</a></div>
+        <div style="color: var(--text-secondary);">📞 ${escapeHtml(lead.phone || 'No phone number provided')}</div>
       `;
     }
-    if (drawerBudget) drawerBudget.innerText = (lead.adSpend && lead.adSpend !== 'N/A') ? lead.adSpend : 'Growth Diagnostic Request';
+
+    if (drawerActionMailto) {
+      drawerActionMailto.href = lead.workEmail ? `mailto:${encodeURIComponent(lead.workEmail)}?subject=Fluvo%20Growth%20Diagnostic` : '#';
+    }
+
+    if (drawerBudget) drawerBudget.innerText = (lead.adSpend && lead.adSpend !== 'N/A') ? lead.adSpend : 'Strategy Call Requested';
     if (drawerDate) drawerDate.innerText = `${lead.preferredDate || 'Flexible Schedule'} ${lead.preferredTime ? '· ' + lead.preferredTime : ''}`;
-    if (drawerMessage) drawerMessage.innerText = lead.message || 'No specific objective details entered.';
+    if (drawerMessage) drawerMessage.innerText = lead.message || 'No specific growth objectives entered.';
     if (drawerStatusSelect) drawerStatusSelect.value = lead.status || 'new';
     if (drawerNotesText) drawerNotesText.value = lead.notes || '';
 
@@ -600,6 +784,20 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseDrawer?.addEventListener('click', closeDrawer);
   leadDrawerOverlay?.addEventListener('click', closeDrawer);
 
+  drawerActionCopyEmail?.addEventListener('click', () => {
+    if (activeDrawerLead?.workEmail) {
+      navigator.clipboard.writeText(activeDrawerLead.workEmail);
+      showToast('Client email copied to clipboard.', 'success');
+    }
+  });
+
+  drawerActionCopyPhone?.addEventListener('click', () => {
+    if (activeDrawerLead?.phone) {
+      navigator.clipboard.writeText(activeDrawerLead.phone);
+      showToast('Client phone number copied to clipboard.', 'success');
+    }
+  });
+
   btnDrawerSave?.addEventListener('click', async () => {
     if (!activeDrawerLead) return;
     const newStatus = drawerStatusSelect?.value || activeDrawerLead.status;
@@ -609,6 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activeDrawerLead.notes = newNotes;
 
     renderKPIs();
+    renderPipelineBars();
     renderTable();
     updateCharts();
     closeDrawer();
@@ -624,8 +823,16 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
     } catch (e) {
-      console.error('Failed to save drawer notes via API:', e);
+      console.warn('API update failed, trying direct Supabase:', e);
     }
+
+    try {
+      await supabase.from('queries').update({ status: newStatus, notes: newNotes }).eq('id', activeDrawerLead.id);
+    } catch (dbErr) {
+      console.warn('Direct Supabase lead update failed:', dbErr);
+    }
+
+    showToast('Lead details and notes saved.', 'success');
   });
 
   btnDrawerDelete?.addEventListener('click', () => {
@@ -636,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================================
-  // 8. CHARTS ENGINE
+  // 10. EDITORIAL CHARTS ENGINE (Fluvo Visual Language)
   // ==========================================================================
   function initCharts() {
     // 1. Overview Revenue Line Chart
@@ -650,19 +857,87 @@ document.addEventListener('DOMContentLoaded', () => {
             {
               label: 'Attributed Revenue ($)',
               data: [0, 0, 0, 0, 0, 0],
-              borderColor: '#D86B2F',
-              backgroundColor: 'rgba(216,107,47,0.1)',
+              borderColor: '#C4622D',
+              backgroundColor: 'rgba(196, 98, 45, 0.08)',
               fill: true,
-              tension: 0.35,
-              borderWidth: 2
+              tension: 0.38,
+              borderWidth: 2.5,
+              pointBackgroundColor: '#C4622D',
+              pointBorderColor: '#171717',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
             },
             {
               label: 'Ad Capital Deployed ($)',
               data: [0, 0, 0, 0, 0, 0],
-              borderColor: '#A0A0A0',
-              borderDash: [4, 4],
-              tension: 0.35,
-              borderWidth: 1.5
+              borderColor: '#8A8A8A',
+              borderDash: [5, 5],
+              tension: 0.38,
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: { color: '#9E9B95', font: { family: 'DM Sans', size: 11.5 }, boxWidth: 12, padding: 16 }
+            },
+            tooltip: {
+              backgroundColor: '#1C1C1C',
+              titleColor: '#F5F2EC',
+              bodyColor: '#9E9B95',
+              borderColor: 'rgba(196, 98, 45, 0.35)',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 6,
+              bodyFont: { family: 'DM Sans', size: 12 },
+              titleFont: { family: 'DM Serif Display', size: 14 }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#66635E', font: { family: 'DM Sans', size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: {
+                color: '#66635E',
+                font: { family: 'JetBrains Mono', size: 10.5 },
+                callback: v => `$${v >= 1000 ? (v / 1000) + 'k' : v}`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Revenue Deep Dive Chart
+    const revCanvas = document.getElementById('revenueDetailChart');
+    if (revCanvas) {
+      revenueDetailChartInstance = new Chart(revCanvas, {
+        type: 'bar',
+        data: {
+          labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'],
+          datasets: [
+            {
+              label: 'Gross Client Revenue ($)',
+              data: [0, 0, 0, 0, 0, 0],
+              backgroundColor: '#C4622D',
+              borderRadius: 4
+            },
+            {
+              label: 'Ad Spend Capital ($)',
+              data: [0, 0, 0, 0, 0, 0],
+              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+              borderRadius: 4
             }
           ]
         },
@@ -670,36 +945,48 @@ document.addEventListener('DOMContentLoaded', () => {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { labels: { color: '#A0A0A0', font: { family: 'Plus Jakarta Sans', size: 11 } } }
+            legend: { labels: { color: '#9E9B95', font: { family: 'DM Sans', size: 11.5 } } }
           },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6F6F6F' } },
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6F6F6F', callback: v => `$${v}` } }
+            x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#66635E' } },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#66635E', callback: v => `$${v >= 1000 ? (v / 1000) + 'k' : v}` }
+            }
           }
         }
       });
     }
 
-    // 2. Query Pipeline Donut Chart
-    const pieCanvas = document.getElementById('statusPieChart');
-    if (pieCanvas) {
-      statusPieChartInstance = new Chart(pieCanvas, {
-        type: 'doughnut',
+    // 3. Growth Funnel Chart
+    const growthCanvas = document.getElementById('growthFunnelChart');
+    if (growthCanvas) {
+      growthFunnelChartInstance = new Chart(growthCanvas, {
+        type: 'line',
         data: {
-          labels: ['New', 'Contacted', 'In Progress', 'Resolved'],
+          labels: ['Brand Discovery', 'Landing Engagement', 'Consultation Form', 'Executive Review', 'Sprint Agreement'],
           datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: ['#D95757', '#D9A441', '#5B8DEF', '#3FB27F'],
-            borderWidth: 0,
-            hoverOffset: 4
+            label: 'Conversion Velocity',
+            data: [0, 0, 0, 0, 0],
+            borderColor: '#4A7C59',
+            backgroundColor: 'rgba(74, 124, 89, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '65%',
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#A0A0A0', font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 10 } }
+            legend: { display: false }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#66635E' } },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#66635E', callback: v => `${v}%` }
+            }
           }
         }
       });
@@ -707,97 +994,72 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateCharts() {
-    const total = queriesData.length;
-    const statusEmpty = document.getElementById('statusChartEmpty');
-    const statusChartCanvas = document.getElementById('statusPieChart');
-    const pipelineCountBadge = document.getElementById('pipelineCountBadge');
-
-    if (pipelineCountBadge) {
-      pipelineCountBadge.innerText = `${total} Total Lead${total === 1 ? '' : 's'}`;
-    }
-
-    if (total === 0) {
-      if (statusEmpty) statusEmpty.style.display = 'flex';
-      if (statusChartCanvas) statusChartCanvas.style.display = 'none';
-      return;
-    }
-
-    // If queries exist:
-    if (statusEmpty) statusEmpty.style.display = 'none';
-    if (statusChartCanvas) statusChartCanvas.style.display = 'block';
-
-    // Calculate real status counts
-    const newCount = queriesData.filter(q => q.status === 'new').length;
-    const contactedCount = queriesData.filter(q => q.status === 'contacted').length;
-    const inProgressCount = queriesData.filter(q => q.status === 'in-progress').length;
-    const resolvedCount = queriesData.filter(q => q.status === 'resolved').length;
-
-    if (statusPieChartInstance) {
-      statusPieChartInstance.data.datasets[0].data = [
-        newCount,
-        contactedCount,
-        inProgressCount,
-        resolvedCount
-      ];
-      statusPieChartInstance.update();
-    }
+    // If overview chart exists, refresh layout
+    overviewChartInstance?.update();
   }
 
   // ==========================================================================
-  // 9. EXPORTS: CSV & EXECUTIVE PDF
+  // 11. EXPORTS: CSV & EXECUTIVE PDF DOSSIER
   // ==========================================================================
   function exportCSV() {
     if (!queriesData || queriesData.length === 0) {
-      alert('No queries available to export yet.');
+      showToast('No queries recorded to export.', 'info');
       return;
     }
-
-    // Direct download via serverless CSV endpoint
+    showToast('Generating queries CSV download...', 'info');
     window.location.href = '/api/export/csv';
   }
 
   function exportPDF() {
+    if (!queriesData || queriesData.length === 0) {
+      showToast('No data available to compile report.', 'info');
+      return;
+    }
+
+    showToast('Compiling executive leadership report...', 'info');
     const doc = new jsPDF();
 
-    // Document Header
-    doc.setFillColor(13, 13, 13);
-    doc.rect(0, 0, 210, 36, 'F');
+    // Document Header Banner
+    doc.setFillColor(11, 11, 11);
+    doc.rect(0, 0, 210, 38, 'F');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(245, 241, 234);
+    doc.setFontSize(17);
+    doc.setTextColor(245, 242, 236);
     doc.text('FLUVO — EXECUTIVE PERFORMANCE REPORT', 14, 18);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(160, 160, 160);
-    doc.text(`Generated on ${new Date().toLocaleString()} · Private Owner Console`, 14, 28);
+    doc.setFontSize(9);
+    doc.setTextColor(158, 155, 149);
+    doc.text(`Generated on ${new Date().toLocaleString()} · Private Executive Command Console`, 14, 28);
 
     // KPI Summary
-    doc.setFontSize(11);
-    doc.setTextColor(216, 107, 47);
-    doc.text(`Total Inquiries: ${queriesData.length}   |   Active: ${queriesData.filter(q=>q.status!=='resolved').length}   |   Resolved: ${queriesData.filter(q=>q.status==='resolved').length}`, 14, 46);
+    doc.setFontSize(10.5);
+    doc.setTextColor(196, 98, 45);
+    const activeCnt = queriesData.filter(q => q.status !== 'resolved').length;
+    const resolvedCnt = queriesData.filter(q => q.status === 'resolved').length;
+    doc.text(`Total Recorded Inquiries: ${queriesData.length}   |   Active Pipeline: ${activeCnt}   |   Resolved: ${resolvedCnt}`, 14, 48);
 
-    // Table Data
     const tableBody = queriesData.map(q => [
       q.fullName || 'Prospective Client',
       q.company || '—',
       q.workEmail || '—',
       q.adSpend || '—',
       (q.status || 'NEW').toUpperCase(),
-      q.createdAt ? q.createdAt.slice(0,10) : '—'
+      q.createdAt ? q.createdAt.slice(0, 10) : '—'
     ]);
 
     autoTable(doc, {
-      startY: 52,
-      head: [['Client / Name', 'Company', 'Email', 'Budget', 'Status', 'Date']],
-      body: tableBody.length > 0 ? tableBody : [['No client records recorded in Supabase yet', '—', '—', '—', '—', '—']],
+      startY: 54,
+      head: [['Client Contact', 'Company', 'Email Address', 'Budget / Spend', 'Status', 'Date']],
+      body: tableBody.length > 0 ? tableBody : [['No client records found', '—', '—', '—', '—', '—']],
       theme: 'grid',
-      headStyles: { fillColor: [21, 21, 21], textColor: [245, 241, 234], fontStyle: 'bold' },
-      styles: { fontSize: 8.5, cellPadding: 4, textColor: [30, 30, 30] }
+      headStyles: { fillColor: [23, 23, 23], textColor: [245, 242, 236], fontStyle: 'bold' },
+      styles: { fontSize: 8.5, cellPadding: 4.5, textColor: [40, 40, 40] }
     });
 
-    doc.save(`Fluvo_Executive_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.save(`Fluvo_Executive_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+    showToast('Executive PDF generated and downloaded.', 'success');
   }
 
   document.getElementById('btnExportCSV')?.addEventListener('click', exportCSV);

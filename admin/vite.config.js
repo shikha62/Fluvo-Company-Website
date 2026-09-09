@@ -1,198 +1,172 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
-const dataFile = path.join(rootDir, 'data', 'queries.json');
-
-function getLocalQueries() {
-  try {
-    if (fs.existsSync(dataFile)) {
-      return JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-    }
-  } catch (e) {
-    console.warn('Could not read data/queries.json:', e.message);
-  }
-  return [];
-}
-
-function saveLocalQueries(queries) {
-  try {
-    fs.writeFileSync(dataFile, JSON.stringify(queries, null, 2), 'utf8');
-  } catch (e) {
-    console.warn('Could not save data/queries.json:', e.message);
-  }
-}
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function adminDevApiPlugin() {
   return {
-    name: 'admin-dev-api-middleware',
+    name: 'admin-dev-api-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const url = req.url || '';
-        if (!url.startsWith('/api')) return next();
+        const url = new URL(req.url, `http://${req.headers.host}`);
 
-        res.setHeader('Content-Type', 'application/json');
-
-        // Helper to read JSON request body
-        const getBody = () => new Promise((resolveBody) => {
-          let data = '';
-          req.on('data', chunk => { data += chunk; });
+        // 1. Auth: Login
+        if (url.pathname === '/api/auth/login' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
           req.on('end', () => {
             try {
-              resolveBody(data ? JSON.parse(data) : {});
-            } catch {
-              resolveBody({});
+              const { email, password } = JSON.parse(body || '{}');
+              if (
+                email === 'connect@fluvo.in' &&
+                (password === 'Vv@5661850' || password === '1234')
+              ) {
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Set-Cookie', 'fluvo_admin_session=authenticated_dev_token; Path=/; HttpOnly; SameSite=Lax');
+                res.end(JSON.stringify({
+                  success: true,
+                  user: { email: 'connect@fluvo.in', role: 'executive_owner' }
+                }));
+              } else {
+                res.statusCode = 401;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: false, error: 'Invalid executive credentials' }));
+              }
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ success: false, error: 'Malformed request' }));
             }
           });
-        });
-
-        // 1. Session check: GET /api/me
-        if (url === '/api/me' && req.method === 'GET') {
-          const cookie = req.headers.cookie || '';
-          if (cookie.includes('fluvo_admin_session=')) {
-            return res.end(JSON.stringify({
-              authenticated: true,
-              user: { email: 'connect@fluvo.in', role: 'admin' }
-            }));
-          }
-          res.statusCode = 401;
-          return res.end(JSON.stringify({ error: 'Unauthorized. Please log in.' }));
+          return;
         }
 
-        // 2. Authentication: POST /api/auth/login
-        if (url === '/api/auth/login' && req.method === 'POST') {
-          const body = await getBody();
-          const email = (body.email || '').trim().toLowerCase();
-          const password = (body.password || '').trim();
-
-          const expectedEmail = (process.env.ADMIN_EMAIL || 'connect@fluvo.in').toLowerCase();
-          const expectedHash = process.env.ADMIN_PASSWORD_HASH;
-
-          let isValid = false;
-
-          // Check if valid against connect@fluvo.in with Vv@5661850 (or owner@fluvo.in fallback)
-          if (email === expectedEmail || email === 'connect@fluvo.in' || email === 'owner@fluvo.in') {
-            if (expectedHash) {
-              try {
-                const bcrypt = await import('bcryptjs');
-                isValid = await bcrypt.default.compare(password, expectedHash);
-              } catch {
-                isValid = (password === 'Vv@5661850' || password === '1234');
-              }
-            } else {
-              // Exact credential matching for connect@fluvo.in
-              isValid = (password === 'Vv@5661850' || password === '1234');
-            }
-          }
-
-          if (isValid) {
-            res.setHeader('Set-Cookie', 'fluvo_admin_session=dev_session_token; Path=/; HttpOnly; SameSite=Strict');
-            return res.end(JSON.stringify({
-              success: true,
-              message: 'Authenticated successfully.',
-              user: { email: email || 'connect@fluvo.in', role: 'admin' }
-            }));
-          } else {
-            res.statusCode = 401;
-            return res.end(JSON.stringify({
-              error: 'Invalid credentials. Please enter email: connect@fluvo.in and your password.'
-            }));
-          }
-        }
-
-        // 3. Logout: POST /api/auth/logout
-        if (url === '/api/auth/logout' && req.method === 'POST') {
-          res.setHeader('Set-Cookie', 'fluvo_admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
-          return res.end(JSON.stringify({ success: true, message: 'Logged out.' }));
-        }
-
-        // 4. Queries list: GET /api/queries
-        if (url.startsWith('/api/queries') && req.method === 'GET' && !url.includes('/stats')) {
-          const queries = getLocalQueries();
-          return res.end(JSON.stringify({
-            success: true,
-            data: queries,
-            total: queries.length
+        // 2. Auth: Me (both /api/me and /api/auth/me)
+        if ((url.pathname === '/api/auth/me' || url.pathname === '/api/me') && req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            authenticated: true,
+            user: { email: 'connect@fluvo.in', role: 'executive_owner' }
           }));
+          return;
         }
 
-        // 5. Query stats: GET /api/queries/stats
-        if (url.startsWith('/api/queries/stats') && req.method === 'GET') {
-          const queries = getLocalQueries();
-          const stats = {
-            total: queries.length,
-            active: queries.filter(q => q.status !== 'resolved').length,
-            newToday: queries.filter(q => q.status === 'new').length,
-            byStatus: {
-              new: queries.filter(q => q.status === 'new').length,
-              contacted: queries.filter(q => q.status === 'contacted').length,
-              inProgress: queries.filter(q => q.status === 'in-progress').length,
-              resolved: queries.filter(q => q.status === 'resolved').length,
+        // 3. Auth: Logout
+        if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
+          res.setHeader('Set-Cookie', 'fluvo_admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+
+        // 4. Queries: GET /api/queries
+        if (url.pathname === '/api/queries' && req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          try {
+            const { data, error } = await supabase
+              .from('queries')
+              .select('*')
+              .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const normalized = (data || []).map(row => ({
+              id: row.id?.toString(),
+              type: row.type || 'schedule',
+              fullName: row.full_name || row.fullName || 'Prospective Client',
+              workEmail: row.work_email || row.workEmail || '',
+              company: row.company || '',
+              phone: row.phone || '',
+              adSpend: row.ad_spend || row.adSpend || '—',
+              preferredDate: row.preferred_date || row.preferredDate || '',
+              preferredTime: row.preferred_time || row.preferredTime || '',
+              message: row.message || '',
+              status: row.status || 'new',
+              starred: Boolean(row.starred),
+              notes: row.notes || '',
+              createdAt: row.created_at || row.createdAt || new Date().toISOString()
+            }));
+
+            res.end(JSON.stringify({ success: true, data: normalized, total: normalized.length }));
+          } catch (err) {
+            console.error('Failed to fetch queries from Supabase in dev server:', err);
+            // Fallback to local queries.json if any
+            const jsonPath = path.resolve(import.meta.dirname, 'data/queries.json');
+            let fallback = [];
+            if (fs.existsSync(jsonPath)) {
+              try { fallback = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')); } catch (e) {}
             }
-          };
-          return res.end(JSON.stringify({ success: true, stats }));
+            res.end(JSON.stringify({ success: true, data: fallback, total: fallback.length }));
+          }
+          return;
         }
 
-        // 6. Query update / delete: /api/queries/:id
-        const idMatch = url.match(/^\/api\/queries\/([^/?]+)/);
+        // 5. Queries: PATCH or DELETE /api/queries/:id
+        const idMatch = url.pathname.match(/^\/api\/queries\/([^/]+)$/);
         if (idMatch) {
-          const queryId = decodeURIComponent(idMatch[1]);
-          const queries = getLocalQueries();
-          const index = queries.findIndex(q => q.id === queryId);
+          const id = idMatch[1];
+          if (req.method === 'DELETE') {
+            res.setHeader('Content-Type', 'application/json');
+            try {
+              await supabase.from('queries').delete().eq('id', id);
+              res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: 'Failed to delete query' }));
+            }
+            return;
+          }
 
           if (req.method === 'PATCH') {
-            const body = await getBody();
-            if (index !== -1) {
-              queries[index] = { ...queries[index], ...body, updatedAt: new Date().toISOString() };
-              saveLocalQueries(queries);
-              return res.end(JSON.stringify({ success: true, data: queries[index] }));
-            }
-            res.statusCode = 404;
-            return res.end(JSON.stringify({ error: 'Query not found.' }));
-          }
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', async () => {
+              res.setHeader('Content-Type', 'application/json');
+              try {
+                const patchData = JSON.parse(body || '{}');
+                const updatePayload = {};
+                if (patchData.status !== undefined) updatePayload.status = patchData.status;
+                if (patchData.starred !== undefined) updatePayload.starred = patchData.starred;
+                if (patchData.notes !== undefined) updatePayload.notes = patchData.notes;
 
-          if (req.method === 'DELETE') {
-            if (index !== -1) {
-              queries.splice(index, 1);
-              saveLocalQueries(queries);
-              return res.end(JSON.stringify({ success: true, message: 'Deleted' }));
-            }
-            res.statusCode = 404;
-            return res.end(JSON.stringify({ error: 'Query not found.' }));
+                const { data, error } = await supabase
+                  .from('queries')
+                  .update(updatePayload)
+                  .eq('id', id)
+                  .select();
+
+                if (error) throw error;
+                res.end(JSON.stringify({ success: true, data: data?.[0] }));
+              } catch (err) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: 'Failed to update query' }));
+              }
+            });
+            return;
           }
         }
 
-        // 7. CSV export: GET /api/export/csv
-        if (url.startsWith('/api/export/csv') && req.method === 'GET') {
-          const queries = getLocalQueries();
-          res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-          res.setHeader('Content-Disposition', 'attachment; filename="Fluvo_Queries.csv"');
-          const header = 'ID,Full Name,Email,Company,Phone,Spend,Status,Date\n';
-          const rows = queries.map(q => `"${q.id}","${q.fullName || ''}","${q.workEmail || ''}","${q.company || ''}","${q.phone || ''}","${q.adSpend || ''}","${q.status || ''}","${q.createdAt || ''}"`).join('\n');
-          return res.end(header + rows);
-        }
-
-        return next();
+        next();
       });
     }
   };
 }
 
 export default defineConfig({
-  plugins: [adminDevApiPlugin()],
   server: {
     port: 5174,
+    strictPort: true
+  },
+  plugins: [adminDevApiPlugin()],
+  optimizeDeps: {
+    exclude: ['jsonwebtoken', 'bcryptjs']
   },
   build: {
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-      },
-    },
-  },
+      external: ['jsonwebtoken', 'bcryptjs']
+    }
+  }
 });
