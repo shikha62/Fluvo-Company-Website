@@ -7,11 +7,14 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite website --port 5173",
+    "dev:website": "vite website --port 5173",
+    "dev:admin": "vite admin --port 5174",
     "server": "node server.js",
-    "start": "node server.js",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build:website": "vite build website",
+    "build:admin": "vite build admin",
+    "preview:website": "vite preview website",
+    "preview:admin": "vite preview admin"
   },
   "devDependencies": {
     "vite": "^8.2.0"

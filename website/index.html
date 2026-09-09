@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluvo — Technology-Driven Digital Growth &amp; Performance Engineering</title>
+  <meta name="description" content="Fluvo combines technical SEO, performance marketing, GA4 attribution, marketing automation, Core Web Vitals and high-performance web engineering to scale enterprise brands.">
+  <meta name="keywords" content="performance marketing agency, technical SEO, Generative Engine Optimization, GEO, GA4 attribution, Core Web Vitals, marketing automation, conversion rate optimization, CRO">
+  <meta name="author" content="Fluvo">
+  <link rel="canonical" href="https://fluvo.in/">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fluvo.in/">
+  <meta property="og:title" content="Fluvo — Technology-Driven Digital Growth &amp; Performance Engineering">
+  <meta property="og:description" content="Strategic performance marketing, technical SEO, first-party attribution, and high-performance web engineering for high-growth enterprise brands.">
+  <meta property="og:site_name" content="Fluvo">
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fluvo — Technology-Driven Digital Growth &amp; Performance Engineering">
+  <meta name="twitter:description" content="Strategic performance marketing, technical SEO, first-party attribution, and high-performance web engineering for high-growth enterprise brands.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans (Brand Logo) + DM Serif Display + DM Sans + Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/style.css">
+
+  <!-- JSON-LD Structured Data: Organization, WebSite & FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://fluvo.in/#organization",
+        "name": "Fluvo",
+        "url": "https://fluvo.in",
+        "logo": "https://fluvo.in/favicon.svg",
+        "description": "Technology-driven digital growth and performance marketing agency specializing in technical SEO, paid media, marketing automation, and conversion engineering.",
+        "email": "hello@fluvo.in",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Noida",
+          "addressRegion": "UP",
+          "addressCountry": "IN"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://fluvo.in/#website",
+        "url": "https://fluvo.in",
+        "name": "Fluvo",
+        "publisher": { "@id": "https://fluvo.in/#organization" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://fluvo.in/?s={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://fluvo.in/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How is Fluvo different from traditional performance agencies?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We operate as a technical growth partner combining performance marketing, full-stack web engineering, and first-party attribution. Every engagement is led by senior growth strategists in agile 90-day sprints focused on unit economics (CAC, ROAS, LTV) with zero lock-in contracts."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What digital marketing and web services do you provide?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We deliver full-funnel growth architecture: Technical SEO, Core Web Vitals optimization, Generative Engine Optimization (GEO), paid media (Google/Meta/LinkedIn Ads), high-performance web development, marketing automation, CRM pipelines, and Conversion Rate Optimization (CRO)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do you handle attribution post-iOS 14.5?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We implement custom first-party server-side tracking (Meta CAPI via Cloudflare/AWS, Google Tag Manager Server Container, GA4 event models) combined with blended MER and Media Mix Modeling to bypass browser signal loss."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do you approach Generative Engine Optimization (GEO) & AI search?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We structure technical content, JSON-LD schema entity graphs, and domain citations so modern AI search systems (ChatGPT, Perplexity, Google AI Overviews) index and cite your brand as an authoritative entity."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How fast can we launch our first growth sprint?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Following our initial technical audit and discovery session, we complete tracking instrumentation and CRM integration within 72 hours. Initial campaigns, optimized landing pages, and SEO enhancements go live in Days 7–10."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. STICKY NAVBAR WITH INTERACTIVE MEGA-PANELS
+       ========================================================================= -->
+  <header class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" aria-label="Fluvo Home">
+        <span class="logo-text">Flu<span class="logo-accent">vo</span></span>
+      </a>
+
+      <!-- Desktop Navigation Links with Hover Mega-Panels -->
+      <nav class="nav-links" aria-label="Main Navigation">
+        <!-- Item 1: Capabilities -->
+        <div class="nav-item">
+          <a href="#services" class="nav-link">
+            <span>What We Offer</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="nav-mega mega-capabilities">
+            <div class="mega-columns">
+              <div class="mega-column">
+                <a href="#all-offers" class="mega-service">Growth &amp; Marketing Strategy</a>
+                <a href="#all-offers" class="mega-service">AI Services</a>
+                <a href="#all-offers" class="mega-service">Paid Social</a>
+                <a href="#all-offers" class="mega-service">Paid Search</a>
+                <a href="#all-offers" class="mega-service">B2B Advertising</a>
+                <a href="#all-offers" class="mega-service">Affiliate Marketing</a>
+                <a href="#all-offers" class="mega-service">SEO</a>
+                <a href="#all-offers" class="mega-service">GEO</a>
+              </div>
+              <div class="mega-column">
+                <a href="#all-offers" class="mega-service">Product Marketing</a>
+                <a href="#all-offers" class="mega-service">Product-Led Growth</a>
+                <a href="#all-offers" class="mega-service">Podcast, Radio, TV</a>
+                <a href="#all-offers" class="mega-service">Amazon Marketing</a>
+                <a href="#all-offers" class="mega-service">Ecommerce Marketplaces</a>
+                <a href="#all-offers" class="mega-service">Content Marketing</a>
+                <a href="#all-offers" class="mega-service">Social Media &amp; Community</a>
+                <a href="#all-offers" class="mega-service">Influencer &amp; Creator Marketing</a>
+              </div>
+              <div class="mega-column">
+                <a href="#all-offers" class="mega-service">Lifecycle Marketing</a>
+                <a href="#all-offers" class="mega-service">CRO</a>
+                <a href="#all-offers" class="mega-service">Direct Mail</a>
+                <a href="#all-offers" class="mega-service">Creative Services</a>
+                <a href="#all-offers" class="mega-service">Analytics &amp; Attribution</a>
+                <a href="#all-offers" class="mega-service">Marketing Operations</a>
+                <a href="#all-offers" class="mega-service">All Capabilities</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2: Process -->
+        <div class="nav-item">
+          <a href="#process" class="nav-link">
+            <span>Who We Work With</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="nav-mega" style="min-width: 300px;">
+            <div class="mega-single">
+              <a href="#all-offers" class="mega-service">Early Stage</a>
+              <a href="#all-offers" class="mega-service">High Growth</a>
+              <a href="#all-offers" class="mega-service">Enterprise</a>
+              <a href="#all-offers" class="mega-service">Investors</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 3: Proof -->
+        <div class="nav-item">
+          <a href="#case-study" class="nav-link">
+            <span>Ways to Engage</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </a>
+          <div class="nav-mega" style="min-width: 320px;">
+            <div class="mega-single">
+              <a href="#all-offers" class="mega-service">Freelancers</a>
+              <a href="#all-offers" class="mega-service">Agency Teams</a>
+              <a href="#all-offers" class="mega-service">Full-Time Employees</a>
+              <a href="#all-offers" class="mega-service">Advisors</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 4: Why Us -->
+        <div class="nav-item">
+          <a href="#why-us" class="nav-link">Why Us</a>
+        </div>
+
+        <!-- Item 5: About Us -->
+        <div class="nav-item">
+          <a href="#about" class="nav-link">About Us</a>
+        </div>
+
+        <!-- Item 6: FAQ -->
+        <div class="nav-item">
+          <a href="#faq" class="nav-link">FAQ</a>
+        </div>
+      </nav>
+
+      <!-- Nav CTA & Search Button -->
+      <div class="nav-actions">
+        <button class="nav-search-btn" id="openSearchBtn" title="Search site (⌘K / Ctrl+K)" aria-label="Search site">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="btn btn-primary btn-sm" id="btnNavSchedule">
+          <span>Contact Us</span>
+          <span class="btn-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="nav-mobile-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#services" class="mobile-nav-link">What We Offer</a>
+    <a href="#process" class="mobile-nav-link">Who We Work With</a>
+    <a href="#case-study" class="mobile-nav-link">Ways to Engage</a>
+    <a href="#why-us" class="mobile-nav-link">Why Us</a>
+    <a href="#about" class="mobile-nav-link">About Us</a>
+    <a href="#faq" class="mobile-nav-link">FAQ</a>
+    <div class="mobile-cta">
+      <button class="btn btn-amber btn-lg" style="width: 100%; justify-content: center;" id="btnMobileSchedule">
+        Schedule Strategy Call
+      </button>
+    </div>
+  </div>
+
+  <main>
+
+  <video
+    class="capability-background-video"
+    id="capabilityBackgroundVideo"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    aria-hidden="true"
+  >
+    <source src="/videos/capability-background.mp4" type="video/mp4">
+  </video>
+    <!-- =========================================================================
+         2. HERO SECTION — EDITORIAL ASYMMETRIC LAYOUT + BACKGROUND VIDEO
+         ========================================================================= -->
+    <section class="hero" id="hero">
+      <!-- Single hero background video with transparency -->
+      <div class="hero-bg-slider" id="heroBgSlider">
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+          <source src="/hero-background.mp4" type="video/mp4">
+        </video>
+        <div class="hero-bg-overlay"></div>
+      </div>
+
+      <div class="hero-inner">
+        <!-- Left Side: Editorial Typography & CTAs -->
+        <div class="hero-content">
+          <div class="hero-label reveal-up">
+            <span class="hero-label-dot"></span>
+            <span>PERFORMANCE &amp; TECHNOLOGY-LED DIGITAL GROWTH</span>
+          </div>
+
+          <h1 class="hero-heading reveal-up" data-delay="100">
+            The Intelligence Behind <em>Your Growth</em>
+          </h1>
+
+          <p class="hero-sub reveal-up" data-delay="200">
+            We build digital marketing systems connecting <strong>technical SEO, high-performance web development, paid media, first-party attribution, marketing automation</strong>, and <strong>conversion rate optimization (CRO)</strong> — turning market presence into measurable business outcomes.
+          </p>
+
+          <div class="hero-ctas reveal-up" data-delay="300">
+            <button class="btn btn-primary btn-lg" id="btnHeroSchedule">
+              <span>Build Your Growth Strategy</span>
+              <span class="btn-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+            </button>
+            <a href="#services" class="btn btn-outline btn-lg">
+              <span>See How We Work</span>
+            </a>
+          </div>
+
+          <div class="hero-proof reveal-up" data-delay="400">
+            <div class="proof-stat">
+              <span class="proof-number">4.8x</span>
+              <span class="proof-desc">Avg Blended ROAS</span>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+              <span class="proof-number">90-Day</span>
+              <span class="proof-desc">Sprint Model</span>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+              <span class="proof-number">1st-Party</span>
+              <span class="proof-desc">Attribution Stack</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         3. DIGITAL MARKETING MESSAGE MARQUEE
+         ========================================================================= -->
+    <section class="logos-section">
+      <div class="logos-label">DIGITAL GROWTH • TECHNICAL SEO • PERFORMANCE MARKETING • ATTRIBUTION • CRO</div>
+      <div class="logos-rail-wrap">
+        <div class="logos-rail">
+          <!-- Set 1 -->
+          <div class="marquee-group">
+            <span class="marquee-item"><span class="marquee-text">TECHNICAL SEO &amp; GEO</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">PERFORMANCE MARKETING &amp; ROAS</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CORE WEB VITALS &amp; FAST FRONTEND</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">1ST-PARTY ATTRIBUTION &amp; GA4</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CRM &amp; WORKFLOW AUTOMATION</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CONVERSION RATE OPTIMIZATION (CRO)</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">AUDIENCE SEGMENTATION &amp; CAPI</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">TURN TRAFFIC INTO QUALIFIED LEADS</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">BUILD YOUR DIGITAL PRESENCE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">TARGET THE RIGHT AUDIENCE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">SCALABLE WEB ARCHITECTURE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">DATA-DRIVEN DIGITAL GROWTH</span><span class="marquee-dot">•</span></span>
+          </div>
+          <!-- Set 2 (Duplicated for seamless infinite loop) -->
+          <div class="marquee-group" aria-hidden="true">
+            <span class="marquee-item"><span class="marquee-text">TECHNICAL SEO &amp; GEO</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">PERFORMANCE MARKETING &amp; ROAS</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CORE WEB VITALS &amp; FAST FRONTEND</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">1ST-PARTY ATTRIBUTION &amp; GA4</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CRM &amp; WORKFLOW AUTOMATION</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">CONVERSION RATE OPTIMIZATION (CRO)</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">AUDIENCE SEGMENTATION &amp; CAPI</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">TURN TRAFFIC INTO QUALIFIED LEADS</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">BUILD YOUR DIGITAL PRESENCE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">TARGET THE RIGHT AUDIENCE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">SCALABLE WEB ARCHITECTURE</span><span class="marquee-dot">•</span></span>
+            <span class="marquee-item"><span class="marquee-text">DATA-DRIVEN DIGITAL GROWTH</span><span class="marquee-dot">•</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         4. PERFORMANCE STATS & IMPACT COUNTERS
+         ========================================================================= -->
+    <section class="stats-section" id="stats">
+      <div class="stats-inner">
+        <div class="stats-intro reveal-left">
+          <span class="label-tag">OUR DIGITAL CARDS</span>
+          <h2 class="section-heading">Strategic growth &amp; performance pillars.</h2>
+          <p class="section-subheading" style="margin-top: 16px;">
+            From brand discovery and audience acquisition to web conversion, engineered for maximum business impact.
+          </p>
+        </div>
+
+        <div class="stats-grid">
+          <!-- CARD 01 -->
+          <div class="stat-card" tabindex="0" role="button" aria-label="Build Authority — Technical SEO &amp; Search Visibility" data-pillar-id="1">
+            <div class="stat-card-top">
+              <span class="stat-badge">01</span>
+              <span class="stat-subtitle">Technical SEO &amp; Search Visibility</span>
+            </div>
+            <div class="stat-label">BUILD AUTHORITY</div>
+            <p class="stat-desc">Create search authority with crawlability audits, Core Web Vitals optimization, schema markup, search intent mapping, and Generative Engine Optimization (GEO).</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open capability details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 02 -->
+          <div class="stat-card" tabindex="0" role="button" aria-label="Expand Reach — Performance Marketing &amp; Paid Media" data-pillar-id="2">
+            <div class="stat-card-top">
+              <span class="stat-badge">02</span>
+              <span class="stat-subtitle">Performance Marketing &amp; Paid Media</span>
+            </div>
+            <div class="stat-label">EXPAND REACH</div>
+            <p class="stat-desc">Precision-targeted paid search and social campaigns across Google Ads, Meta CAPI, and LinkedIn — optimized for Cost Per Acquisition (CPA), ROAS, and scalable reach.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open capability details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 03 -->
+          <div class="stat-card" tabindex="0" role="button" aria-label="Create Demand — Marketing Automation &amp; Lifecycle CRM" data-pillar-id="3">
+            <div class="stat-card-top">
+              <span class="stat-badge">03</span>
+              <span class="stat-subtitle">Marketing Automation &amp; Lifecycle CRM</span>
+            </div>
+            <div class="stat-label">CREATE DEMAND</div>
+            <p class="stat-desc">Drive customer acquisition with automated CRM workflows, lead scoring, audience segmentation, email automation, and webhook integrations across the buying journey.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open capability details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 04 -->
+          <div class="stat-card" tabindex="0" role="button" aria-label="Convert Traffic — High-Performance Web &amp; CRO" data-pillar-id="4">
+            <div class="stat-card-top">
+              <span class="stat-badge">04</span>
+              <span class="stat-subtitle">High-Performance Web &amp; CRO</span>
+            </div>
+            <div class="stat-label">CONVERT TRAFFIC</div>
+            <p class="stat-desc">Turn qualified traffic into pipeline with responsive web architecture, sub-second load speeds, landing page experimentation, conversion funnel optimization, and GA4 telemetry.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open capability details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         5. WHY FLUVO — EDITORIAL COMPARISON
+         ========================================================================= -->
+    <section class="why-section" id="why-us">
+      <div class="why-inner">
+        <div class="why-header">
+          <div class="reveal-up">
+            <span class="label-tag">THE FLUVO STANDARD</span>
+            <h2 class="section-heading">Built different from legacy agencies.</h2>
+          </div>
+          <p class="section-subheading reveal-up" data-delay="100">
+            Traditional agencies operate in channel silos with disconnected tactics. We align strategy, audience targeting, and continuous optimization into one seamless digital growth model.
+          </p>
+        </div>
+
+        <div class="why-rows reveal-up" data-delay="200">
+          <div class="why-row">
+            <div class="why-row-head">
+              OPERATING PILLAR
+              <span>Dimension of execution</span>
+            </div>
+            <div class="why-col" style="font-weight: 600; color: var(--gray-mid); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em;">
+              TRADITIONAL AGENCY MODEL
+            </div>
+            <div class="why-col fluvo" style="font-weight: 700; color: var(--amber); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em;">
+              OUR DIGITAL GROWTH MODEL
+            </div>
+          </div>
+
+          <!-- ROW 1 -->
+          <div class="why-row">
+            <div class="why-row-head">
+              STRATEGY &amp; PLANNING
+              <span>How campaigns are structured</span>
+            </div>
+            <div class="why-col">
+              <span class="status-cross">✕</span> Channel-first campaigns with disconnected marketing tactics.
+            </div>
+            <div class="why-col fluvo">
+              <span class="status-check">✓</span> Unified growth architecture connecting technical SEO, paid media, CRM automation, and conversion telemetry.
+            </div>
+          </div>
+
+          <!-- ROW 2 -->
+          <div class="why-row">
+            <div class="why-row-head">
+              AUDIENCE TARGETING
+              <span>Who the marketing reaches</span>
+            </div>
+            <div class="why-col">
+              <span class="status-cross">✕</span> Broad targeting with limited behavioral segmentation.
+            </div>
+            <div class="why-col fluvo">
+              <span class="status-check">✓</span> Precision audience segmentation mapped to search intent, first-party customer data, and high-intent buying journeys.
+            </div>
+          </div>
+
+          <!-- ROW 3 -->
+          <div class="why-row">
+            <div class="why-row-head">
+              PERFORMANCE &amp; ATTRIBUTION
+              <span>How performance improves</span>
+            </div>
+            <div class="why-col">
+              <span class="status-cross">✕</span> Campaigns evaluated mainly through in-platform vanity metrics and inflated CTRs.
+            </div>
+            <div class="why-col fluvo">
+              <span class="status-check">✓</span> First-party attribution, server-side CAPI tracking, CAC, blended ROAS, and verified pipeline outcomes.
+            </div>
+          </div>
+
+          <!-- ROW 4 -->
+          <div class="why-row">
+            <div class="why-row-head">
+              FULL-FUNNEL EXECUTION
+              <span>How channels work together</span>
+            </div>
+            <div class="why-col">
+              <span class="status-cross">✕</span> Separate teams managing individual channels independently.
+            </div>
+            <div class="why-col fluvo">
+              <span class="status-check">✓</span> Integrated awareness, consideration, and conversion systems powered by rapid creative velocity and CRO experimentation.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         6. CAPABILITIES & SERVICES (EDITORIAL CARDS)
+         ========================================================================= -->
+    <section class="services-section" id="services">
+      <div class="services-inner">
+        <div class="services-header">
+          <div class="reveal-up">
+            <span class="label-tag">OUR EXPERTISE</span>
+            <h2 class="section-heading">Full-funnel performance engineering.</h2>
+          </div>
+          <p class="section-subheading reveal-up" data-delay="100">
+            Every capability is a modular growth pillar engineered for unit-economic profitability and sustainable scale.
+          </p>
+        </div>
+
+        <div class="services-grid">
+          <!-- CARD 01 -->
+          <div class="service-card" tabindex="0" role="button" aria-label="Audience Intelligence — Search Intent & Audience Segmentation" data-service-id="1">
+            <div class="service-card-top">
+              <div class="service-icon">01</div>
+              <span class="service-subtitle">Search Intent &amp; Audience Segmentation</span>
+            </div>
+            <h3 class="service-name">AUDIENCE INTELLIGENCE</h3>
+            <p class="service-desc">Unify CRM, GA4, firmographic, and search-intent data to define high-LTV ICP cohorts, map buyer signals, and validate CAC-to-LTV viability before media spend.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open service details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 02 -->
+          <div class="service-card" tabindex="0" role="button" aria-label="Demand Architecture — Multi-Touch Paid & Organic Inbound" data-service-id="2">
+            <div class="service-card-top">
+              <div class="service-icon">02</div>
+              <span class="service-subtitle">Multi-Touch Paid &amp; Organic Inbound</span>
+            </div>
+            <h3 class="service-name">DEMAND ARCHITECTURE</h3>
+            <p class="service-desc">Connect technical SEO, GEO answer content, Google and Meta campaigns, and cross-channel attribution into one demand system for measurable commercial intent.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open service details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 03 -->
+          <div class="service-card" tabindex="0" role="button" aria-label="Journey Orchestration — Web Engineering & Marketing Automation" data-service-id="3">
+            <div class="service-card-top">
+              <div class="service-icon">03</div>
+              <span class="service-subtitle">Web Engineering &amp; Marketing Automation</span>
+            </div>
+            <h3 class="service-name">JOURNEY ORCHESTRATION</h3>
+            <p class="service-desc">Engineer fast conversion pages, webhook APIs, CRM routing, nurture automation, and retargeting triggers so every qualified lead moves through the funnel without delay.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open service details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+
+          <!-- CARD 04 -->
+          <div class="service-card" tabindex="0" role="button" aria-label="Measurement & CRO — GA4 Attribution & Funnel Optimization" data-service-id="4">
+            <div class="service-card-top">
+              <div class="service-icon">04</div>
+              <span class="service-subtitle">GA4 Attribution &amp; Funnel Optimization</span>
+            </div>
+            <h3 class="service-name">MEASUREMENT &amp; CRO</h3>
+            <p class="service-desc">Instrument GA4 and server-side CAPI, test each funnel stage, and model CAC, LTV, ROAS, and contribution margin to turn performance data into budget decisions.</p>
+            <div class="stat-card-footer">
+              <span class="stat-action-icon" aria-label="Open service details">
+                <img class="stat-action-robot" src="/images/fluvo-ai-character.jpg" alt="" aria-hidden="true">
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="all-offers-section" id="all-offers" aria-labelledby="allOffersTitle">
+      <video class="all-offers-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="/videos/complete-menu-background.mp4" type="video/mp4">
+      </video>
+      <div class="all-offers-overlay" aria-hidden="true"></div>
+      <div class="all-offers-inner all-offers-content">
+        <div class="services-header">
+          <div>
+            <span class="label-tag">THE COMPLETE MENU</span>
+            <h2 class="section-heading" id="allOffersTitle">Every growth option, together.</h2>
+          </div>
+          <p class="section-subheading">Expand any option to scan the essentials, then read the full detail without leaving this page.</p>
+        </div>
+        <div class="all-offers-list" id="allOffersList"></div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         7. PROCESS TIMELINE — VERTICAL SVG LINE-DRAW ANIMATION
+         ========================================================================= -->
+    <section class="process-section" id="process">
+      <div class="process-inner">
+        <div class="process-header">
+          <div class="reveal-up">
+            <span class="label-tag">OUR METHODOLOGY</span>
+            <h2 class="section-heading">A 90-Day Growth Roadmap.</h2>
+          </div>
+          <p class="section-subheading reveal-up" data-delay="100">
+            A structured four-stage growth program designed to understand your market, activate the right channels, improve performance, and build a foundation for sustainable digital growth.
+          </p>
+        </div>
+
+        <!-- Timeline with animated track line & sequential step-by-step reveal -->
+        <div class="timeline-wrapper" id="timelineWrapper">
+          <div class="timeline-track-line">
+            <div class="timeline-track-fill" id="timelineTrackFill"></div>
+          </div>
+
+          <!-- Steps Column -->
+          <div class="timeline-steps">
+            <!-- Stage 1 -->
+            <div class="timeline-step" data-step="1">
+              <div class="step-node">
+                <div class="step-circle">01</div>
+              </div>
+              <div class="step-body">
+                <div class="step-stage">STAGE 01 · DAYS 1–30</div>
+                <h3 class="step-title">DISCOVER &amp; BUILD THE FOUNDATION</h3>
+                <p class="step-text">Forensic audit of website architecture, Core Web Vitals, conversion tracking, competitor search share, and unit economics to identify growth bottlenecks.</p>
+                <div class="step-tags">
+                  <span class="step-tag">Technical SEO Audit</span>
+                  <span class="step-tag">First-Party Attribution Setup</span>
+                  <span class="step-tag">Audience Intent Insights</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 2 -->
+            <div class="timeline-step" data-step="2">
+              <div class="step-node">
+                <div class="step-circle">02</div>
+              </div>
+              <div class="step-body">
+                <div class="step-stage">STAGE 02 · DAYS 31–60</div>
+                <h3 class="step-title">ACTIVATE &amp; CAPTURE DEMAND</h3>
+                <p class="step-text">Deploy technical on-page SEO, high-speed landing pages, API lead integrations, and segmented paid campaigns across Google and Meta.</p>
+                <div class="step-tags">
+                  <span class="step-tag">Performance Media Launch</span>
+                  <span class="step-tag">High-Converting Landing Pages</span>
+                  <span class="step-tag">CRM Workflow Automation</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 3 -->
+            <div class="timeline-step" data-step="3">
+              <div class="step-node">
+                <div class="step-circle">03</div>
+              </div>
+              <div class="step-body">
+                <div class="step-stage">STAGE 03 · DAYS 61–75</div>
+                <h3 class="step-title">MEASURE, TEST &amp; REFINE</h3>
+                <p class="step-text">Analyze GA4 telemetry and server attribution to double down on top-performing keywords, audience cohorts, and creative angles while eliminating inefficient spend.</p>
+                <div class="step-tags">
+                  <span class="step-tag">Conversion Rate Optimization (CRO)</span>
+                  <span class="step-tag">A/B Funnel Testing</span>
+                  <span class="step-tag">ROAS / CAC Calibration</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 4 -->
+            <div class="timeline-step" data-step="4">
+              <div class="step-node">
+                <div class="step-circle">04</div>
+              </div>
+              <div class="step-body">
+                <div class="step-stage">STAGE 04 · DAYS 76–90</div>
+                <h3 class="step-title">SCALE WHAT WORKS</h3>
+                <p class="step-text">Scale budget behind verified ROAS drivers, implement Generative Engine Optimization (GEO), and establish a predictable, compounding customer acquisition system.</p>
+                <div class="step-tags">
+                  <span class="step-tag">Channel Expansion</span>
+                  <span class="step-tag">Automated Lead Scoring</span>
+                  <span class="step-tag">Compounding Growth Engine</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         8. EDITORIAL QUOTE & POSITIVE VIBES
+         ========================================================================= -->
+    <section class="quote-section">
+      <div class="quote-bg-text">FLUVO</div>
+      <div class="quote-inner">
+        <span class="quote-marks">“</span>
+        <blockquote class="quote-text reveal-up">
+          Marketing is not an expense to be managed down. When built with mathematical rigor and bold creative conviction, it is the most reliable profit engine in your business.
+        </blockquote>
+        <div class="quote-author reveal-up" data-delay="100">
+          <div class="quote-author-line"></div>
+          <span class="quote-author-name">Fluvo Scaling Philosophy</span>
+          <div class="quote-author-line"></div>
+        </div>
+
+        <div class="quote-cards-row reveal-up" data-delay="200">
+          <div class="vibe-card">
+            <div class="vibe-card-icon">🌱</div>
+            <p class="vibe-card-text">“Growth without profitability is vanity. Sustainable scale requires unit-economic rigor across CAC, LTV, and payback periods.”</p>
+            <span class="vibe-card-author">Unit-Economic Discipline #1</span>
+          </div>
+
+          <div class="vibe-card">
+            <div class="vibe-card-icon">⚡</div>
+            <p class="vibe-card-text">“Creative velocity meets high-performance engineering. The brand with sub-second page speeds, superior hooks, and frictionless forms wins the market.”</p>
+            <span class="vibe-card-author">Creative &amp; Technical Velocity #2</span>
+          </div>
+
+          <div class="vibe-card">
+            <div class="vibe-card-icon">🎯</div>
+            <p class="vibe-card-text">“First-party truth beats platform optimism. Optimize for verified pipeline revenue and blended ROAS, not self-reported dashboard conversions.”</p>
+            <span class="vibe-card-author">First-Party Attribution #3</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         9. FEATURED GROWTH CASE STUDY
+         ========================================================================= -->
+    <section class="case-section" id="case-study">
+      <div class="case-inner">
+        <div class="case-card reveal-up">
+          <div class="case-info">
+            <div class="case-client-tag">FEATURED GROWTH CASE STUDY</div>
+            <h2 class="case-title">From fragmented marketing to a scalable digital growth engine</h2>
+            <p class="case-desc">
+              An integrated architecture brought technical SEO, high-speed landing pages, server-side attribution, and precision audience segmentation into one unified system — transforming marketing spend into a predictable revenue engine.
+            </p>
+
+            <div class="case-metrics">
+              <div class="case-metric" data-animate-metric>
+                <div class="case-metric-label">MONTHLY REVENUE</div>
+                <div class="case-metric-val">
+                  <span class="case-metric-before">$180K</span>
+                  <span class="case-arrow">→</span>
+                  <span class="case-metric-after" data-count-prefix="$" data-count-suffix="K/mo" data-count-from="180" data-count-to="420">$420K/mo</span>
+                </div>
+              </div>
+              <div class="case-metric" data-animate-metric>
+                <div class="case-metric-label">BLENDED ROAS</div>
+                <div class="case-metric-val">
+                  <span class="case-metric-before">2.1x</span>
+                  <span class="case-arrow">→</span>
+                  <span class="case-metric-after" data-count-prefix="" data-count-suffix="x" data-count-from="2.1" data-count-to="4.6" data-count-decimals="1">4.6x</span>
+                </div>
+              </div>
+              <div class="case-metric" data-animate-metric>
+                <div class="case-metric-label">CUSTOMER ACQUISITION COST</div>
+                <div class="case-metric-val">
+                  <span class="case-metric-before">$72</span>
+                  <span class="case-arrow">→</span>
+                  <span class="case-metric-after" data-count-prefix="$" data-count-suffix="" data-count-from="72" data-count-to="41">$41</span>
+                </div>
+              </div>
+              <div class="case-metric" data-animate-metric>
+                <div class="case-metric-label">CONVERSION RATE</div>
+                <div class="case-metric-val">
+                  <span class="case-metric-before">1.6%</span>
+                  <span class="case-arrow">→</span>
+                  <span class="case-metric-after" data-count-prefix="" data-count-suffix="%" data-count-from="1.6" data-count-to="3.9" data-count-decimals="1">3.9%</span>
+                </div>
+              </div>
+            </div>
+
+            <blockquote class="case-quote">
+              "A unified growth strategy gave us a clearer view of what was driving demand, where our budget was working hardest, and which opportunities were ready to scale."
+              <footer>
+                <strong>Growth Strategy Partner</strong>
+                <span>Performance Marketing &amp; Digital Growth</span>
+              </footer>
+            </blockquote>
+          </div>
+
+          <div class="case-visual">
+            <div class="case-chart-box">
+              <div class="case-chart-label">
+                <span>Revenue Growth — 9-Month Performance</span>
+                <span class="case-chart-pill">+133% Revenue Growth</span>
+              </div>
+              <div class="case-chart-container" id="caseChartContainer">
+                <svg class="case-chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none" id="caseChartSvg">
+                  <defs>
+                    <linearGradient id="chartAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="rgba(217, 123, 71, 0.45)" />
+                      <stop offset="60%" stop-color="rgba(196, 98, 45, 0.12)" />
+                      <stop offset="100%" stop-color="rgba(196, 98, 45, 0.0)" />
+                    </linearGradient>
+                    <linearGradient id="chartLineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#C4622D" />
+                      <stop offset="50%" stop-color="#E2783F" />
+                      <stop offset="100%" stop-color="#FFA066" />
+                    </linearGradient>
+                    <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(226, 120, 63, 0.55)" />
+                    </filter>
+                  </defs>
+
+                  <g class="chart-grid">
+                    <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 4" stroke-width="1" />
+                    <line x1="0" y1="85" x2="500" y2="85" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 4" stroke-width="1" />
+                    <line x1="0" y1="140" x2="500" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 4" stroke-width="1" />
+                    <line x1="0" y1="180" x2="500" y2="180" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+                  </g>
+
+                  <path class="chart-area" d="M0,180 L500,180 L500,200 L0,200 Z" fill="url(#chartAreaGrad)" />
+                  <path class="chart-line" d="M0,180 L500,180" fill="none" stroke="url(#chartLineGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#chartGlow)" />
+                  <line class="chart-crosshair" id="chartCrosshair" x1="0" y1="15" x2="0" y2="180" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0" />
+
+                  <g class="chart-dots" id="chartDots">
+                    <circle cx="0" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="62.5" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="125" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="187.5" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="250" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="312.5" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="375" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="437.5" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                    <circle cx="500" cy="180" r="4.5" fill="#FFA066" stroke="#1C1C1C" stroke-width="1.5" opacity="0" />
+                  </g>
+
+                  <circle class="chart-active-dot" id="chartActiveDot" cx="0" cy="0" r="7" fill="#FFA066" stroke="#FFFFFF" stroke-width="2.5" opacity="0" />
+                </svg>
+
+                <div class="chart-tooltip" id="chartTooltip">
+                  <div class="chart-tooltip-header">
+                    <span class="chart-tooltip-month" id="ttMonth">Month 1</span>
+                    <span class="chart-tooltip-growth" id="ttGrowth">+0%</span>
+                  </div>
+                  <div class="chart-tooltip-val" id="ttVal">$180,000<span class="chart-tooltip-period">/mo</span></div>
+                </div>
+
+                <div class="chart-months">
+                  <span>M1</span><span>M2</span><span>M3</span><span>M4</span><span>M5</span><span>M6</span><span>M7</span><span>M8</span><span>M9</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         10. CLIENT TESTIMONIALS RAIL
+         ========================================================================= -->
+    <section class="testimonials-section">
+      <div class="testimonials-inner">
+        <div class="testimonials-header">
+          <div class="reveal-up">
+            <span class="label-tag">EXECUTIVE TESTIMONIALS</span>
+            <h2 class="section-heading">Trusted by leadership teams.</h2>
+          </div>
+        </div>
+
+        <div class="testimonials-track-wrap reveal-up" data-delay="200" aria-label="Executive testimonials carousel">
+          <div class="testimonials-track" id="testimonialTrack">
+            <!-- Card 1 -->
+            <div class="t-card">
+              <div class="t-stars">★★★★★</div>
+              <p class="t-text">“They cut through the agency BS and delivered a 5.2x blended ROAS across our Q4 peak season. Zero fluff, just rigorous execution.”</p>
+              <div class="t-author">
+                <div class="t-avatar">EV</div>
+                <div>
+                  <div class="t-author-name">Eleanor Vance</div>
+                  <div class="t-author-name" style="font-weight: normal; font-size: 12px; color: var(--gray-mid);">VP Growth, Lumina Health</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="t-card">
+              <div class="t-stars">★★★★★</div>
+              <p class="t-text">“The creative velocity alone paid for their engagement within 30 days. They produced 40+ ad angles that unlocked scale on TikTok.”</p>
+              <div class="t-author">
+                <div class="t-avatar">MS</div>
+                <div>
+                  <div class="t-author-name">Marcus Sterling</div>
+                  <div class="t-author-name" style="font-weight: normal; font-size: 12px; color: var(--gray-mid);">Founder &amp; CEO, Apex Apparel</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="t-card">
+              <div class="t-stars">★★★★★</div>
+              <p class="t-text">“Their server attribution architecture solved our post-iOS 14.5 signal blind spot. We finally have clarity on true customer acquisition cost.”</p>
+              <div class="t-author">
+                <div class="t-avatar">DT</div>
+                <div>
+                  <div class="t-author-name">David Thorne</div>
+                  <div class="t-author-name" style="font-weight: normal; font-size: 12px; color: var(--gray-mid);">Head of Growth, FinTech Flow</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="t-card">
+              <div class="t-stars">★★★★★</div>
+              <p class="t-text">“Fluvo is the only agency partner we’ve worked with that understands unit economics and EBITDA as deeply as our CFO.”</p>
+              <div class="t-author">
+                <div class="t-avatar">SN</div>
+                <div>
+                  <div class="t-author-name">Sophie Nakamura</div>
+                  <div class="t-author-name" style="font-weight: normal; font-size: 12px; color: var(--gray-mid);">CMO, Bloom Beauty</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         11. ABOUT US / FLUVO GROWTH SYSTEM
+         ========================================================================= -->
+    <section class="about-section" id="about">
+      <video class="about-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <source src="/videos/orange-bubbles.mp4" type="video/mp4">
+      </video>
+      <div class="about-inner">
+        <!-- Section Hero Intro -->
+        <div class="about-hero">
+          <div class="about-hero-left reveal-left">
+            <span class="label-tag">ABOUT FLUVO</span>
+            <h2 class="section-heading" style="margin-top: 14px;">We engineer growth systems, not just campaigns.</h2>
+          </div>
+          <div class="about-hero-right reveal-right">
+            <p class="about-lead">
+              Fluvo is a technology-driven digital growth partner combining performance marketing, technical web engineering, and marketing operations for ambitious businesses.
+            </p>
+            <p class="about-subtext">
+              We bring technical SEO, performance media, conversion rate optimization (CRO), API automation, first-party GA4 attribution, and CRM pipelines together under one connected growth architecture. Instead of optimizing individual channels in isolation, we engineer the full customer lifecycle — from search discovery to acquisition, conversion, and compounding customer value.
+            </p>
+          </div>
+        </div>
+
+        <!-- Approach Subsection (4 Cards) -->
+        <div class="about-approach-wrap">
+          <div class="about-approach-header reveal-up">
+            <span class="label-tag">OUR APPROACH</span>
+            <h3 class="about-section-title">A disciplined framework for compounding scale.</h3>
+          </div>
+
+          <div class="about-approach-grid">
+            <!-- Card 01 -->
+            <div class="about-approach-card reveal-up" data-delay="100">
+              <div class="about-card-top">
+                <span class="about-card-num">01</span>
+                <span class="about-card-tag">ANALYSIS</span>
+              </div>
+              <h4 class="about-card-title">DIAGNOSE</h4>
+              <p class="about-card-text">
+                Forensic analysis of unit economics, attribution signal loss, Core Web Vitals, and conversion funnel friction to locate growth bottlenecks.
+              </p>
+            </div>
+
+            <!-- Card 02 -->
+            <div class="about-approach-card reveal-up" data-delay="200">
+              <div class="about-card-top">
+                <span class="about-card-num">02</span>
+                <span class="about-card-tag">SYSTEMS</span>
+              </div>
+              <h4 class="about-card-title">ENGINEER</h4>
+              <p class="about-card-text">
+                Rebuild growth infrastructure — from responsive web architecture and CRM workflows to server-side CAPI and structured schemas.
+              </p>
+            </div>
+
+            <!-- Card 03 -->
+            <div class="about-approach-card reveal-up" data-delay="300">
+              <div class="about-card-top">
+                <span class="about-card-num">03</span>
+                <span class="about-card-tag">EXECUTION</span>
+              </div>
+              <h4 class="about-card-title">ACCELERATE</h4>
+              <p class="about-card-text">
+                Deploy segmented paid campaigns, high-velocity creative testing, and Generative Engine Optimization (GEO) to drive efficient customer acquisition.
+              </p>
+            </div>
+
+            <!-- Card 04 -->
+            <div class="about-approach-card reveal-up" data-delay="400">
+              <div class="about-card-top">
+                <span class="about-card-num">04</span>
+                <span class="about-card-tag">SCALE</span>
+              </div>
+              <h4 class="about-card-title">COMPOUND</h4>
+              <p class="about-card-text">
+                Strengthen automated retention, lifecycle workflows, and conversion efficiency so every customer acquisition compounds in value.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Philosophy Banner -->
+        <div class="about-philosophy-box reveal-up">
+          <div class="about-philosophy-content">
+            <span class="label-tag" style="color: var(--amber);">OUR PHILOSOPHY</span>
+            <blockquote class="about-philosophy-quote">
+              “Marketing should be measured by the profit it creates — not the impressions it generates.”
+            </blockquote>
+            <p class="about-philosophy-desc">
+              We believe sustainable growth comes from the intersection of first-party data, scalable technology, creative velocity, and disciplined execution.
+            </p>
+          </div>
+        </div>
+
+        <!-- Positioning Levers Section (6 Capability Blocks) -->
+        <div class="about-levers-wrap">
+          <div class="about-levers-header reveal-up">
+            <span class="label-tag">FULL-FUNNEL EXECUTION</span>
+            <h3 class="about-section-title">One growth system. Every critical lever.</h3>
+          </div>
+
+          <div class="about-levers-grid">
+            <!-- Lever 01 -->
+            <div class="about-lever-card reveal-up" data-delay="100">
+              <div class="about-lever-num">01</div>
+              <h4 class="about-lever-title">Paid Media</h4>
+              <p class="about-lever-text">Audience-segmented campaigns across Google Ads, Meta CAPI, and LinkedIn.</p>
+            </div>
+
+            <!-- Lever 02 -->
+            <div class="about-lever-card reveal-up" data-delay="150">
+              <div class="about-lever-num">02</div>
+              <h4 class="about-lever-title">Conversion (CRO)</h4>
+              <p class="about-lever-text">High-speed landing pages, form optimization, and funnel experimentation.</p>
+            </div>
+
+            <!-- Lever 03 -->
+            <div class="about-lever-card reveal-up" data-delay="200">
+              <div class="about-lever-num">03</div>
+              <h4 class="about-lever-title">Technical SEO &amp; GEO</h4>
+              <p class="about-lever-text">Core Web Vitals, structured schema data, and AI search visibility.</p>
+            </div>
+
+            <!-- Lever 04 -->
+            <div class="about-lever-card reveal-up" data-delay="250">
+              <div class="about-lever-num">04</div>
+              <h4 class="about-lever-title">Attribution</h4>
+              <p class="about-lever-text">First-party server tracking, GA4 event architecture, and blended ROAS analysis.</p>
+            </div>
+
+            <!-- Lever 05 -->
+            <div class="about-lever-card reveal-up" data-delay="300">
+              <div class="about-lever-num">05</div>
+              <h4 class="about-lever-title">Automation</h4>
+              <p class="about-lever-text">CRM integrations, automated lead scoring, and webhook workflows.</p>
+            </div>
+
+            <!-- Lever 06 -->
+            <div class="about-lever-card reveal-up" data-delay="350">
+              <div class="about-lever-num">06</div>
+              <h4 class="about-lever-title">Scalable Scale</h4>
+              <p class="about-lever-text">Algorithmic budget allocation focused on unit-economic profitability.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         12. FREQUENTLY ASKED QUESTIONS
+         ========================================================================= -->
+    <section class="faq-section" id="faq">
+      <div class="faq-inner">
+        <div class="faq-layout">
+          <div class="faq-intro reveal-left">
+            <span class="label-tag">COMMON INQUIRIES</span>
+            <h2 class="section-heading">Everything you need to know.</h2>
+            <p class="section-subheading" style="margin-top: 16px;">
+              Have a specific question not covered here? Schedule a diagnostic call or message our team in live chat.
+            </p>
+          </div>
+
+          <div class="faq-list reveal-right">
+            <!-- FAQ 1 -->
+            <div class="faq-item open">
+              <div class="faq-question">
+                <span>How is Fluvo different from traditional performance agencies?</span>
+                <span class="faq-icon">+</span>
+              </div>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  We operate as a technical growth partner combining performance marketing, full-stack web engineering, and first-party attribution. Every engagement is led by senior growth strategists in agile 90-day sprints focused on unit economics (CAC, ROAS, LTV) with zero lock-in contracts.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>What digital marketing and web services do you provide?</span>
+                <span class="faq-icon">+</span>
+              </div>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  We deliver full-funnel growth architecture: Technical SEO, Core Web Vitals optimization, Generative Engine Optimization (GEO), paid media (Google/Meta/LinkedIn Ads), high-performance web development, marketing automation, CRM pipelines, and Conversion Rate Optimization (CRO).
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How do you handle attribution post-iOS 14.5?</span>
+                <span class="faq-icon">+</span>
+              </div>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  We implement custom first-party server-side tracking (Meta CAPI via Cloudflare/AWS, Google Tag Manager Server Container, GA4 event models) combined with blended MER and Media Mix Modeling to bypass browser signal loss. We never rely on inflated platform self-reported conversions.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 4 -->
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How do you approach Generative Engine Optimization (GEO) &amp; AI search?</span>
+                <span class="faq-icon">+</span>
+              </div>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  We structure technical content, JSON-LD schema entity graphs, and domain citations so modern AI search systems (ChatGPT, Perplexity, Google AI Overviews) index and cite your brand as an authoritative entity.
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ 5 -->
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How fast can we launch our first growth sprint?</span>
+                <span class="faq-icon">+</span>
+              </div>
+              <div class="faq-answer">
+                <div class="faq-answer-inner">
+                  Following our initial technical audit and discovery session, we complete tracking instrumentation and CRM integration within 72 hours. Initial campaigns, optimized landing pages, and SEO enhancements go live in Days 7–10.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         13. SCHEDULE A CALL SECTION (WITH EMBEDDED WORKING FORM)
+         ========================================================================= -->
+    <section class="schedule-section" id="schedule">
+      <video class="schedule-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="/videos/fluvo-cta-background.mp4" type="video/mp4">
+      </video>
+      <div class="schedule-bg-overlay" aria-hidden="true"></div>
+      <div class="schedule-inner">
+        <div class="schedule-left reveal-left">
+          <span class="label-tag">LET’S BUILD TOGETHER</span>
+          <h2 class="section-heading">Schedule your technical growth diagnostic call.</h2>
+          <p class="section-subheading">
+            Meet with our senior growth strategists for a 30-minute deep dive into your unit economics, attribution models, and digital scaling roadmap.
+          </p>
+
+          <div class="schedule-points">
+            <div class="schedule-point">
+              <div class="schedule-point-icon">✓</div>
+              <span>Forensic technical SEO, Core Web Vitals &amp; ad account audit</span>
+            </div>
+            <div class="schedule-point">
+              <div class="schedule-point-icon">✓</div>
+              <span>Custom 90-day growth blueprint with expected ROAS and CAC modeling</span>
+            </div>
+            <div class="schedule-point">
+              <div class="schedule-point-icon">✓</div>
+              <span>Direct access to Senior Growth Engineers (no salespeople)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-form-wrap reveal-right">
+          <form class="schedule-form" id="scheduleMainForm">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="mFullName">Full Name *</label>
+                <input type="text" id="mFullName" name="fullName" placeholder="Eleanor Vance" required>
+              </div>
+              <div class="form-group">
+                <label for="mWorkEmail">Work Email *</label>
+                <input type="email" id="mWorkEmail" name="workEmail" placeholder="eleanor@company.com" required>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="mCompany">Company Name</label>
+                <input type="text" id="mCompany" name="company" placeholder="Lumina Health">
+              </div>
+              <div class="form-group">
+                <label for="mPhone">Phone Number</label>
+                <input type="tel" id="mPhone" name="phone" placeholder="+1 (555) 000-0000">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="mPreferredDate">Preferred Date</label>
+              <input type="date" id="mPreferredDate" name="preferredDate">
+            </div>
+
+            <div class="form-group full">
+              <label for="mMessage">Primary Growth Objective / Current Bottleneck</label>
+              <textarea id="mMessage" name="message" placeholder="Tell us about your current channels, blended ROAS targets, and acquisition challenges..."></textarea>
+            </div>
+
+            <div class="form-submit-wrap">
+              <button type="submit" class="btn btn-amber btn-lg" id="btnSubmitSchedule">
+                <span>Confirm Call Request</span>
+                <span class="btn-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+              </button>
+              <p class="form-privacy">🔒 Your data is confidential. No spam.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       14. FOOTER
+       ========================================================================= -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand-name">Flu<span class="logo-accent">vo</span></div>
+          <p class="footer-desc">
+            Strategic performance marketing and technical growth engineering agency scaling enterprise brands through data, automation and conversion optimization.
+          </p>
+          <button class="btn btn-amber btn-sm" id="btnFooterSchedule">Schedule Strategy Call</button>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Capabilities</div>
+          <div class="footer-links">
+            <a href="#services" class="footer-link">Build Authority (Technical SEO &amp; GEO)</a>
+            <a href="#services" class="footer-link">Expand Reach (Paid Media &amp; CAPI)</a>
+            <a href="#services" class="footer-link">Create Demand (Marketing Automation)</a>
+            <a href="#services" class="footer-link">Convert Traffic (Web &amp; CRO)</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <div class="footer-links">
+            <a href="#why-us" class="footer-link">Why Us</a>
+            <a href="#about" class="footer-link">About Fluvo</a>
+            <a href="#process" class="footer-link">90-Day Growth Roadmap</a>
+            <a href="#case-study" class="footer-link">Case Studies</a>
+            <a href="#faq" class="footer-link">Frequently Asked Questions</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Headquarters</div>
+          <div class="footer-links">
+            <span class="footer-link">Noida • UP • India</span>
+            <span class="footer-link">hello@fluvo.in</span>
+            <span class="footer-link">+1 (800) 582-9014</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Fluvo Performance Marketing LLC. All rights reserved.</div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       14.5 FULL-SCREEN CAPABILITY SHOWCASE MODAL
+       ========================================================================= -->
+  <div class="pillar-modal-overlay" id="pillarModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="pillar-modal-dialog">
+      <video class="pillar-modal-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <source src="/videos/capability-background.mp4" type="video/mp4">
+      </video>
+      
+      <!-- Top Navigation & Control Bar -->
+      <header class="pillar-modal-topbar">
+        <div class="pillar-topbar-left">
+          <div class="pillar-badge-pill" id="pmBadge">01</div>
+          <span class="pillar-category-tag" id="pmCategory">TECHNICAL SEO &amp; SEARCH VISIBILITY</span>
+        </div>
+
+        <div class="pillar-topbar-nav">
+          <button class="pillar-nav-btn" id="pmPrevBtn" title="Previous Capability" aria-label="Previous Capability">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+            <span>Prev</span>
+          </button>
+
+          <div class="pillar-tabs-pills" id="pmTabsPills">
+            <button class="pillar-dot-btn active" data-pillar-switch="1">01</button>
+            <button class="pillar-dot-btn" data-pillar-switch="2">02</button>
+            <button class="pillar-dot-btn" data-pillar-switch="3">03</button>
+            <button class="pillar-dot-btn" data-pillar-switch="4">04</button>
+          </div>
+
+          <button class="pillar-nav-btn" id="pmNextBtn" title="Next Capability" aria-label="Next Capability">
+            <span>Next</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <button class="pillar-close-btn" id="closePillarModal" aria-label="Close capability view">
+          <span>Close</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      <!-- Scrollable Modal Content Body -->
+      <div class="pillar-modal-scroll-body" id="pmScrollBody">
+        
+        <!-- Summary-first editorial capability page -->
+        <section class="pm-hero-section">
+          <div class="pm-hero-eyebrow" id="pmTagline">Engineered for durable search dominance &amp; AI retrieval</div>
+          <h1 class="pm-hero-title" id="pmTitle">BUILD AUTHORITY</h1>
+          <p class="pm-hero-lead" id="pmOverview">Create search authority with technical SEO, performance engineering, structured data and GEO.</p>
+          <div class="pm-highlights-row" id="pmHighlights"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-outcomes-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">KEY OUTCOMES</span>
+            <h2 class="pm-section-title">The signal that matters.</h2>
+          </div>
+          <div class="pm-benchmarks-grid" id="pmBenchmarks"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-capabilities-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">CORE CAPABILITIES</span>
+            <h2 class="pm-section-title">Focused execution, built to compound.</h2>
+          </div>
+          <div class="pm-deliverables-list" id="pmDeliverables"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-tech-section">
+          <div class="pm-section-intro pm-section-intro-inline">
+            <div>
+              <span class="pm-section-label">TECHNOLOGY ECOSYSTEM</span>
+              <h2 class="pm-section-title">The stack behind the system.</h2>
+            </div>
+            <span class="pm-section-note">Selected tools, revealed on demand</span>
+          </div>
+          <details class="pm-disclosure pm-stack-disclosure">
+            <summary><span>View full technology stack</span><span class="pm-summary-arrow">+</span></summary>
+            <div class="pm-tool-chips" id="pmToolStack"></div>
+          </details>
+        </section>
+
+        <section class="pm-editorial-section pm-roadmap-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">90-DAY FRAMEWORK</span>
+            <h2 class="pm-section-title">From discovery to compounding scale.</h2>
+          </div>
+          <div class="pm-sprint-steps-grid" id="pmRoadmap"></div>
+        </section>
+
+      </div>
+
+      <!-- Modal Bottom Action Bar -->
+      <footer class="pillar-modal-footer">
+        <div class="pm-footer-left">
+          <span class="pm-footer-kicker">Ready to deploy this capability?</span>
+          <strong id="pmFooterPillarName">01: Build Authority</strong>
+        </div>
+
+        <div class="pm-footer-actions">
+          <a href="#case-study" class="btn btn-outline-white btn-sm" id="pmBtnCaseStudy">
+            <span>Explore Case Studies</span>
+          </a>
+
+          <button class="btn btn-amber btn-sm" id="pmBtnSchedule">
+            <span>Schedule Strategy Call for this Capability</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       14.6 FULL-SCREEN SERVICES / EXPERTISE MODAL
+       ========================================================================= -->
+  <div class="pillar-modal-overlay" id="serviceModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="pillar-modal-dialog service-modal-dialog">
+
+      <video class="service-expansion-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+        <source src="/videos/capability-background.mp4" type="video/mp4">
+      </video>
+
+      <!-- Top Navigation & Control Bar -->
+      <header class="pillar-modal-topbar">
+        <div class="pillar-topbar-left">
+          <div class="pillar-badge-pill" id="smBadge">01</div>
+          <span class="pillar-category-tag" id="smCategory">SEARCH INTENT &amp; AUDIENCE SEGMENTATION</span>
+        </div>
+
+        <div class="pillar-topbar-nav">
+          <button class="pillar-nav-btn" id="smPrevBtn" title="Previous Service" aria-label="Previous Service">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+            <span>Prev</span>
+          </button>
+
+          <div class="pillar-tabs-pills" id="smTabsPills">
+            <button class="pillar-dot-btn active" data-service-switch="1">01</button>
+            <button class="pillar-dot-btn" data-service-switch="2">02</button>
+            <button class="pillar-dot-btn" data-service-switch="3">03</button>
+            <button class="pillar-dot-btn" data-service-switch="4">04</button>
+          </div>
+
+          <button class="pillar-nav-btn" id="smNextBtn" title="Next Service" aria-label="Next Service">
+            <span>Next</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <button class="pillar-close-btn" id="closeServiceModal" aria-label="Close service view">
+          <span>Close</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+
+      <!-- Scrollable Modal Content Body -->
+      <div class="pillar-modal-scroll-body" id="smScrollBody">
+
+        <!-- Summary-first editorial service page -->
+        <section class="pm-hero-section">
+          <div class="pm-hero-eyebrow" id="smTagline">Deep audience intelligence for scalable growth</div>
+          <h1 class="pm-hero-title" id="smTitle">AUDIENCE INTELLIGENCE</h1>
+          <p class="pm-hero-lead" id="smOverview">Analyze first-party customer data to uncover buyer journeys and unlock growth.</p>
+          <div class="pm-highlights-row" id="smHighlights"><!-- Injected via JS --></div>
+        </section>
+
+        <section class="pm-editorial-section pm-outcomes-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">KEY OUTCOMES</span>
+            <h2 class="pm-section-title">The signal that matters.</h2>
+          </div>
+          <div class="pm-benchmarks-grid" id="smBenchmarks"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-technical-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">TECHNICAL IMPLEMENTATION</span>
+            <h2 class="pm-section-title">The system behind the service.</h2>
+          </div>
+          <div class="pm-technical-grid" id="smTechnicalGrid"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-capabilities-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">CORE CAPABILITIES</span>
+            <h2 class="pm-section-title">Focused execution, built to compound.</h2>
+          </div>
+          <div class="pm-deliverables-list" id="smDeliverables"></div>
+        </section>
+
+        <section class="pm-editorial-section pm-tech-section">
+          <div class="pm-section-intro pm-section-intro-inline">
+            <div>
+              <span class="pm-section-label">TECHNOLOGY ECOSYSTEM</span>
+              <h2 class="pm-section-title">The stack behind the system.</h2>
+            </div>
+            <span class="pm-section-note">Selected tools, revealed on demand</span>
+          </div>
+          <details class="pm-disclosure pm-stack-disclosure">
+            <summary><span>View full technology stack</span><span class="pm-summary-arrow">+</span></summary>
+            <div class="pm-tool-chips" id="smToolStack"></div>
+          </details>
+        </section>
+
+        <section class="pm-editorial-section pm-roadmap-section">
+          <div class="pm-section-intro">
+            <span class="pm-section-label">90-DAY FRAMEWORK</span>
+            <h2 class="pm-section-title">From discovery to compounding scale.</h2>
+          </div>
+          <div class="pm-sprint-steps-grid" id="smRoadmap"></div>
+        </section>
+
+      </div>
+
+      <!-- Modal Bottom Action Bar -->
+      <footer class="pillar-modal-footer">
+        <div class="pm-footer-left">
+          <span class="pm-footer-kicker">Ready to activate this service?</span>
+          <strong id="smFooterServiceName">01: Audience Intelligence</strong>
+        </div>
+        <div class="pm-footer-actions">
+          <a href="#case-study" class="btn btn-outline-white btn-sm" id="smBtnCaseStudy">
+            <span>Explore Case Studies</span>
+          </a>
+          <button class="btn btn-amber btn-sm" id="smBtnSchedule">
+            <span>Schedule Strategy Call for this Service</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       15. SCHEDULE A CALL MODAL (TRIGGERED BY NAVBAR / CTAS)
+       ========================================================================= -->
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Schedule a Strategy Call</h3>
+          <p class="modal-subtitle">Direct 30-min strategy session with a Senior Growth Lead.</p>
+        </div>
+        <button class="modal-close" id="closeScheduleModal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form" id="schedulePopupForm">
+          <div class="form-group">
+            <label for="pFullName">Full Name *</label>
+            <input type="text" id="pFullName" name="fullName" placeholder="Eleanor Vance" required>
+          </div>
+          <div class="form-group">
+            <label for="pWorkEmail">Work Email *</label>
+            <input type="email" id="pWorkEmail" name="workEmail" placeholder="eleanor@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="pCompany">Company / Brand</label>
+            <input type="text" id="pCompany" name="company" placeholder="Lumina Health">
+          </div>
+          <div class="form-group">
+            <label for="pPhone">Phone Number</label>
+            <input type="tel" id="pPhone" name="phone" placeholder="+1 (555) 000-0000">
+          </div>
+          <div class="form-group">
+            <label for="pMessage">Brief Objective or Challenge</label>
+            <textarea id="pMessage" name="message" rows="3" placeholder="Lower CAC, scale Meta/Google CAPI, fix GA4 attribution, Core Web Vitals..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-amber btn-lg" style="width: 100%; justify-content: center; margin-top: 16px;">
+            <span>Submit Call Request</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       16. VIDEO MODAL (AGENCY FILM)
+       ========================================================================= -->
+  <div class="modal-overlay" id="videoModal">
+    <div class="modal-box modal-video-box">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px;">
+        <h3 class="modal-title" style="color: var(--dark-text); font-size: 20px;">Fluvo: The Scaling Framework</h3>
+        <button class="modal-close" id="closeVideoModal" style="border-color: rgba(255,255,255,0.2); color: var(--dark-text);">&times;</button>
+      </div>
+      <div class="video-wrapper">
+        <div class="video-responsive">
+          <iframe id="videoIframe" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1" title="Fluvo Framework Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       17. COMMAND PALETTE SEARCH OVERLAY (⌘K / Ctrl+K)
+       ========================================================================= -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-box">
+      <div class="search-input-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search capabilities, methodology, case studies..." autocomplete="off">
+        <span class="search-kbd" id="closeSearchKbd">ESC</span>
+      </div>
+      <div class="search-results" id="searchResults">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       18. LIVE CHAT WIDGET
+       ========================================================================= -->
+  <div class="chat-bubble" id="chatBubble" aria-label="Open Live Chat">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <div class="chat-unread" id="chatUnread">1</div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-header-avatar">👑</div>
+      <div>
+        <div class="chat-header-name">Fluvo Growth Concierge</div>
+        <div class="chat-header-status"><span class="chat-online-dot"></span> Senior Growth Partner</div>
+      </div>
+      <button class="modal-close chat-close" id="closeChatBtn" style="margin-left: auto; width: 26px; height: 26px; font-size: 14px; border-color: rgba(255,255,255,0.2); color: var(--white); cursor: pointer;" aria-label="Close Chat">&times;</button>
+    </div>
+
+    <div class="chat-body" id="chatBody">
+      <div class="chat-msg agent">
+        <div class="chat-bubble-msg">
+          👋 Welcome to Fluvo! Are you looking to scale paid acquisition, lower CAC, audit GA4/CAPI attribution, or optimize Core Web Vitals?
+        </div>
+        <span class="chat-msg-time">Just now</span>
+      </div>
+    </div>
+
+    <div class="chat-suggestions">
+      <button class="chat-chip" data-msg="I want to schedule a strategy call">📅 Schedule a Call</button>
+      <button class="chat-chip" data-msg="What are your ROAS benchmarks?">📈 ROAS Benchmarks</button>
+      <button class="chat-chip" data-msg="How does your 90-day sprint work?">⚡ 90-Day Sprint</button>
+    </div>
+
+    <form class="chat-footer" id="chatForm">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." autocomplete="off">
+      <button type="submit" class="chat-send" aria-label="Send message">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

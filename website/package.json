@@ -1,0 +1,21 @@
+{
+  "name": "fluvo-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18.0.0" },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "canvas-confetti": "^1.9.4",
+    "chart.js": "^4.5.1",
+    "nodemailer": "^6.10.1"
+  }
+}
