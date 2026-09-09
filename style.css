@@ -3812,7 +3812,7 @@ textarea { resize: vertical; min-height: 90px; }
 .pillar-modal-overlay {
   position: fixed;
   inset: 0;
-  background: transparent;
+  background: var(--cream);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   z-index: 99999;
@@ -3872,14 +3872,32 @@ textarea { resize: vertical; min-height: 90px; }
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(245, 242, 236, 0.42);
+  background: rgba(245, 242, 236, 0.58);
   pointer-events: none;
   z-index: 0;
+}
+
+.pillar-modal-background-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  opacity: 0.52;
+  filter: saturate(1.02) contrast(1.02) brightness(1.04);
 }
 
 .pillar-modal-dialog > * {
   position: relative;
   z-index: 1;
+}
+
+.pillar-modal-dialog > .pillar-modal-background-video {
+  position: absolute;
+  z-index: 0;
 }
 
 .service-modal-dialog {
@@ -3889,7 +3907,7 @@ textarea { resize: vertical; min-height: 90px; }
 
 .service-modal-dialog::before {
   z-index: 1;
-  background: rgba(245, 242, 236, 0.48);
+  background: rgba(245, 242, 236, 0.58);
 }
 
 .service-modal-dialog > .service-expansion-background-video {
@@ -3902,7 +3920,7 @@ textarea { resize: vertical; min-height: 90px; }
   object-fit: cover;
   object-position: center;
   pointer-events: none;
-  opacity: 0.82;
+  opacity: 0.52;
   filter: saturate(1.04) contrast(1.02) brightness(1.02);
 }
 
