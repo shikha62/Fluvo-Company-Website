@@ -256,7 +256,7 @@ if (fs.existsSync(DIST_DIR)) {
     res.sendFile(path.join(DIST_DIR, 'admin.html'));
   });
   // Fallback: serve index.html for all other non-API routes
-  app.get('*', (_req, res) => {
+  app.get('/{*splat}', (_req, res) => {
     res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
 }
