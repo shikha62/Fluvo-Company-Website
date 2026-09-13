@@ -1610,7 +1610,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEl.textContent = 'Testing connection...';
       }
       if (msgTargetEl) {
-        msgTargetEl.innerHTML = '<span style="color:#fcd34d;">Testing live IMAP connection to imap.titan.email:993...</span>';
+        msgTargetEl.innerHTML = '<span style="color:#fcd34d;">Testing live IMAP connection to imap.secureserver.net:993...</span>';
       }
 
       try {
@@ -1621,10 +1621,10 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({
             password: password.trim(),
             address: 'connect@fluvo.in',
-            imapHost: 'imap.titan.email',
+            imapHost: 'imap.secureserver.net',
             imapPort: 993,
-            smtpHost: 'smtp.titan.email',
-            smtpPort: 587
+            smtpHost: 'smtpout.secureserver.net',
+            smtpPort: 465
           })
         });
 

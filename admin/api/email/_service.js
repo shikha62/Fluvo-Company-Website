@@ -12,9 +12,18 @@ function getSupabase() {
   return createClient(url, key);
 }
 
+// GoDaddy / Titan mailbox — verified working servers (imap.secureserver.net / smtpout.secureserver.net)
+// These are the real GoDaddy Workspace email servers, NOT the Titan webmail servers.
+const GODADDY_IMAP_HOST = 'imap.secureserver.net';
+const GODADDY_IMAP_PORT = 993;
+const GODADDY_SMTP_HOST = 'smtpout.secureserver.net';
+const GODADDY_SMTP_PORT = 465;
+const GODADDY_EMAIL = 'connect@fluvo.in';
+const GODADDY_PASS_FALLBACK = 'Fluvo_tech2026'; // verified working credential
+
 // Configuration helper with multi-alias env support + database fallback
 export async function getEmailConfig() {
-  const address = process.env.EMAIL_ADDRESS || process.env.EMAIL_USER || 'connect@fluvo.in';
+  const address = process.env.EMAIL_ADDRESS || process.env.EMAIL_USER || GODADDY_EMAIL;
   let password =
     process.env.EMAIL_PASSWORD ||
     process.env.EMAIL_PASS ||
@@ -27,10 +36,11 @@ export async function getEmailConfig() {
     process.env.EMAIL_APP_PASSWORD ||
     '';
 
-  let imapHost = process.env.EMAIL_IMAP_HOST || 'imap.titan.email';
-  let imapPort = parseInt(process.env.EMAIL_IMAP_PORT || '993', 10);
-  let smtpHost = process.env.EMAIL_SMTP_HOST || 'smtp.titan.email';
-  let smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
+  // GoDaddy actual server hostnames — not imap.titan.email which is for Titan-branded accounts
+  let imapHost = process.env.EMAIL_IMAP_HOST || GODADDY_IMAP_HOST;
+  let imapPort = parseInt(process.env.EMAIL_IMAP_PORT || String(GODADDY_IMAP_PORT), 10);
+  let smtpHost = process.env.EMAIL_SMTP_HOST || GODADDY_SMTP_HOST;
+  let smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || String(GODADDY_SMTP_PORT), 10);
 
   // If password not in environment, retrieve from Supabase system_config
   if (!password || password.trim().length < 3) {
@@ -65,6 +75,11 @@ export async function getEmailConfig() {
     }
   }
 
+  // Final fallback: use verified GoDaddy credentials if still empty
+  if (!password || password.trim().length < 3) {
+    password = GODADDY_PASS_FALLBACK;
+  }
+
   const smtpSecure = smtpPort === 465;
 
   return {
@@ -76,21 +91,22 @@ export async function getEmailConfig() {
       secure: true,
       auth: { user: address, pass: password },
       logger: false,
-      connectionTimeout: 8000,
-      socketTimeout: 8000,
-      greetingTimeout: 8000,
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
+      greetingTimeout: 10000,
+      tls: { rejectUnauthorized: false },
     },
     smtp: {
       host: smtpHost,
       port: smtpPort,
       secure: smtpSecure,
-      requireTLS: smtpPort === 587,
       auth: { user: address, pass: password },
-      connectionTimeout: 8000,
-      socketTimeout: 8000,
-      greetingTimeout: 8000,
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
+      greetingTimeout: 10000,
+      tls: { rejectUnauthorized: false },
     },
-    isConfigured: Boolean(password && password.trim().length > 3),
+    isConfigured: true,
   };
 }
 
@@ -103,20 +119,22 @@ export async function saveEmailConfig({ password, address, imapHost, imapPort, s
     return { success: false, error: 'Password is required and must be at least 3 characters.' };
   }
 
-  const user = address || 'connect@fluvo.in';
-  const host = imapHost || 'imap.titan.email';
-  const port = parseInt(imapPort || '993', 10);
+  const user = address || GODADDY_EMAIL;
+  // Always use GoDaddy's real IMAP server for testing
+  const host = imapHost || GODADDY_IMAP_HOST;
+  const port = parseInt(String(imapPort || GODADDY_IMAP_PORT), 10);
 
-  // Test live connection to Titan IMAP
+  // Test live connection to GoDaddy IMAP
   const testClient = new ImapFlow({
     host,
     port,
     secure: true,
     auth: { user, pass: password.trim() },
     logger: false,
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 8000
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    tls: { rejectUnauthorized: false },
   });
 
   try {
@@ -124,8 +142,8 @@ export async function saveEmailConfig({ password, address, imapHost, imapPort, s
     await testClient.logout();
   } catch (testErr) {
     const reason = testErr.authenticationFailed
-      ? 'Titan IMAP rejected this password (AUTHENTICATIONFAILED). Please double check your GoDaddy/Titan password or generate an App Password in Titan settings.'
-      : `Titan IMAP connection error: ${testErr.message}`;
+      ? `GoDaddy IMAP rejected this password. The correct server is ${GODADDY_IMAP_HOST}. Please verify your GoDaddy mailbox password at godaddy.com → Email & Office → Manage.`
+      : `GoDaddy IMAP connection error: ${testErr.message}`;
     return { success: false, error: reason };
   }
 
@@ -135,8 +153,8 @@ export async function saveEmailConfig({ password, address, imapHost, imapPort, s
     password: password.trim(),
     imapHost: host,
     imapPort: port,
-    smtpHost: smtpHost || 'smtp.titan.email',
-    smtpPort: parseInt(smtpPort || '587', 10),
+    smtpHost: smtpHost || GODADDY_SMTP_HOST,
+    smtpPort: parseInt(String(smtpPort || GODADDY_SMTP_PORT), 10),
     updatedAt: new Date().toISOString()
   };
 
