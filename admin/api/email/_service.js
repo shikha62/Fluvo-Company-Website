@@ -637,7 +637,7 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
       } catch (e) {
         console.warn('Supabase mark read notice:', e.message);
       }
-      return { success: true, data: foundLead };
+      return { success: true, data: foundLead, message: foundLead };
     }
   }
 
@@ -649,29 +649,42 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
       await client.connect();
       const lock = await client.getMailboxLock(normFolder === 'Starred' ? 'INBOX' : normFolder);
       try {
-        const msg = await client.download(uid, ['rfc822'], { uid: true });
-        const parsed = await simpleParser(msg.content);
-        await client.messageFlagsAdd({ uid }, ['\\Seen']);
+        const fetchResult = await client.fetchOne(String(uid), { source: true, flags: true }, { uid: true });
+        if (fetchResult && fetchResult.source) {
+          const parsed = await simpleParser(fetchResult.source);
+          try {
+            await client.messageFlagsAdd({ uid: numUid }, ['\\Seen']);
+          } catch (flagErr) {
+            console.warn('Flag mark read notice:', flagErr.message);
+          }
 
-        return {
-          success: true,
-          data: {
-            uid: Number(uid),
+          const detail = {
+            uid: numUid,
             messageId: parsed.messageId || '',
-            from: { name: parsed.from?.value?.[0]?.name || parsed.from?.text, address: parsed.from?.value?.[0]?.address },
-            to: (parsed.to?.value || []).map(t => ({ name: t.name, address: t.address })),
-            cc: (parsed.cc?.value || []).map(t => ({ name: t.name, address: t.address })),
+            from: {
+              name: parsed.from?.value?.[0]?.name || parsed.from?.text || '',
+              address: parsed.from?.value?.[0]?.address || ''
+            },
+            to: (parsed.to?.value || []).map(t => ({ name: t.name || '', address: t.address || '' })),
+            cc: (parsed.cc?.value || []).map(t => ({ name: t.name || '', address: t.address || '' })),
             subject: parsed.subject || '(No Subject)',
             date: parsed.date ? parsed.date.toISOString() : new Date().toISOString(),
-            html: parsed.html || `<p>${(parsed.text || '').replace(/\n/g, '<br>')}</p>`,
+            html: parsed.html || (parsed.text ? `<p>${parsed.text.replace(/\n/g, '<br>')}</p>` : ''),
             text: parsed.text || '',
+            hasAttachments: Boolean(parsed.attachments && parsed.attachments.length > 0),
             attachments: (parsed.attachments || []).map(a => ({
               filename: a.filename || 'attachment',
-              contentType: a.contentType,
-              size: a.size
+              contentType: a.contentType || 'application/octet-stream',
+              size: a.size || 0
             }))
-          }
-        };
+          };
+
+          return {
+            success: true,
+            data: detail,
+            message: detail
+          };
+        }
       } finally {
         lock.release();
         await client.logout();
@@ -690,7 +703,8 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
   found.unread = false;
   return {
     success: true,
-    data: found
+    data: found,
+    message: found
   };
 }
 

@@ -1313,6 +1313,11 @@ document.addEventListener('DOMContentLoaded', () => {
       readerEmpty.style.display = 'none';
       readerView.style.display = 'flex';
 
+      // Show loading indicator in reader body if body needs to be fetched
+      if (!msg.html && !msg.text) {
+        readerBody.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:120px;color:var(--text-muted);font-size:13px;gap:8px;"><div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Loading message content...</div>';
+      }
+
       // If we only have snippet, fetch full detail
       let fullMsg = msg;
       if (!msg.html && !msg.text) {
@@ -1321,7 +1326,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch(`/api/email?${params}`, { credentials: 'same-origin' });
           if (res.ok) {
             const json = await res.json();
-            if (json.success && json.message) fullMsg = { ...msg, ...json.message };
+            const fetched = json.message || json.data;
+            if (json.success && fetched) {
+              fullMsg = { ...msg, ...fetched };
+              Object.assign(msg, fetched);
+            }
           }
         } catch (err) {
           console.warn('Could not load email detail:', err);
@@ -1370,9 +1379,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Body
       if (fullMsg.html) {
-        readerBody.innerHTML = `<div class="email-html-body">${fullMsg.html}</div>`;
+        const cleanHtml = fullMsg.html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        const iframeDoc = `<!DOCTYPE html><html><head><base target="_blank"><meta charset="utf-8"><style>body{margin:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#111;background:#fff;word-break:break-word;}img{max-width:100%;height:auto;}</style></head><body>${cleanHtml}</body></html>`;
+
+        const frame = document.createElement('iframe');
+        frame.className = 'email-html-frame';
+        frame.style.width = '100%';
+        frame.style.border = 'none';
+        frame.style.background = '#ffffff';
+        frame.style.borderRadius = '8px';
+        frame.style.display = 'block';
+        frame.style.minHeight = '350px';
+        frame.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox allow-same-origin');
+        frame.srcdoc = iframeDoc;
+        frame.onload = () => {
+          try {
+            const h = frame.contentWindow?.document?.body?.scrollHeight || frame.contentWindow?.document?.documentElement?.scrollHeight;
+            if (h && h > 100) frame.style.height = `${h + 40}px`;
+          } catch {}
+        };
+        readerBody.innerHTML = '';
+        readerBody.appendChild(frame);
+      } else if (fullMsg.text) {
+        readerBody.innerHTML = `<div class="email-text-body">${escHtml(fullMsg.text)}</div>`;
       } else {
-        readerBody.innerHTML = `<div class="email-text-body">${escHtml(fullMsg.text || '')}</div>`;
+        readerBody.innerHTML = `<div class="email-text-body" style="color:var(--text-muted);font-style:italic;">(No body content in this message)</div>`;
       }
 
       // Mark as read via API (fire & forget)
