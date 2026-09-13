@@ -96,6 +96,14 @@
           <span>Growth</span>
         </div>
 
+        <div class="nav-label">Communications</div>
+
+        <div class="sidebar-link" data-tab="inbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Inbox</span>
+          <span class="badge-count" id="sidebarInboxCount" style="display:none;">0</span>
+        </div>
+
         <div class="nav-label">System</div>
 
         <div class="sidebar-link" data-tab="settings">
@@ -512,7 +520,145 @@
         </div>
 
         <!-- ===================================================================
-             TAB 5: SECURITY & WORKSPACE SETTINGS
+             TAB 5: EMAIL CENTER / INBOX
+             =================================================================== -->
+        <div class="tab-pane" id="tab-inbox">
+          <div class="email-shell">
+
+            <!-- ── Left: Folder Sidebar ── -->
+            <aside class="email-folders" id="emailFolders">
+              <div class="email-folder-header">
+                <span>connect@fluvo.in</span>
+                <button class="email-compose-btn" id="btnCompose" title="New Email">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  Compose
+                </button>
+              </div>
+              <nav class="email-folder-nav" id="emailFolderNav">
+                <div class="email-folder-item active" data-folder="INBOX">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+                  <span>Inbox</span>
+                  <span class="folder-badge" id="folderBadge-INBOX"></span>
+                </div>
+                <div class="email-folder-item" data-folder="Sent">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  <span>Sent</span>
+                </div>
+                <div class="email-folder-item" data-folder="Drafts">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  <span>Drafts</span>
+                </div>
+                <div class="email-folder-item" data-folder="Archive">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  <span>Archive</span>
+                </div>
+                <div class="email-folder-item" data-folder="Spam">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Spam</span>
+                </div>
+                <div class="email-folder-item" data-folder="Trash">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  <span>Trash</span>
+                </div>
+              </nav>
+            </aside>
+
+            <!-- ── Center: Email List ── -->
+            <div class="email-list-panel">
+              <div class="email-list-toolbar">
+                <div class="email-search-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" id="emailSearchInput" placeholder="Search messages…" class="email-search-input" autocomplete="off">
+                </div>
+                <div class="email-toolbar-actions">
+                  <button class="email-action-btn" id="btnEmailRefresh" title="Refresh">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="email-list" id="emailList">
+                <div class="email-list-loader" id="emailListLoader">
+                  <div class="email-spinner"></div>
+                  <span>Loading messages…</span>
+                </div>
+              </div>
+
+              <div class="email-list-pagination" id="emailPagination" style="display:none;">
+                <button class="email-page-btn" id="btnEmailPrev" disabled>← Prev</button>
+                <span class="email-page-info" id="emailPageInfo">Page 1</span>
+                <button class="email-page-btn" id="btnEmailNext">Next →</button>
+              </div>
+            </div>
+
+            <!-- ── Right: Email Reader + Compose Modal ── -->
+            <div class="email-reader-panel" id="emailReaderPanel">
+              <div class="email-reader-empty" id="emailReaderEmpty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <p>Select a message to read</p>
+              </div>
+
+              <div class="email-reader-view" id="emailReaderView" style="display:none;">
+                <div class="email-reader-header" id="emailReaderHeader"></div>
+                <div class="email-reader-body" id="emailReaderBody"></div>
+                <div class="email-reader-footer">
+                  <button class="email-action-btn primary" id="btnReply">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 00-4-4H4"/></svg>
+                    Reply
+                  </button>
+                  <button class="email-action-btn" id="btnForward">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 014-4h12"/></svg>
+                    Forward
+                  </button>
+                  <button class="email-action-btn" id="btnMarkUnread">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Mark Unread
+                  </button>
+                  <button class="email-action-btn danger" id="btnDeleteEmail">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── Compose Modal ── -->
+          <div class="email-compose-modal" id="emailComposeModal" style="display:none;">
+            <div class="email-compose-card">
+              <div class="email-compose-header">
+                <span id="emailComposeTitle">New Email</span>
+                <button class="email-compose-close" id="btnComposeClose">&times;</button>
+              </div>
+              <div class="email-compose-body">
+                <div class="email-compose-field">
+                  <label>To</label>
+                  <input type="email" id="composeTo" placeholder="recipient@domain.com" class="email-compose-input" multiple>
+                </div>
+                <div class="email-compose-field">
+                  <label>Subject</label>
+                  <input type="text" id="composeSubject" placeholder="Email subject…" class="email-compose-input">
+                </div>
+                <div class="email-compose-field" style="flex:1;">
+                  <label>Message</label>
+                  <textarea id="composeBody" class="email-compose-textarea" placeholder="Write your message here…"></textarea>
+                </div>
+              </div>
+              <div class="email-compose-footer">
+                <button class="email-action-btn" id="btnComposeSend">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Send Email
+                </button>
+                <button class="email-action-btn" id="btnComposeCancel">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ===================================================================
+             TAB 5 (PREVIOUSLY TAB 5): SECURITY & WORKSPACE SETTINGS
              =================================================================== -->
         <div class="tab-pane" id="tab-settings">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px;">
