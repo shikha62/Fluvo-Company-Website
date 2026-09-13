@@ -1235,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (emailCurrentMsg && emailCurrentMsg.uid === msg.uid) item.classList.add('active');
 
         const badges = [];
+        if (msg.isLeadInquiry) badges.push(`<span class="email-badge inquiry-badge" style="background:rgba(216,107,47,0.15);color:#D86B2F;border:1px solid rgba(216,107,47,0.3);font-weight:600;">⚡ Call Request</span>`);
         if (msg.unread) badges.push(`<span class="email-badge unread-badge">Unread</span>`);
         if (msg.starred) badges.push(`<span class="email-badge starred-badge">★ Starred</span>`);
         if (msg.hasAttachments) badges.push(`<span class="email-badge attachment-badge">📎</span>`);

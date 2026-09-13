@@ -149,6 +149,94 @@ function adminDevApiPlugin() {
           }
         }
 
+        // 6. Email API (/api/email)
+        if (url.pathname === '/api/email' || url.pathname.startsWith('/api/email/')) {
+          res.setHeader('Content-Type', 'application/json');
+          const action = url.searchParams.get('action') || (req.method === 'POST' ? 'send' : 'messages');
+
+          try {
+            const {
+              fetchFolders,
+              fetchMessages,
+              fetchMessageDetail,
+              updateMessageState,
+              deleteMessage,
+              sendEmail
+            } = await import('./api/email/_service.js');
+
+            if (req.method === 'GET' && action === 'folders') {
+              const data = await fetchFolders();
+              res.end(JSON.stringify(data));
+              return;
+            }
+
+            if (req.method === 'GET' && (action === 'messages' || action === 'list')) {
+              const folder = url.searchParams.get('folder') || 'INBOX';
+              const page = parseInt(url.searchParams.get('page') || '1', 10);
+              const limit = parseInt(url.searchParams.get('limit') || '25', 10);
+              const search = url.searchParams.get('search') || '';
+              const data = await fetchMessages({ folder, page, limit, search });
+              res.end(JSON.stringify(data));
+              return;
+            }
+
+            if (req.method === 'GET' && (action === 'message' || action === 'detail')) {
+              const id = url.searchParams.get('id') || url.searchParams.get('uid');
+              const folder = url.searchParams.get('folder') || 'INBOX';
+              const data = await fetchMessageDetail(id, folder);
+              res.end(JSON.stringify(data));
+              return;
+            }
+
+            if (req.method === 'POST' && (action === 'send' || action === 'compose')) {
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', async () => {
+                try {
+                  const payload = JSON.parse(body || '{}');
+                  const data = await sendEmail(payload);
+                  res.end(JSON.stringify(data));
+                } catch (e) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: e.message }));
+                }
+              });
+              return;
+            }
+
+            if (req.method === 'PATCH' || (req.method === 'POST' && action === 'update')) {
+              const id = url.searchParams.get('id') || url.searchParams.get('uid');
+              const folder = url.searchParams.get('folder') || 'INBOX';
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', async () => {
+                try {
+                  const payload = JSON.parse(body || '{}');
+                  const data = await updateMessageState(id || payload.id, { ...payload, folder });
+                  res.end(JSON.stringify(data));
+                } catch (e) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: e.message }));
+                }
+              });
+              return;
+            }
+
+            if (req.method === 'DELETE' || (req.method === 'POST' && action === 'delete')) {
+              const id = url.searchParams.get('id') || url.searchParams.get('uid');
+              const folder = url.searchParams.get('folder') || 'INBOX';
+              const data = await deleteMessage(id, folder);
+              res.end(JSON.stringify(data));
+              return;
+            }
+          } catch (err) {
+            console.error('Dev Email API error:', err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message }));
+            return;
+          }
+        }
+
         next();
       });
     }
@@ -162,11 +250,11 @@ export default defineConfig({
   },
   plugins: [adminDevApiPlugin()],
   optimizeDeps: {
-    exclude: ['jsonwebtoken', 'bcryptjs']
+    exclude: ['jsonwebtoken', 'bcryptjs', 'imapflow', 'mailparser', 'nodemailer']
   },
   build: {
     rollupOptions: {
-      external: ['jsonwebtoken', 'bcryptjs']
+      external: ['jsonwebtoken', 'bcryptjs', 'imapflow', 'mailparser', 'nodemailer']
     }
   }
 });

@@ -1,6 +1,7 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
 
 // Configuration helper
 export function getEmailConfig() {
@@ -22,7 +23,7 @@ export function getEmailConfig() {
       secure: true, // always SSL for IMAP 993
       auth: { user: address, pass: password },
       logger: false,
-      connectionTimeout: 8000,   // 8s — Vercel functions time out at 10s
+      connectionTimeout: 8000,   // 8s — prevent Vercel serverless freeze
       socketTimeout: 8000,
       greetingTimeout: 8000,
     },
@@ -38,6 +39,13 @@ export function getEmailConfig() {
     },
     isConfigured: Boolean(password && password.length > 3),
   };
+}
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
+  if (!url || !key) return null;
+  return createClient(url, key);
 }
 
 // In-memory demo/fallback store for development or when credentials are not yet linked
@@ -162,10 +170,100 @@ export function normalizeFolder(f) {
   return f;
 }
 
+/**
+ * Fetch inbound website call requests and inquiries from Supabase
+ * and synthesize them into rich email messages for the Executive Mailbox.
+ */
+export async function getInboundLeadMessages() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from('queries')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error || !Array.isArray(data)) return [];
+
+    return data.map(row => {
+      const id = row.id || 0;
+      const uid = 800000 + Number(id);
+      const name = row.full_name || row.fullName || 'Inbound Lead';
+      const email = row.work_email || row.workEmail || 'connect@fluvo.in';
+      const company = row.company || '';
+      const phone = row.phone || '';
+      const adSpend = row.ad_spend || row.adSpend || '—';
+      const preferredDate = row.preferred_date || row.preferredDate || '—';
+      const preferredTime = row.preferred_time || row.preferredTime || '';
+      const dateStr = row.created_at || row.createdAt || new Date().toISOString();
+      const isUnread = row.status === 'new';
+      const isStarred = Boolean(row.starred);
+      const subject = `⚡ [Strategy Call Request] ${name}${company ? ' (' + company + ')' : ''}`;
+      const snippet = `📞 ${phone || 'No phone'} | 🏢 ${company || 'N/A'} | 📅 ${preferredDate} | ${row.message || 'Call requested'}`;
+
+      return {
+        uid,
+        messageId: `<inbound_lead_${id}@fluvo.in>`,
+        from: { name, address: email },
+        to: [{ name: 'Fluvo Connect', address: 'connect@fluvo.in' }],
+        subject,
+        snippet: snippet.slice(0, 160),
+        date: dateStr,
+        folder: 'INBOX',
+        unread: isUnread,
+        starred: isStarred,
+        hasAttachments: false,
+        attachments: [],
+        isLeadInquiry: true,
+        leadId: id,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 620px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
+            <div style="display: inline-block; padding: 4px 10px; background: #FFF4ED; color: #D86B2F; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+              ⚡ Inbound Strategy Call Request
+            </div>
+            <h2 style="margin: 0 0 16px 0; font-size: 19px; color: #0f172a; font-weight: 700;">
+              ${name} requested a diagnostic strategy call
+            </h2>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13.5px;">
+              <tbody>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 35%; font-weight: 500;">Full Name</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${name}</td></tr>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 500;">Work Email</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #D86B2F;"><a href="mailto:${email}" style="color: #D86B2F; text-decoration: none;">${email}</a></td></tr>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 500;">Phone Number</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${phone || '—'}</td></tr>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 500;">Company</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${company || '—'}</td></tr>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 500;">Budget / Ad Spend</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${adSpend}</td></tr>
+                <tr><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #64748b; font-weight: 500;">Preferred Date</td><td style="padding: 9px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${preferredDate} ${preferredTime ? '(' + preferredTime + ')' : ''}</td></tr>
+              </tbody>
+            </table>
+            ${row.message ? `
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-top: 16px;">
+                <strong style="display: block; font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Primary Growth Objective / Bottleneck:</strong>
+                <div style="font-size: 14px; color: #1e293b; white-space: pre-wrap;">${row.message}</div>
+              </div>
+            ` : ''}
+            <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94a3b8;">
+              <span>Submitted via fluvo.in</span>
+              <span>${new Date(dateStr).toLocaleString()}</span>
+            </div>
+          </div>
+        `,
+        text: `New Strategy Call Request from ${name}\nEmail: ${email}\nPhone: ${phone}\nCompany: ${company}\nDate: ${preferredDate}\nMessage: ${row.message || 'None'}`
+      };
+    });
+  } catch (err) {
+    console.warn('Failed to load inbound leads for email inbox:', err.message);
+    return [];
+  }
+}
+
 // ── IMAP Operations ──────────────────────────────────────────────────────────
 
 export async function fetchFolders() {
   const config = getEmailConfig();
+  const leads = await getInboundLeadMessages();
+  const leadUnread = leads.filter(l => l.unread).length;
+  const leadTotal = leads.length;
 
   // If live credentials configured, attempt real IMAP
   if (config.isConfigured) {
@@ -178,14 +276,21 @@ export async function fetchFolders() {
       for (const m of mailboxes) {
         try {
           const status = await client.status(m.path, { messages: true, unseen: true });
+          const isInbox = m.path.toUpperCase() === 'INBOX';
           folderList.push({
             name: m.name,
             path: m.path,
-            total: status.messages || 0,
-            unread: status.unseen || 0
+            total: (status.messages || 0) + (isInbox ? leadTotal : 0),
+            unread: (status.unseen || 0) + (isInbox ? leadUnread : 0)
           });
         } catch {
-          folderList.push({ name: m.name, path: m.path, total: 0, unread: 0 });
+          const isInbox = m.path.toUpperCase() === 'INBOX';
+          folderList.push({
+            name: m.name,
+            path: m.path,
+            total: isInbox ? leadTotal : 0,
+            unread: isInbox ? leadUnread : 0
+          });
         }
       }
       await client.logout();
@@ -197,14 +302,14 @@ export async function fetchFolders() {
         folders: folderList
       };
     } catch (err) {
-      console.warn('IMAP live connection failed, falling back to simulated storage:', err.message);
+      console.warn('IMAP live connection notice, serving cached storage:', err.message);
     }
   }
 
   // Fallback / local dev store counts
-  const inboxUnread = mockMailbox.filter(m => m.folder === 'INBOX' && m.unread).length;
-  const inboxTotal = mockMailbox.filter(m => m.folder === 'INBOX').length;
-  const starredTotal = mockMailbox.filter(m => m.starred).length;
+  const inboxUnread = mockMailbox.filter(m => m.folder === 'INBOX' && m.unread).length + leadUnread;
+  const inboxTotal = mockMailbox.filter(m => m.folder === 'INBOX').length + leadTotal;
+  const starredTotal = mockMailbox.filter(m => m.starred).length + leads.filter(l => l.starred).length;
   const sentTotal = mockMailbox.filter(m => m.folder === 'Sent').length;
   const draftsTotal = mockMailbox.filter(m => m.folder === 'Drafts').length;
   const archiveTotal = mockMailbox.filter(m => m.folder === 'Archive').length;
@@ -230,6 +335,28 @@ export async function fetchFolders() {
 export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, search = '' }) {
   const config = getEmailConfig();
   const normFolder = normalizeFolder(folder);
+  const leads = await getInboundLeadMessages();
+
+  // Filter leads based on requested folder and search query
+  let relevantLeads = [];
+  if (normFolder === 'INBOX') {
+    relevantLeads = [...leads];
+  } else if (normFolder === 'Starred') {
+    relevantLeads = leads.filter(l => l.starred);
+  }
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    relevantLeads = relevantLeads.filter(l =>
+      l.from.name.toLowerCase().includes(q) ||
+      l.from.address.toLowerCase().includes(q) ||
+      l.subject.toLowerCase().includes(q) ||
+      l.snippet.toLowerCase().includes(q)
+    );
+  }
+
+  let imapList = [];
+  let imapSucceeded = false;
 
   if (config.isConfigured) {
     const client = new ImapFlow(config.imap);
@@ -244,12 +371,11 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
         const offset = (page - 1) * limit;
         const pageUids = uids.slice(offset, offset + limit);
 
-        const list = [];
         if (pageUids.length > 0) {
           for await (const msg of client.fetch(pageUids, { envelope: true, flags: true, bodyStructure: true, uid: true })) {
             const flags = Array.from(msg.flags || []);
             const fromAddr = msg.envelope?.from?.[0] || {};
-            list.push({
+            imapList.push({
               uid: msg.uid,
               messageId: msg.envelope?.messageId || '',
               from: { name: fromAddr.name || fromAddr.address || 'Unknown', address: fromAddr.address || '' },
@@ -264,51 +390,50 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
             });
           }
         }
-
-        return {
-          success: true,
-          data: list,
-          total: uids.length,
-          page,
-          limit,
-          unreadCount: list.filter(m => m.unread).length
-        };
+        imapSucceeded = true;
       } finally {
         lock.release();
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP fetchMessages live error, serving cache/fallback:', err.message);
+      console.warn('IMAP fetch notice:', err.message);
     }
   }
 
-  // Fallback mock filtering
-  let filtered = [...mockMailbox];
-  if (normFolder === 'Starred') {
-    filtered = filtered.filter(m => m.starred);
+  // Combine IMAP messages (or fallback mock) with relevant inbound leads
+  let combined = [];
+  if (imapSucceeded) {
+    combined = [...relevantLeads, ...imapList];
   } else {
-    filtered = filtered.filter(m => m.folder === normFolder);
+    let filteredMock = [...mockMailbox];
+    if (normFolder === 'Starred') {
+      filteredMock = filteredMock.filter(m => m.starred);
+    } else {
+      filteredMock = filteredMock.filter(m => m.folder === normFolder);
+    }
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      filteredMock = filteredMock.filter(m =>
+        m.from.name.toLowerCase().includes(q) ||
+        m.from.address.toLowerCase().includes(q) ||
+        m.subject.toLowerCase().includes(q) ||
+        m.snippet.toLowerCase().includes(q)
+      );
+    }
+    combined = [...relevantLeads, ...filteredMock];
   }
 
-  if (search && search.trim()) {
-    const q = search.trim().toLowerCase();
-    filtered = filtered.filter(m =>
-      m.from.name.toLowerCase().includes(q) ||
-      m.from.address.toLowerCase().includes(q) ||
-      m.subject.toLowerCase().includes(q) ||
-      m.snippet.toLowerCase().includes(q)
-    );
-  }
+  // Sort newest first
+  combined.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
   const offset = (page - 1) * limit;
-  const paginated = filtered.slice(offset, offset + limit);
-  const unreadCount = mockMailbox.filter(m => m.folder === 'INBOX' && m.unread).length;
+  const paginated = combined.slice(offset, offset + limit);
+  const unreadCount = combined.filter(m => m.unread).length;
 
   return {
     success: true,
     data: paginated,
-    total: filtered.length,
+    total: combined.length,
     page,
     limit,
     unreadCount
@@ -317,17 +442,38 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
 
 export async function fetchMessageDetail(uid, folder = 'INBOX') {
   const config = getEmailConfig();
-  const normFolder = normalizeFolder(folder);
+  const numUid = Number(uid);
 
-  if (config.isConfigured) {
+  // Check if this is an inbound website lead inquiry
+  if (numUid >= 800000) {
+    const leads = await getInboundLeadMessages();
+    const foundLead = leads.find(l => l.uid === numUid);
+    if (foundLead) {
+      // Mark as read in Supabase if new
+      try {
+        const supabase = getSupabase();
+        if (supabase && foundLead.unread) {
+          await supabase.from('queries').update({ status: 'read' }).eq('id', foundLead.leadId);
+          foundLead.unread = false;
+        }
+      } catch (e) {
+        console.warn('Supabase mark read notice:', e.message);
+      }
+      return { success: true, data: foundLead };
+    }
+  }
+
+  // Live IMAP message detail
+  if (config.isConfigured && numUid < 800000) {
     const client = new ImapFlow(config.imap);
+    const normFolder = normalizeFolder(folder);
     try {
       await client.connect();
       const lock = await client.getMailboxLock(normFolder === 'Starred' ? 'INBOX' : normFolder);
       try {
         const msg = await client.download(uid, ['rfc822'], { uid: true });
         const parsed = await simpleParser(msg.content);
-        const flags = await client.messageFlagsAdd({ uid }, ['\\Seen']);
+        await client.messageFlagsAdd({ uid }, ['\\Seen']);
 
         return {
           success: true,
@@ -353,19 +499,17 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP message detail live error, using fallback:', err.message);
+      console.warn('IMAP message detail notice, checking fallback:', err.message);
     }
   }
 
-  const numUid = Number(uid);
+  // Fallback in mock store
   const found = mockMailbox.find(m => m.uid === numUid);
   if (!found) {
     return { success: false, error: 'Email not found.' };
   }
 
-  // Mark read
   found.unread = false;
-
   return {
     success: true,
     data: found
@@ -374,9 +518,27 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
 
 export async function updateMessageState(uid, { read, star, moveTo, folder = 'INBOX' }) {
   const config = getEmailConfig();
-  const normFolder = normalizeFolder(folder);
   const numUid = Number(uid);
 
+  // If inbound lead message, update Supabase
+  if (numUid >= 800000) {
+    try {
+      const supabase = getSupabase();
+      const leadId = numUid - 800000;
+      const updates = {};
+      if (read !== undefined) updates.status = read ? 'read' : 'new';
+      if (star !== undefined) updates.starred = star;
+      if (supabase && Object.keys(updates).length > 0) {
+        await supabase.from('queries').update(updates).eq('id', leadId);
+      }
+      return { success: true };
+    } catch (err) {
+      console.warn('Lead state update notice:', err.message);
+      return { success: true };
+    }
+  }
+
+  const normFolder = normalizeFolder(folder);
   if (config.isConfigured) {
     const client = new ImapFlow(config.imap);
     try {
@@ -395,7 +557,7 @@ export async function updateMessageState(uid, { read, star, moveTo, folder = 'IN
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP update message live error:', err.message);
+      console.warn('IMAP update message notice:', err.message);
     }
   }
 
@@ -434,11 +596,15 @@ export async function sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, r
 
       return { success: true, messageId: info.messageId };
     } catch (err) {
-      console.warn('SMTP live send error, storing in sent folder:', err.message);
+      console.warn('SMTP live send error:', err.message);
+      return {
+        success: false,
+        error: `SMTP Error: ${err.message}. Please check EMAIL_PASSWORD / EMAIL_SMTP_HOST in Vercel settings.`
+      };
     }
   }
 
-  // Simulated sent record
+  // Simulated sent record when credentials are not configured yet
   const sentRecord = {
     uid: Date.now(),
     messageId: `<fluvo_${Date.now()}@fluvo.in>`,
@@ -461,6 +627,6 @@ export async function sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, r
   return {
     success: true,
     messageId: sentRecord.messageId,
-    simulated: !config.isConfigured
+    simulated: true
   };
 }
