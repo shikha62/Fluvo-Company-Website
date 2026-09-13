@@ -293,20 +293,38 @@ export async function fetchFolders() {
           });
         }
       }
-      await client.logout();
-
+      imapSucceeded = true;
       return {
         success: true,
         provider: 'Titan / GoDaddy IMAP',
         mailbox: config.address,
-        folders: folderList
+        folders: folderList,
+        connection: { connected: true, configured: true, mailbox: config.address, error: null }
       };
     } catch (err) {
-      console.warn('IMAP live connection notice, serving cached storage:', err.message);
+      const errMsg = err.authenticationFailed
+        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update EMAIL_PASSWORD in Vercel with your GoDaddy/Titan Email Password or App Password.'
+        : `IMAP connection error: ${err.message}`;
+      console.warn('IMAP live connection notice:', errMsg);
+      return {
+        success: true,
+        provider: 'Titan Email (Reconnecting)',
+        mailbox: config.address,
+        folders: [
+          { name: 'Inbox', path: 'INBOX', total: leadTotal, unread: leadUnread },
+          { name: 'Starred', path: 'Starred', total: leads.filter(l => l.starred).length, unread: 0 },
+          { name: 'Sent', path: 'Sent', total: 0, unread: 0 },
+          { name: 'Drafts', path: 'Drafts', total: 0, unread: 0 },
+          { name: 'Archive', path: 'Archive', total: 0, unread: 0 },
+          { name: 'Trash', path: 'Trash', total: 0, unread: 0 },
+          { name: 'Spam', path: 'Spam', total: 0, unread: 0 }
+        ],
+        connection: { connected: false, configured: true, mailbox: config.address, error: errMsg }
+      };
     }
   }
 
-  // Fallback / local dev store counts
+  // Fallback / local dev store counts when not configured
   const inboxUnread = mockMailbox.filter(m => m.folder === 'INBOX' && m.unread).length + leadUnread;
   const inboxTotal = mockMailbox.filter(m => m.folder === 'INBOX').length + leadTotal;
   const starredTotal = mockMailbox.filter(m => m.starred).length + leads.filter(l => l.starred).length;
@@ -318,7 +336,7 @@ export async function fetchFolders() {
 
   return {
     success: true,
-    provider: config.isConfigured ? 'Titan Email (Reconnecting)' : 'Fluvo Enterprise Mailbox Engine',
+    provider: 'Fluvo Enterprise Mailbox Engine',
     mailbox: config.address,
     folders: [
       { name: 'Inbox', path: 'INBOX', total: inboxTotal, unread: inboxUnread },
@@ -328,7 +346,8 @@ export async function fetchFolders() {
       { name: 'Archive', path: 'Archive', total: archiveTotal, unread: 0 },
       { name: 'Trash', path: 'Trash', total: trashTotal, unread: 0 },
       { name: 'Spam', path: 'Spam', total: spamTotal, unread: 0 }
-    ]
+    ],
+    connection: { connected: false, configured: false, mailbox: config.address, error: 'EMAIL_PASSWORD is not set in Vercel environment variables.' }
   };
 }
 
@@ -357,6 +376,7 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
 
   let imapList = [];
   let imapSucceeded = false;
+  let connectionError = null;
 
   if (config.isConfigured) {
     const client = new ImapFlow(config.imap);
@@ -396,8 +416,13 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP fetch notice:', err.message);
+      connectionError = err.authenticationFailed
+        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update EMAIL_PASSWORD in Vercel with your GoDaddy/Titan Email Password or App Password.'
+        : `IMAP connection error: ${err.message}`;
+      console.warn('IMAP fetch notice:', connectionError);
     }
+  } else {
+    connectionError = 'EMAIL_PASSWORD is not set in Vercel environment variables.';
   }
 
   // Combine IMAP messages (or fallback mock) with relevant inbound leads
@@ -436,7 +461,13 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
     total: combined.length,
     page,
     limit,
-    unreadCount
+    unreadCount,
+    connection: {
+      connected: imapSucceeded,
+      configured: config.isConfigured,
+      mailbox: config.address,
+      error: connectionError
+    }
   };
 }
 

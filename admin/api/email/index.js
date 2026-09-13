@@ -46,7 +46,8 @@ export default async function handler(req, res) {
         totalPages,
         unread,
         page,
-        folder
+        folder,
+        connection: result.connection || null
       });
     }
 

@@ -1151,8 +1151,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Load messages from API ────────────────────────────────────────────────
-    async function fetchMessages() {
-      showLoader(true);
+    let lastKnownEmailId = null;
+    let emailConnectionState = null;
+
+    async function fetchMessages(silent = false) {
+      if (!silent) showLoader(true);
 
       try {
         const params = new URLSearchParams({
@@ -1170,24 +1173,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const json = await res.json();
 
         if (json.success && Array.isArray(json.messages)) {
+          emailConnectionState = json.connection || null;
+          const firstMsg = json.messages[0];
+
+          // Trigger live notification if a new unread email arrived
+          if (lastKnownEmailId && firstMsg && firstMsg.uid !== lastKnownEmailId && firstMsg.unread) {
+            const senderName = firstMsg.from?.name || firstMsg.from?.address || 'Someone';
+            showToast(`🔔 New Email from ${senderName}: "${firstMsg.subject}"`, 'info');
+          }
+          if (firstMsg) lastKnownEmailId = firstMsg.uid;
+
           emailMessages = json.messages;
           emailTotalPages = json.totalPages || 1;
-          renderMessageList(emailMessages);
+          renderMessageList(emailMessages, emailConnectionState);
           renderPagination();
           updateFolderBadges(json);
+          updateMailboxHeader(emailConnectionState);
         } else {
           renderMessageList([]);
         }
       } catch (err) {
         console.warn('Email fetch failed:', err);
-        renderMessageList([]);
+        if (!silent) renderMessageList([]);
       }
 
-      showLoader(false);
+      if (!silent) showLoader(false);
     }
 
     function showLoader(show) {
       if (emailLoader) emailLoader.style.display = show ? 'flex' : 'none';
+    }
+
+    function updateMailboxHeader(conn) {
+      const headerLabel = document.querySelector('.email-sidebar-header span');
+      if (!headerLabel) return;
+      if (conn?.connected) {
+        headerLabel.innerHTML = `<span style="color:#22c55e; margin-right:4px;">●</span> CONNECT@FLUVO.IN`;
+        headerLabel.title = 'Live IMAP Connected to Titan Email';
+      } else {
+        headerLabel.innerHTML = `<span style="color:#f59e0b; margin-right:4px;">●</span> CONNECT@FLUVO.IN`;
+        headerLabel.title = conn?.error || 'Titan Email Sync Disconnected';
+      }
     }
 
     function updateFolderBadges(json) {
@@ -1197,11 +1223,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Sidebar badge
       if (sidebarInboxCount) {
-        if (emailCurrentFolder === 'INBOX' && unreadCount > 0) {
+        if (unreadCount > 0) {
           sidebarInboxCount.textContent = String(unreadCount);
           sidebarInboxCount.style.display = '';
-        } else if (emailCurrentFolder !== 'INBOX') {
-          // keep existing badge
         } else {
           sidebarInboxCount.style.display = 'none';
         }
@@ -1209,13 +1233,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Render message list ──────────────────────────────────────────────────
-    function renderMessageList(messages) {
+    function renderMessageList(messages, conn) {
       if (!emailList) return;
 
       // Remove previous items (keep loader)
       Array.from(emailList.children).forEach(c => {
         if (!c.id || c.id !== 'emailListLoader') c.remove();
       });
+
+      // Show sync warning banner if IMAP failed to authenticate
+      if (conn && !conn.connected && conn.error) {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'email-sync-alert';
+        alertBox.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;margin:8px 8px 12px 8px;font-size:12px;color:#fcd34d;';
+        alertBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:3px;color:#fbbf24;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Titan Mailbox Sync Notice
+          </div>
+          <div style="color:#e2e8f0;font-size:11.5px;line-height:1.4;">${escHtml(conn.error)}</div>
+        `;
+        emailList.appendChild(alertBox);
+      }
 
       if (!messages || messages.length === 0) {
         const empty = document.createElement('div');
@@ -1492,12 +1531,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Auto-load on tab switch ────────────────────────────────────────────────
     document.querySelectorAll('.sidebar-link').forEach(link => {
       link.addEventListener('click', () => {
-        if (link.dataset.tab === 'inbox' && !emailInitialized) {
-          emailInitialized = true;
-          fetchMessages();
+        if (link.dataset.tab === 'inbox') {
+          if (!emailInitialized) {
+            emailInitialized = true;
+            fetchMessages();
+          } else {
+            // Refresh on click
+            fetchMessages(true);
+          }
         }
       });
     });
+
+    // ── Background Email Polling (every 25 seconds) ──
+    setInterval(() => {
+      // Poll silently in background to update counters and alert on new incoming emails
+      fetchMessages(true);
+    }, 25000);
   } // end initEmailCenter
 
 });
