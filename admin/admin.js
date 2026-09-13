@@ -1245,14 +1245,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (conn && !conn.connected && conn.error) {
         const alertBox = document.createElement('div');
         alertBox.className = 'email-sync-alert';
-        alertBox.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;margin:8px 8px 12px 8px;font-size:12px;color:#fcd34d;';
+        alertBox.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 14px;margin:8px 8px 12px 8px;font-size:12px;color:#fcd34d;';
         alertBox.innerHTML = `
-          <div style="display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:3px;color:#fbbf24;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Titan Mailbox Sync Notice
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:6px;font-weight:600;color:#fbbf24;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Titan Mailbox Sync Notice
+            </div>
+            <button type="button" class="btn-open-cfg-modal" style="background:#D86B2F;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;">
+              ⚙️ Connect Mailbox
+            </button>
           </div>
           <div style="color:#e2e8f0;font-size:11.5px;line-height:1.4;">${escHtml(conn.error)}</div>
         `;
+        alertBox.querySelector('.btn-open-cfg-modal')?.addEventListener('click', openConfigModal);
         emailList.appendChild(alertBox);
       }
 
@@ -1548,6 +1554,123 @@ document.addEventListener('DOMContentLoaded', () => {
       // Poll silently in background to update counters and alert on new incoming emails
       fetchMessages(true);
     }, 25000);
+
+    // ── Titan Mailbox Config Modal & Settings Handlers ──
+    const emailConfigModal = document.getElementById('emailConfigModal');
+    const btnConfigModalClose = document.getElementById('btnConfigModalClose');
+    const btnConfigModalCancel = document.getElementById('btnConfigModalCancel');
+    const btnModalSaveConfig = document.getElementById('btnModalSaveConfig');
+    const modalEmailPassword = document.getElementById('modalEmailPassword');
+    const btnToggleModalPassword = document.getElementById('btnToggleModalPassword');
+    const modalConfigMsg = document.getElementById('modalConfigMsg');
+
+    const cfgEmailPassword = document.getElementById('cfgEmailPassword');
+    const btnToggleCfgPassword = document.getElementById('btnToggleCfgPassword');
+    const btnSaveEmailConfig = document.getElementById('btnSaveEmailConfig');
+    const cfgStatusMessage = document.getElementById('cfgStatusMessage');
+    const settingsMailboxStatusBadge = document.getElementById('settingsMailboxStatusBadge');
+
+    function openConfigModal() {
+      if (emailConfigModal) {
+        emailConfigModal.style.display = 'flex';
+        if (modalConfigMsg) modalConfigMsg.innerHTML = '';
+        modalEmailPassword?.focus();
+      }
+    }
+
+    function closeConfigModal() {
+      if (emailConfigModal) emailConfigModal.style.display = 'none';
+    }
+
+    btnConfigModalClose?.addEventListener('click', closeConfigModal);
+    btnConfigModalCancel?.addEventListener('click', closeConfigModal);
+
+    btnToggleModalPassword?.addEventListener('click', () => {
+      if (!modalEmailPassword) return;
+      modalEmailPassword.type = modalEmailPassword.type === 'password' ? 'text' : 'password';
+    });
+
+    btnToggleCfgPassword?.addEventListener('click', () => {
+      if (!cfgEmailPassword) return;
+      cfgEmailPassword.type = cfgEmailPassword.type === 'password' ? 'text' : 'password';
+    });
+
+    async function executeSaveConfig(password, msgTargetEl, btnEl) {
+      if (!password || password.trim().length < 3) {
+        showToast('Please enter your Titan/GoDaddy email password.', 'error');
+        if (msgTargetEl) {
+          msgTargetEl.innerHTML = '<span style="color:#f87171;">Password is required.</span>';
+        }
+        return;
+      }
+
+      const originalBtnText = btnEl ? btnEl.textContent : '';
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = 'Testing connection...';
+      }
+      if (msgTargetEl) {
+        msgTargetEl.innerHTML = '<span style="color:#fcd34d;">Testing live IMAP connection to imap.titan.email:993...</span>';
+      }
+
+      try {
+        const res = await fetch('/api/email?action=save-config', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            password: password.trim(),
+            address: 'connect@fluvo.in',
+            imapHost: 'imap.titan.email',
+            imapPort: 993,
+            smtpHost: 'smtp.titan.email',
+            smtpPort: 587
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast('🎉 ' + json.message, 'success');
+          if (msgTargetEl) {
+            msgTargetEl.innerHTML = '<span style="color:#4ade80;">✅ ' + json.message + '</span>';
+          }
+          if (settingsMailboxStatusBadge) {
+            settingsMailboxStatusBadge.innerHTML = '● Connected (Live IMAP)';
+            settingsMailboxStatusBadge.style.color = '#22c55e';
+            settingsMailboxStatusBadge.style.borderColor = 'rgba(34,197,94,0.3)';
+            settingsMailboxStatusBadge.style.background = 'rgba(34,197,94,0.1)';
+          }
+          setTimeout(() => {
+            closeConfigModal();
+            fetchMessages();
+          }, 1200);
+        } else {
+          showToast(json.error || 'Connection failed', 'error');
+          if (msgTargetEl) {
+            msgTargetEl.innerHTML = `<span style="color:#f87171;">❌ ${json.error || 'Connection failed'}</span>`;
+          }
+        }
+      } catch (err) {
+        console.error('Save config error:', err);
+        showToast('Network error testing credentials.', 'error');
+        if (msgTargetEl) {
+          msgTargetEl.innerHTML = '<span style="color:#f87171;">❌ Network error testing credentials.</span>';
+        }
+      } finally {
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.textContent = originalBtnText || 'Connect & Test Live Sync';
+        }
+      }
+    }
+
+    btnModalSaveConfig?.addEventListener('click', () => {
+      executeSaveConfig(modalEmailPassword?.value, modalConfigMsg, btnModalSaveConfig);
+    });
+
+    btnSaveEmailConfig?.addEventListener('click', () => {
+      executeSaveConfig(cfgEmailPassword?.value, cfgStatusMessage, btnSaveEmailConfig);
+    });
   } // end initEmailCenter
 
 });

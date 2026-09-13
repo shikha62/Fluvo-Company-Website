@@ -5,7 +5,8 @@ import {
   fetchMessageDetail,
   updateMessageState,
   deleteMessage,
-  sendEmail
+  sendEmail,
+  saveEmailConfig
 } from './_service.js';
 
 export default async function handler(req, res) {
@@ -99,6 +100,13 @@ export default async function handler(req, res) {
 
       const result = await deleteMessage(id, folder);
       return res.status(200).json(result);
+    }
+
+    // 7. Save & Test Titan Mailbox Configuration
+    if (req.method === 'POST' && (action === 'config' || action === 'save-config' || action === 'test-config')) {
+      const { password, address, imapHost, imapPort, smtpHost, smtpPort } = req.body || {};
+      const result = await saveEmailConfig({ password, address, imapHost, imapPort, smtpHost, smtpPort });
+      return res.status(result.success ? 200 : 400).json(result);
     }
 
     return res.status(405).json({ error: `Action or method not supported: ${req.method} ${action}` });

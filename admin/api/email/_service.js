@@ -3,16 +3,69 @@ import { simpleParser } from 'mailparser';
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuration helper
-export function getEmailConfig() {
+let cachedCustomConfig = null;
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+// Configuration helper with multi-alias env support + database fallback
+export async function getEmailConfig() {
   const address = process.env.EMAIL_ADDRESS || process.env.EMAIL_USER || 'connect@fluvo.in';
-  const password = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS || '';
-  const imapHost = process.env.EMAIL_IMAP_HOST || 'imap.titan.email';
-  const imapPort = parseInt(process.env.EMAIL_IMAP_PORT || '993', 10);
-  const smtpHost = process.env.EMAIL_SMTP_HOST || 'smtp.titan.email';
-  // Try port 587 (STARTTLS) first — more reliable in serverless; fallback to 465 (SSL)
-  const smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
-  const smtpSecure = smtpPort === 465; // true only for port 465 (implicit SSL)
+  let password =
+    process.env.EMAIL_PASSWORD ||
+    process.env.EMAIL_PASS ||
+    process.env.SMTP_PASSWORD ||
+    process.env.SMTP_PASS ||
+    process.env.TITAN_PASSWORD ||
+    process.env.TITAN_PASS ||
+    process.env.MAIL_PASSWORD ||
+    process.env.GODADDY_PASSWORD ||
+    process.env.EMAIL_APP_PASSWORD ||
+    '';
+
+  let imapHost = process.env.EMAIL_IMAP_HOST || 'imap.titan.email';
+  let imapPort = parseInt(process.env.EMAIL_IMAP_PORT || '993', 10);
+  let smtpHost = process.env.EMAIL_SMTP_HOST || 'smtp.titan.email';
+  let smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
+
+  // If password not in environment, retrieve from Supabase system_config
+  if (!password || password.trim().length < 3) {
+    if (cachedCustomConfig && cachedCustomConfig.password) {
+      password = cachedCustomConfig.password;
+      if (cachedCustomConfig.imapHost) imapHost = cachedCustomConfig.imapHost;
+      if (cachedCustomConfig.smtpHost) smtpHost = cachedCustomConfig.smtpHost;
+    } else {
+      try {
+        const supabase = getSupabase();
+        if (supabase) {
+          const { data } = await supabase
+            .from('queries')
+            .select('*')
+            .eq('type', 'system_config')
+            .eq('full_name', 'email_config')
+            .maybeSingle();
+
+          if (data && data.notes) {
+            const parsed = JSON.parse(data.notes);
+            if (parsed.password) {
+              cachedCustomConfig = parsed;
+              password = parsed.password;
+              if (parsed.imapHost) imapHost = parsed.imapHost;
+              if (parsed.smtpHost) smtpHost = parsed.smtpHost;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Notice checking stored credentials:', e.message);
+      }
+    }
+  }
+
+  const smtpSecure = smtpPort === 465;
 
   return {
     address,
@@ -20,32 +73,108 @@ export function getEmailConfig() {
     imap: {
       host: imapHost,
       port: imapPort,
-      secure: true, // always SSL for IMAP 993
+      secure: true,
       auth: { user: address, pass: password },
       logger: false,
-      connectionTimeout: 8000,   // 8s — prevent Vercel serverless freeze
+      connectionTimeout: 8000,
       socketTimeout: 8000,
       greetingTimeout: 8000,
     },
     smtp: {
       host: smtpHost,
       port: smtpPort,
-      secure: smtpSecure,       // false for 587 (STARTTLS), true for 465
+      secure: smtpSecure,
       requireTLS: smtpPort === 587,
       auth: { user: address, pass: password },
       connectionTimeout: 8000,
       socketTimeout: 8000,
       greetingTimeout: 8000,
     },
-    isConfigured: Boolean(password && password.length > 3),
+    isConfigured: Boolean(password && password.trim().length > 3),
   };
 }
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
-  if (!url || !key) return null;
-  return createClient(url, key);
+/**
+ * Validates a Titan email password via live IMAP test,
+ * and if valid, saves it securely to the Supabase database.
+ */
+export async function saveEmailConfig({ password, address, imapHost, imapPort, smtpHost, smtpPort }) {
+  if (!password || password.trim().length < 3) {
+    return { success: false, error: 'Password is required and must be at least 3 characters.' };
+  }
+
+  const user = address || 'connect@fluvo.in';
+  const host = imapHost || 'imap.titan.email';
+  const port = parseInt(imapPort || '993', 10);
+
+  // Test live connection to Titan IMAP
+  const testClient = new ImapFlow({
+    host,
+    port,
+    secure: true,
+    auth: { user, pass: password.trim() },
+    logger: false,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 8000
+  });
+
+  try {
+    await testClient.connect();
+    await testClient.logout();
+  } catch (testErr) {
+    const reason = testErr.authenticationFailed
+      ? 'Titan IMAP rejected this password (AUTHENTICATIONFAILED). Please double check your GoDaddy/Titan password or generate an App Password in Titan settings.'
+      : `Titan IMAP connection error: ${testErr.message}`;
+    return { success: false, error: reason };
+  }
+
+  // Save to database
+  const configData = {
+    address: user,
+    password: password.trim(),
+    imapHost: host,
+    imapPort: port,
+    smtpHost: smtpHost || 'smtp.titan.email',
+    smtpPort: parseInt(smtpPort || '587', 10),
+    updatedAt: new Date().toISOString()
+  };
+
+  cachedCustomConfig = configData;
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data: existing } = await supabase
+        .from('queries')
+        .select('id')
+        .eq('type', 'system_config')
+        .eq('full_name', 'email_config')
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from('queries').update({
+          notes: JSON.stringify(configData),
+          updated_at: new Date().toISOString()
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('queries').insert([{
+          type: 'system_config',
+          full_name: 'email_config',
+          work_email: user,
+          notes: JSON.stringify(configData),
+          status: 'resolved'
+        }]);
+      }
+    } catch (dbErr) {
+      console.warn('Persist error:', dbErr.message);
+    }
+  }
+
+  return {
+    success: true,
+    message: 'Titan Mailbox connected successfully! All live company emails are now synchronized.'
+  };
 }
 
 // In-memory demo/fallback store for development or when credentials are not yet linked
@@ -182,6 +311,7 @@ export async function getInboundLeadMessages() {
     const { data, error } = await supabase
       .from('queries')
       .select('*')
+      .neq('type', 'system_config')
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -260,12 +390,11 @@ export async function getInboundLeadMessages() {
 // ── IMAP Operations ──────────────────────────────────────────────────────────
 
 export async function fetchFolders() {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
   const leads = await getInboundLeadMessages();
   const leadUnread = leads.filter(l => l.unread).length;
   const leadTotal = leads.length;
 
-  // If live credentials configured, attempt real IMAP
   if (config.isConfigured) {
     const client = new ImapFlow(config.imap);
     try {
@@ -293,7 +422,8 @@ export async function fetchFolders() {
           });
         }
       }
-      imapSucceeded = true;
+      await client.logout();
+
       return {
         success: true,
         provider: 'Titan / GoDaddy IMAP',
@@ -303,7 +433,7 @@ export async function fetchFolders() {
       };
     } catch (err) {
       const errMsg = err.authenticationFailed
-        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update EMAIL_PASSWORD in Vercel with your GoDaddy/Titan Email Password or App Password.'
+        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update your password via Settings or set EMAIL_PASSWORD in Vercel.'
         : `IMAP connection error: ${err.message}`;
       console.warn('IMAP live connection notice:', errMsg);
       return {
@@ -347,12 +477,12 @@ export async function fetchFolders() {
       { name: 'Trash', path: 'Trash', total: trashTotal, unread: 0 },
       { name: 'Spam', path: 'Spam', total: spamTotal, unread: 0 }
     ],
-    connection: { connected: false, configured: false, mailbox: config.address, error: 'EMAIL_PASSWORD is not set in Vercel environment variables.' }
+    connection: { connected: false, configured: false, mailbox: config.address, error: 'EMAIL_PASSWORD is not set. Click "Connect Mailbox" to enter your password.' }
   };
 }
 
 export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, search = '' }) {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
   const normFolder = normalizeFolder(folder);
   const leads = await getInboundLeadMessages();
 
@@ -417,12 +547,12 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
       }
     } catch (err) {
       connectionError = err.authenticationFailed
-        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update EMAIL_PASSWORD in Vercel with your GoDaddy/Titan Email Password or App Password.'
+        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update your password via Settings or set EMAIL_PASSWORD in Vercel.'
         : `IMAP connection error: ${err.message}`;
       console.warn('IMAP fetch notice:', connectionError);
     }
   } else {
-    connectionError = 'EMAIL_PASSWORD is not set in Vercel environment variables.';
+    connectionError = 'EMAIL_PASSWORD is not set. Click "Connect Mailbox" to enter your password.';
   }
 
   // Combine IMAP messages (or fallback mock) with relevant inbound leads
@@ -472,7 +602,7 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
 }
 
 export async function fetchMessageDetail(uid, folder = 'INBOX') {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
   const numUid = Number(uid);
 
   // Check if this is an inbound website lead inquiry
@@ -480,7 +610,6 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
     const leads = await getInboundLeadMessages();
     const foundLead = leads.find(l => l.uid === numUid);
     if (foundLead) {
-      // Mark as read in Supabase if new
       try {
         const supabase = getSupabase();
         if (supabase && foundLead.unread) {
@@ -548,7 +677,7 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
 }
 
 export async function updateMessageState(uid, { read, star, moveTo, folder = 'INBOX' }) {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
   const numUid = Number(uid);
 
   // If inbound lead message, update Supabase
@@ -608,7 +737,7 @@ export async function deleteMessage(uid, folder = 'INBOX') {
 }
 
 export async function sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, references }) {
-  const config = getEmailConfig();
+  const config = await getEmailConfig();
 
   if (config.isConfigured) {
     const transporter = nodemailer.createTransport(config.smtp);
@@ -630,7 +759,7 @@ export async function sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, r
       console.warn('SMTP live send error:', err.message);
       return {
         success: false,
-        error: `SMTP Error: ${err.message}. Please check EMAIL_PASSWORD / EMAIL_SMTP_HOST in Vercel settings.`
+        error: `SMTP Error: ${err.message}. Please check Titan Email Password in Settings.`
       };
     }
   }

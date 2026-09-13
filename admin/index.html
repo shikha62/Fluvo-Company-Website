@@ -655,13 +655,92 @@
             </div>
           </div>
 
+          <!-- Quick Connect Titan Mailbox Modal -->
+          <div class="email-compose-modal" id="emailConfigModal" style="display: none;">
+            <div class="email-compose-box" style="max-width: 500px; background: #16181d; border: 1px solid var(--border-default); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+              <div class="email-compose-header" style="border-bottom: 1px solid var(--border-default); padding: 14px 18px;">
+                <span style="font-weight: 600; font-size: 14px; color: #fff;">Connect Titan / GoDaddy Mailbox</span>
+                <button class="email-compose-close" id="btnConfigModalClose" style="cursor: pointer; background: none; border: none; color: #999; font-size: 18px;">&times;</button>
+              </div>
+              <div style="padding: 20px;">
+                <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
+                  Connect <strong>connect@fluvo.in</strong> to synchronize all live emails from GoDaddy Titan and enable real outgoing email delivery.
+                </p>
+                <div style="margin-bottom: 14px;">
+                  <label style="display: block; font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Email Account</label>
+                  <input type="text" value="connect@fluvo.in" readonly class="auth-input-field" style="width: 100%; box-sizing: border-box;" />
+                </div>
+                <div style="margin-bottom: 16px;">
+                  <label style="display: block; font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Titan Password or App Password</label>
+                  <div style="position: relative;">
+                    <input type="password" id="modalEmailPassword" class="auth-input-field" style="width: 100%; box-sizing: border-box; padding-right: 40px;" placeholder="Your Titan / GoDaddy password" />
+                    <button type="button" id="btnToggleModalPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">👁️</button>
+                  </div>
+                  <span style="font-size: 11.5px; color: #94a3b8; margin-top: 5px; display: block;">
+                    The password you use to log into secureserver.titan.email
+                  </span>
+                </div>
+                <div id="modalConfigMsg" style="font-size: 12px; margin-bottom: 14px; min-height: 18px;"></div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                  <button type="button" class="btn-action" id="btnConfigModalCancel">Cancel</button>
+                  <button type="button" class="btn-action primary" id="btnModalSaveConfig">Connect &amp; Test Live</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- ===================================================================
-             TAB 5 (PREVIOUSLY TAB 5): SECURITY & WORKSPACE SETTINGS
+             TAB 5: SECURITY & WORKSPACE SETTINGS
              =================================================================== -->
         <div class="tab-pane" id="tab-settings">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px;">
+            
+            <!-- Titan Mailbox Integration Card (Full Width) -->
+            <div class="card-panel" style="grid-column: 1 / -1;">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Titan / GoDaddy Mailbox Integration</h3>
+                  <p class="panel-subtitle">Direct IMAP/SMTP sync for connect@fluvo.in company communications</p>
+                </div>
+                <div id="settingsMailboxStatusBadge" style="display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--font-mono);padding:4px 10px;border-radius:20px;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">
+                  ● Disconnected
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 14px;">
+                <div>
+                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Mailbox Email Address</label>
+                  <input type="email" id="cfgEmailAddress" value="connect@fluvo.in" class="auth-input-field" style="width: 100%; box-sizing: border-box;" placeholder="connect@fluvo.in" readonly />
+                </div>
+                <div>
+                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Titan Email Password / App Password</label>
+                  <div style="position: relative;">
+                    <input type="password" id="cfgEmailPassword" class="auth-input-field" style="width: 100%; box-sizing: border-box; padding-right: 40px;" placeholder="Enter your GoDaddy/Titan password" />
+                    <button type="button" id="btnToggleCfgPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px;">👁️</button>
+                  </div>
+                  <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">The password you use on secureserver.titan.email</span>
+                </div>
+                <div>
+                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">IMAP Server (Incoming)</label>
+                  <input type="text" id="cfgImapHost" value="imap.titan.email:993 (SSL)" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
+                </div>
+                <div>
+                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">SMTP Server (Outgoing)</label>
+                  <input type="text" id="cfgSmtpHost" value="smtp.titan.email:587 (STARTTLS)" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-default);">
+                <div id="cfgStatusMessage" style="font-size: 12.5px; color: var(--text-muted);">
+                  Status: Ready to connect.
+                </div>
+                <button type="button" class="btn-action primary" id="btnSaveEmailConfig" style="padding: 10px 20px;">
+                  Connect &amp; Test Live Sync
+                </button>
+              </div>
+            </div>
             
             <!-- Security Architecture Card -->
             <div class="card-panel">
