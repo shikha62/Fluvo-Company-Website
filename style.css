@@ -303,6 +303,14 @@ ul, ol { list-style: none; }
   color: var(--amber);
 }
 
+.nav-logo-img {
+  height: clamp(32px, 3.2vw, 38px);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
