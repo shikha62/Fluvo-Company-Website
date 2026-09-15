@@ -890,7 +890,58 @@
     </section>
 
     <!-- =========================================================================
-         10. CLIENT TESTIMONIALS RAIL
+         10. OUR WORK — GROWTH ENGINEERING CASE STUDIES
+         ========================================================================= -->
+    <section class="work-section" id="our-work" aria-labelledby="work-title">
+      <div class="work-inner">
+        <header class="work-header reveal-up">
+          <div>
+            <span class="label-tag">OUR WORK</span>
+            <h2 class="section-heading" id="work-title">Growth Systems Built for Measurable Outcomes.</h2>
+          </div>
+          <div class="work-header-copy">
+            <p class="section-subheading">From technical infrastructure to acquisition, attribution and conversion, we engineer connected growth systems designed to turn digital performance into measurable business outcomes.</p>
+            <p class="work-supporting-line">Selected growth engagements across acquisition, automation, attribution and conversion.</p>
+          </div>
+        </header>
+
+        <div class="work-metrics reveal-up" data-delay="100" aria-label="Portfolio summary">
+          <div><strong>07+</strong><span>Growth Engagements</span></div>
+          <div><strong>05+</strong><span>Growth Verticals</span></div>
+          <div><strong>04</strong><span>Markets</span></div>
+          <div><strong>01</strong><span>Connected Growth System</span></div>
+        </div>
+
+        <nav class="work-filters reveal-up" data-delay="200" aria-label="Filter growth engagements">
+          <button class="work-filter active" type="button" data-work-filter="all" aria-pressed="true">ALL</button>
+          <button class="work-filter" type="button" data-work-filter="india" aria-pressed="false">INDIA</button>
+          <button class="work-filter" type="button" data-work-filter="international" aria-pressed="false">INTERNATIONAL</button>
+          <button class="work-filter" type="button" data-work-filter="acquisition" aria-pressed="false">ACQUISITION</button>
+          <button class="work-filter" type="button" data-work-filter="automation" aria-pressed="false">AUTOMATION</button>
+          <button class="work-filter" type="button" data-work-filter="attribution" aria-pressed="false">ATTRIBUTION</button>
+          <button class="work-filter" type="button" data-work-filter="cro" aria-pressed="false">CRO</button>
+          <button class="work-filter" type="button" data-work-filter="seo" aria-pressed="false">SEO &amp; GEO</button>
+        </nav>
+
+        <div class="work-featured" id="workFeatured"></div>
+        <div class="work-grid" id="workGrid" aria-live="polite"></div>
+
+        <div class="work-cta reveal-up" data-delay="100">
+          <div>
+            <span class="label-tag">THE NEXT SYSTEM</span>
+            <h3>Ready to Build Your Growth Engine?</h3>
+            <p>Let's identify the highest-leverage opportunities across acquisition, conversion, attribution and customer lifecycle.</p>
+          </div>
+          <div class="work-cta-actions">
+            <button class="btn btn-amber" type="button" data-open-schedule>Schedule Strategy Call <span class="btn-arrow">&#8594;</span></button>
+            <a class="btn btn-outline" href="#services">Explore Our Capabilities <span class="btn-arrow">&#8594;</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         11. CLIENT TESTIMONIALS RAIL
          ========================================================================= -->
     <section class="testimonials-section">
       <div class="testimonials-inner">
@@ -1322,6 +1373,16 @@
 
     </div>
   </footer>
+
+  <div class="modal-overlay work-detail-modal" id="workDetailModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="workDetailHeading">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div><span class="label-tag">CASE STUDY DETAIL</span><h2 class="modal-title" id="workDetailHeading">Growth system</h2></div>
+        <button class="modal-close" id="closeWorkDetail" type="button" aria-label="Close case study detail">&times;</button>
+      </div>
+      <div class="modal-body work-detail-body" id="workDetailBody"></div>
+    </div>
+  </div>
 
   <!-- =========================================================================
        14.5 FULL-SCREEN CAPABILITY SHOWCASE MODAL

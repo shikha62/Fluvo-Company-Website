@@ -1,6 +1,7 @@
 import Chart from 'chart.js/auto';
 import confetti from 'canvas-confetti';
 import { submitInquiry } from './src/supabase.js';
+import { caseStudies } from './src/case-studies.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
@@ -440,6 +441,102 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ==========================================================================\n+  // 11. OUR WORK CASE STUDIES\n+  // ==========================================================================\n+  const workFeatured = document.getElementById('workFeatured');
+  const workGrid = document.getElementById('workGrid');
+  const workDetailModal = document.getElementById('workDetailModal');
+  const workDetailBody = document.getElementById('workDetailBody');
+  const closeWorkDetail = document.getElementById('closeWorkDetail');
+
+  const metricMarkup = (study) => study.metrics.map(metric => `
+    <div class="work-result"><strong>${metric.value}</strong><span>${metric.label}</span></div>
+  `).join('');
+
+  const tagsMarkup = (study) => study.capabilities.slice(0, 5).map(tag => `<span>${tag}</span>`).join('');
+
+  const studyMatches = (study, filter) => {
+    if (filter === 'all') return true;
+    if (filter === 'india' || filter === 'international') return study.region === filter;
+    const terms = {
+      acquisition: ['Paid Media', 'Paid Acquisition'],
+      automation: ['CRM Automation', 'CRM Workflow Automation', 'Lifecycle Automation', 'Lifecycle Workflows', 'CRM Workflows'],
+      attribution: ['GA4', 'GA4 Attribution', 'First-Party Attribution', 'GA4 Event Architecture'],
+      cro: ['CRO', 'Conversion Rate Optimization', 'Conversion Optimization'],
+      seo: ['Technical SEO']
+    };
+    return (terms[filter] || []).some(term => study.implementation.includes(term));
+  };
+
+  function renderWork(filter = 'all') {
+    if (!workFeatured || !workGrid) return;
+    const visibleStudies = caseStudies.filter(study => studyMatches(study, filter));
+    const featured = visibleStudies.find(study => study.featured);
+    workFeatured.innerHTML = featured ? `
+      <article class="work-featured-card reveal-up in-view">
+        <div class="work-featured-copy">
+          <div class="work-card-meta"><span>${featured.country}</span><span>${featured.industry}</span></div>
+          <h3>${featured.company}</h3>
+          <p class="work-engagement">${featured.engagement}</p>
+          <div class="work-story-grid">
+            <div><span>THE CHALLENGE</span><p>${featured.challenge}</p></div>
+            <div><span>THE STRATEGY</span><p>${featured.strategy}</p></div>
+          </div>
+          <div class="work-capabilities"><span class="work-mini-label">SYSTEM BUILT</span>${tagsMarkup(featured)}</div>
+          <button class="work-explore" type="button" data-study-id="${featured.id}">EXPLORE CASE STUDY <span>&#8594;</span></button>
+        </div>
+        <div class="work-results-panel">
+          <div class="work-panel-heading"><span>PERFORMANCE OUTCOMES</span><span>CONNECTED SYSTEM / 01</span></div>
+          <div class="work-results">${metricMarkup(featured)}</div>
+          <svg class="work-sparkline" viewBox="0 0 520 150" role="img" aria-label="Illustrative performance trend rising over time"><path d="M0 126 C55 122 62 110 112 112 S155 87 205 96 S258 69 305 77 S352 48 400 54 S462 22 520 24" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M0 126 C55 122 62 110 112 112 S155 87 205 96 S258 69 305 77 S352 48 400 54 S462 22 520 24 L520 150 L0 150Z" fill="url(#workChartFill)" opacity=".28"/><defs><linearGradient id="workChartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C4622D"/><stop offset="1" stop-color="#C4622D" stop-opacity="0"/></linearGradient></defs></svg>
+          <blockquote>“${featured.testimonial}”<footer>${featured.person} <span>${featured.role}</span></footer></blockquote>
+        </div>
+      </article>` : '';
+    workGrid.innerHTML = visibleStudies.filter(study => !study.featured).map((study, index) => `
+      <article class="work-card reveal-up in-view" style="--card-delay: ${index * 60}ms">
+        <div class="work-card-meta"><span>${study.country}</span><span>${study.industry}</span></div>
+        <h3>${study.company}</h3>
+        <p class="work-engagement">${study.engagement}</p>
+        <p class="work-card-challenge">${study.challenge}</p>
+        <div class="work-capabilities"><span class="work-mini-label">SYSTEM BUILT</span>${tagsMarkup(study)}</div>
+        <div class="work-card-results">${metricMarkup(study)}</div>
+        <button class="work-explore" type="button" data-study-id="${study.id}">EXPLORE CASE STUDY <span>&#8594;</span></button>
+      </article>`).join('');
+  }
+
+  function openWorkDetail(study) {
+    if (!workDetailModal || !workDetailBody) return;
+    workDetailBody.innerHTML = `
+      <div class="work-detail-kicker">${study.country} / ${study.industry}</div>
+      <h2>${study.company}</h2><p class="work-detail-engagement">${study.engagement}</p>
+      <div class="work-detail-sections"><section><span>THE CHALLENGE</span><p>${study.challenge}</p></section><section><span>THE APPROACH</span><p>${study.strategy}</p></section><section><span>WHAT FLUVO BUILT</span><div class="work-detail-tags">${study.services.map(service => `<span>${service}</span>`).join('')}</div></section><section><span>PERFORMANCE OUTCOMES</span><div class="work-detail-results">${metricMarkup(study)}</div></section></div>
+      <blockquote>“${study.testimonial}”<footer>${study.person} <span>${study.role}</span></footer></blockquote>`;
+    workDetailModal.classList.add('open');
+    workDetailModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeWorkDetails() {
+    workDetailModal?.classList.remove('open');
+    workDetailModal?.setAttribute('aria-hidden', 'true');
+    if (!document.querySelector('.modal-overlay.open')) document.body.style.overflow = '';
+  }
+
+  renderWork();
+  document.querySelectorAll('[data-work-filter]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-work-filter]').forEach(filterButton => {
+      const active = filterButton === button;
+      filterButton.classList.toggle('active', active);
+      filterButton.setAttribute('aria-pressed', String(active));
+    });
+    renderWork(button.dataset.workFilter);
+  }));
+  document.getElementById('our-work')?.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-study-id]');
+    if (trigger) openWorkDetail(caseStudies.find(study => study.id === trigger.dataset.studyId));
+  });
+  closeWorkDetail?.addEventListener('click', closeWorkDetails);
+  workDetailModal?.addEventListener('click', event => { if (event.target === workDetailModal) closeWorkDetails(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeWorkDetails(); });
+
   // ==========================================================================
   // 11. SCHEDULE A CALL MODAL (OPEN / CLOSE)
   // ==========================================================================
@@ -452,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnMobileSchedule'),
     document.getElementById('btnFooterSchedule'),
   ];
+  document.querySelectorAll('[data-open-schedule]').forEach(button => openScheduleTriggers.push(button));
 
   function openSchedule() {
     scheduleModal?.classList.add('open');
