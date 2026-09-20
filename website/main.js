@@ -121,10 +121,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
   startSlideTimer();
 
+  const pillarServices = [
+    {
+      number: '01',
+      category: 'BUILD DIGITAL EXPERIENCES',
+      title: 'WEB DEVELOPMENT & DIGITAL EXPERIENCE',
+      description: 'Build fast, responsive, and scalable websites around business goals with modern frontend development, responsive UI/UX, performance optimization, technical SEO, API integration, analytics, and secure architecture.',
+      image: '/assets/services/web-development.png',
+      imageAlt: 'Web development and digital experience illustration'
+    },
+    {
+      number: '02',
+      category: 'CREATE CONNECTED APPS',
+      title: 'APP DEVELOPMENT & MOBILE SOLUTIONS',
+      description: 'Develop reliable mobile applications with cross-platform development, intuitive UI/UX, REST API and database integration, authentication, security, push notifications, and app performance optimization.',
+      image: '/assets/services/app-development.png',
+      imageAlt: 'App development and mobile solutions illustration'
+    },
+    {
+      number: '03',
+      category: 'GROW ORGANICALLY',
+      title: 'ORGANIC GROWTH & SEARCH PERFORMANCE',
+      description: 'Build long-term digital visibility through Search Engine Optimization (SEO), keyword and search-intent analysis, technical SEO, on-page optimization, local SEO, content strategy, analytics, and search performance tracking.',
+      image: '/assets/services/organic-growth.png',
+      imageAlt: 'Organic growth and search performance illustration'
+    },
+    {
+      number: '04',
+      category: 'BUILD WITH INTELLIGENCE',
+      title: 'AI-DRIVEN SYSTEMS & AUTOMATION',
+      description: 'Build intelligent digital systems using AI integration, automation, APIs, data processing, intelligent workflows, business process automation, analytics, and connected systems.',
+      image: '/assets/services/ai-automation.png',
+      imageAlt: 'AI-driven systems and automation illustration'
+    }
+  ];
+
+  const pillarRows = document.getElementById('pillarRows');
+  if (pillarRows) {
+    pillarRows.innerHTML = pillarServices.map((service, index) => `
+      <article class="pillar-row${index % 2 ? ' pillar-row--reverse' : ''}" tabindex="0" role="button" aria-label="${service.title} — ${service.category}" data-pillar-id="${index + 1}">
+        <div class="pillar-media">
+          <img src="${service.image}" alt="${service.imageAlt}" loading="lazy">
+        </div>
+        <div class="pillar-content">
+          <span class="pillar-number">${service.number}</span>
+          <span class="pillar-category">${service.category}</span>
+          <h3 class="pillar-title">${service.title}</h3>
+          <p class="pillar-description">${service.description}</p>
+        </div>
+      </article>
+    `).join('');
+  }
+
   // ==========================================================================
   // 5. SCROLL-TRIGGERED STAGGERED REVEALS (INTERSECTION OBSERVER)
   // ==========================================================================
-  const revealElements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale, .stat-card, .service-card');
+  const revealElements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale, .pillar-row, .service-card');
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -492,13 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
       </article>` : '';
     workGrid.innerHTML = visibleStudies.filter(study => !study.featured).map((study, index) => `
       <article class="work-card reveal-up in-view" style="--card-delay: ${index * 60}ms">
-        <div class="work-card-meta"><span>${study.country}</span><span>${study.industry}</span></div>
-        <h3>${study.company}</h3>
-        <p class="work-engagement">${study.engagement}</p>
-        <p class="work-card-challenge">${study.challenge}</p>
-        <div class="work-capabilities"><span class="work-mini-label">SYSTEM BUILT</span>${tagsMarkup(study)}</div>
-        <div class="work-card-results">${metricMarkup(study)}</div>
-        <button class="work-explore" type="button" data-study-id="${study.id}">EXPLORE CASE STUDY <span>&#8594;</span></button>
+        <button class="work-card-toggle" type="button" data-study-id="${study.id}">
+          <span class="work-card-summary">
+            <span class="work-card-meta"><span>${study.country}</span><span>${study.industry}</span></span>
+            <h3>${study.company}</h3>
+            <p class="work-engagement">${study.engagement}</p>
+          </span>
+          <span class="work-card-expand" aria-hidden="true">+</span>
+        </button>
       </article>`).join('');
   }
 
@@ -521,14 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   renderWork();
-  document.querySelectorAll('[data-work-filter]').forEach(button => button.addEventListener('click', () => {
-    document.querySelectorAll('[data-work-filter]').forEach(filterButton => {
-      const active = filterButton === button;
-      filterButton.classList.toggle('active', active);
-      filterButton.setAttribute('aria-pressed', String(active));
-    });
-    renderWork(button.dataset.workFilter);
-  }));
   document.getElementById('our-work')?.addEventListener('click', event => {
     const trigger = event.target.closest('[data-study-id]');
     if (trigger) openWorkDetail(caseStudies.find(study => study.id === trigger.dataset.studyId));
@@ -705,35 +750,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const offerCatalog = [
     ['What We Offer', 'Growth & Marketing Strategy', 'Turn ambitious growth goals into a focused plan for positioning, channels, investment, and measurement. We align leadership around the choices that matter most and create a practical roadmap your team can execute.'],
     ['What We Offer', 'AI Services', 'Put AI to work in the parts of marketing where it can create real leverage. We identify the right opportunities, design useful workflows, and help your team adopt them with confidence and clear guardrails.'],
-    ['What We Offer', 'Paid Social', 'Build paid social campaigns around the audiences, creative angles, and signals most likely to drive profitable action. Continuous testing and reliable reporting make it easier to scale what works.'],
-    ['What We Offer', 'Paid Search', 'Capture high-intent demand with account structures, keywords, ads, landing pages, and bids connected to commercial outcomes. We improve efficiency while protecting the quality of the pipeline.'],
     ['What We Offer', 'B2B Advertising', 'Reach valuable business audiences across a longer buying journey with account-based targeting, demand generation, and content that earns attention. We connect campaign activity to lead quality and revenue progress.'],
-    ['What We Offer', 'Affiliate Partnerships', 'Create a partner channel that extends your reach without compromising brand fit or measurement. We shape the program, recruit the right partners, and optimize contribution over time.'],
     ['What We Offer', 'Search Engine Optimization', 'Build durable organic visibility through technical site health, search-intent mapping, useful content, and authority growth. The work is grounded in qualified traffic, not vanity rankings.'],
     ['What We Offer', 'Generative Engine Optimization', 'Help modern answer engines understand and recommend your brand. We strengthen entity signals, schema, semantic authority, and measurement so your visibility is ready for AI-led discovery.'],
     ['What We Offer', 'Product Marketing', 'Make your product easier to understand, choose, and adopt. We clarify positioning and messaging, support launches, and give sales and marketing teams the tools to tell one consistent story.'],
-    ['What We Offer', 'Product-Led Growth', 'Design experiences that let product value create momentum. We improve activation, retention, and expansion through lifecycle insight and experiments tied to the customer journey.'],
-    ['What We Offer', 'Podcast, Radio, TV', 'Bring your brand into high-attention channels with a clear audience strategy and creative built for the format. We pair memorable reach with practical ways to understand response and impact.'],
-    ['What We Offer', 'Amazon Marketing', 'Improve discovery and conversion across the Amazon marketplace. We combine retail search strategy, listing optimization, creative improvements, and performance tracking to grow marketplace demand.'],
-    ['What We Offer', 'Ecommerce Marketplaces', 'Create a repeatable marketplace growth system across merchandising, acquisition, conversion, and retention. The focus stays on profitable catalog and channel expansion.'],
     ['What We Offer', 'Content Marketing', 'Create distinctive content that answers real customer questions and moves people toward action. Editorial strategy, production systems, distribution, and measurement work as one system.'],
     ['What We Offer', 'Social Media & Community', 'Build a useful, recognizable presence through consistent storytelling and genuine conversation. We turn community signals into better content, stronger relationships, and clearer brand momentum.'],
     ['What We Offer', 'Influencer & Creator Marketing', 'Partner with credible creators whose audience and voice fit your brand. We manage the path from selection and collaboration design to performance learning and repeatable results.'],
-    ['What We Offer', 'Lifecycle Marketing', 'Give customers the right message at the right moment from first signal through long-term value. Journey mapping, CRM programs, and retention experiments make communication more relevant and measurable.'],
-    ['What We Offer', 'Conversion Rate Optimization', 'Find and remove friction across the funnel with evidence-led research and testing. We turn behavioral insight into clearer experiences, stronger conversion, and better economics.'],
-    ['What We Offer', 'Direct Mail', 'Use physical touchpoints to create memorable moments for high-value audiences. We connect offer strategy, production, and response measurement to the wider customer acquisition system.'],
     ['What We Offer', 'Creative Services', 'Develop a clear creative point of view that gives every channel more impact. From direction to production and testing, we create assets that communicate quickly and learn continuously.'],
-    ['What We Offer', 'Analytics & Attribution', 'Replace fragmented reporting with a dependable view of demand, conversion, and profitable growth. We build measurement architecture and dashboards that help teams make better decisions faster.'],
-    ['What We Offer', 'Marketing Operations', 'Connect the people, processes, data, and platforms behind effective marketing. We simplify workflows, integrate systems, and create operating habits that make growth easier to scale.'],
-    ['What We Offer', 'All Capabilities', 'Bring strategy, media, creative, technology, lifecycle, and measurement together around one growth objective. We assemble the right combination of capabilities for the problem in front of your business.'],
-    ['Who We Work With', 'Early Stage', 'Create a practical foundation for finding product-market fit and generating early demand. We prioritize clear positioning, lean acquisition loops, and measurement that supports fast learning.'],
-    ['Who We Work With', 'High Growth', 'Turn momentum into a repeatable growth system without losing the speed that created it. We help strengthen channels, conversion, retention, and the operating rhythm behind continued scale.'],
-    ['Who We Work With', 'Enterprise', 'Coordinate complex teams, markets, and systems around durable growth. We bring structure to portfolio alignment, governance, measurement, and executive-level decision making.'],
     ['Who We Work With', 'Investors', 'Give portfolio companies sharper growth insight and practical execution capacity. Diagnostics, shared playbooks, benchmarks, and embedded support help teams move from uncertainty to action.'],
-    ['Ways to Engage', 'Freelancers', 'Add senior growth thinking or specialist execution when a project needs more range or momentum. Support can flex around the work, team, and timeline you already have.'],
     ['Ways to Engage', 'Agency Teams', 'Extend your delivery capability with technical growth expertise that fits your client model. We can support strategy, specialist execution, measurement, or the full delivery layer behind the scenes.'],
     ['Ways to Engage', 'Full-Time Employees', 'Strengthen your internal growth function with practical systems, insight, and hands-on support. We help teams plan better, build capability, and execute with greater confidence.'],
-    ['Ways to Engage', 'Advisors', 'Give clients or portfolio companies an experienced partner for complex marketing decisions. We provide clear assessments, strategic advice, and roadmaps that can move directly into execution.']
   ];
 
   const allOffersList = document.getElementById('allOffersList');
@@ -808,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { title: 'Stage 03: Conversion Rate Optimization (CRO) & A/B Testing', section: 'Methodology', href: '#process', icon: '03' },
     { title: 'Stage 04: Channel Scaling & Generative Engine Optimization (GEO)', section: 'Methodology', href: '#process', icon: '04' },
     { title: 'Case Study: Scalable Digital Growth Engine (+133% Revenue)', section: 'Case Studies', href: '#case-study', icon: '📈' },
-    { title: 'Why Us: Unified Growth Architecture vs Legacy Agencies', section: 'Operating Model', href: '#why-us', icon: '⚖️' },
+    { title: 'Why Us: Unified Growth Architecture vs Legacy Agencies', section: 'Operating Model', href: '#our-work', icon: '⚖️' },
     { title: 'About Fluvo: Growth Systems, Strategy & Performance', section: 'About Us', href: '#about', icon: '🎯' },
     { title: 'Our Approach: Diagnose, Engineer, Accelerate, Compound', section: 'About Us', href: '#about', icon: '🧭' },
     { title: 'Technical Growth Diagnostic Strategy Call', section: 'Schedule', href: '#schedule', icon: '📅' },
@@ -879,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // 14.5. PILLAR & PERFORMANCE CARDS INTERACTION (SERVICES & DIGITAL CARDS)
   // ==========================================================================
-  const interactiveCards = document.querySelectorAll('.service-card, .stat-card');
+  const interactiveCards = document.querySelectorAll('.service-card, .pillar-row');
   interactiveCards.forEach(card => {
     const activateCard = (e) => {
       // Avoid duplicate triggers if triggered by child
@@ -1252,8 +1279,8 @@ document.addEventListener('DOMContentLoaded', () => {
     1: {
       id: 1,
       badge: '01',
-      category: 'TECHNICAL SEO & SEARCH VISIBILITY',
-      title: 'BUILD AUTHORITY',
+      category: 'WEB DEVELOPMENT & DIGITAL EXPERIENCE',
+      title: 'BUILD DIGITAL EXPERIENCES',
       tagline: 'Engineered for durable search dominance & Generative Engine Optimization (GEO)',
       overview: 'Transform search visibility into an enterprise moat. We deploy forensic crawlability audits, sub-second Core Web Vitals engineering, nested JSON-LD schema graphs, and intent clustering to capture high-intent commercial demand across Google and AI answer engines.',
       highlights: [
@@ -1321,8 +1348,8 @@ document.addEventListener('DOMContentLoaded', () => {
     2: {
       id: 2,
       badge: '02',
-      category: 'PERFORMANCE MARKETING & PAID MEDIA',
-      title: 'EXPAND REACH',
+      category: 'APP DEVELOPMENT & MOBILE SOLUTIONS',
+      title: 'CREATE CONNECTED APPS',
       tagline: 'Algorithmic Paid Search, Meta CAPI & Programmatic B2B Media',
       overview: 'Precision-targeted paid search and social campaigns engineered for unit-economic profitability. We combine server-side Conversions API (CAPI), high-velocity creative testing, and value-based algorithmic bidding to scale media investment with positive blended ROAS.',
       highlights: [
@@ -1390,8 +1417,8 @@ document.addEventListener('DOMContentLoaded', () => {
     3: {
       id: 3,
       badge: '03',
-      category: 'MARKETING AUTOMATION & LIFECYCLE CRM',
-      title: 'CREATE DEMAND',
+      category: 'ORGANIC GROWTH & SEARCH PERFORMANCE',
+      title: 'GROW ORGANICALLY',
       tagline: 'CRM Orchestration, Lead Routing & Automated Lifecycle Buyer Journeys',
       overview: 'Bridge marketing acquisition and sales execution with automated CRM revenue operations. We engineer multi-touch lead scoring, automated nurture sequences, zero-latency webhook pipelines, and dynamic audience synchronization across the buyer lifecycle.',
       highlights: [
@@ -1459,8 +1486,8 @@ document.addEventListener('DOMContentLoaded', () => {
     4: {
       id: 4,
       badge: '04',
-      category: 'HIGH-PERFORMANCE WEB & CRO',
-      title: 'CONVERT TRAFFIC',
+      category: 'AI-DRIVEN SYSTEMS & AUTOMATION',
+      title: 'BUILD WITH INTELLIGENCE',
       tagline: 'Edge Jamstack Web Architecture, Sub-Second Speeds & Funnel Optimization',
       overview: 'Turn qualified traffic into pipeline with frictionless high-converting web engineering. We build lightning-fast web experiences with sub-second page loads, micro-interactions, continuous A/B funnel experimentation, and GA4 user telemetry.',
       highlights: [
@@ -1526,6 +1553,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  Object.assign(capabilityData, {
+    1: {
+      id: 1, badge: '01', category: 'WEB DEVELOPMENT & DIGITAL EXPERIENCE', title: 'BUILD DIGITAL EXPERIENCES',
+      tagline: 'ENGINEERED FOR FAST, SCALABLE & HIGH-CONVERTING DIGITAL EXPERIENCES',
+      overview: 'We design and develop fast, responsive websites and digital platforms using modern frontend, backend and cloud technologies.',
+      highlights: ['Frontend Engineering', 'Backend & APIs', 'Performance Engineering', 'Technical SEO'],
+      deliverables: [
+        { title: 'Frontend Engineering', desc: 'React, Next.js, responsive UI and component-based architecture.' },
+        { title: 'Backend & APIs', desc: 'REST APIs, authentication, databases and scalable server-side systems.' },
+        { title: 'Performance Engineering', desc: 'Core Web Vitals, image optimization, caching and fast page delivery.' },
+        { title: 'Technical SEO', desc: 'Semantic HTML, structured data, crawlability and search-ready architecture.' }
+      ],
+      tools: ['React', 'Next.js', 'Node.js', 'REST APIs', 'PostgreSQL', 'Cloudflare', 'Git'],
+      benchmarks: [
+        { val: 'Fast Load Times', label: 'Website performance', sub: 'Example performance framework' },
+        { val: 'Responsive Across Devices', label: 'Interface quality', sub: 'Example performance framework' },
+        { val: 'Scalable Architecture', label: 'System foundation', sub: 'Example performance framework' },
+        { val: 'Search-Ready Websites', label: 'Technical SEO', sub: 'Example performance framework' }
+      ],
+      visualization: { title: 'Website Performance', note: 'Example performance framework', type: 'bars', items: ['Performance', 'Accessibility', 'SEO', 'Best Practices'] },
+      roadmap: [
+        { badge: '01 · PLAN', title: 'Map the experience', desc: 'Align content, journeys and technical requirements around the business goal.' },
+        { badge: '02 · BUILD', title: 'Develop the system', desc: 'Build responsive interfaces, APIs and secure foundations with reusable components.' },
+        { badge: '03 · OPTIMIZE', title: 'Improve delivery', desc: 'Measure Core Web Vitals, refine technical SEO and strengthen release quality.' }
+      ]
+    },
+    2: {
+      id: 2, badge: '02', category: 'APP DEVELOPMENT & MOBILE SOLUTIONS', title: 'CREATE CONNECTED APPS',
+      tagline: 'BUILT FOR CONNECTED, FAST & SCALABLE MOBILE EXPERIENCES',
+      overview: 'We build mobile applications that combine intuitive UX, reliable backend systems and scalable APIs for real-world business use.',
+      highlights: ['Cross-Platform Development', 'API & Backend Integration', 'App Performance', 'Deployment & Analytics'],
+      deliverables: [
+        { title: 'Cross-Platform Development', desc: 'Flutter and modern mobile frameworks for Android and iOS.' },
+        { title: 'API & Backend Integration', desc: 'Secure REST APIs, authentication, databases and third-party integrations.' },
+        { title: 'App Performance', desc: 'Optimized rendering, efficient API calls, caching and lightweight interfaces.' },
+        { title: 'Deployment & Analytics', desc: 'App Store and Play Store deployment, crash monitoring and usage analytics.' }
+      ],
+      tools: ['Flutter', 'Dart', 'REST APIs', 'Firebase', 'PostgreSQL', 'Node.js'],
+      benchmarks: [
+        { val: 'Cross-Platform Apps', label: 'Product delivery', sub: 'Illustrative mobile product framework' },
+        { val: 'API-Connected Products', label: 'System connectivity', sub: 'Illustrative mobile product framework' },
+        { val: 'Reliable Performance', label: 'App quality', sub: 'Illustrative mobile product framework' },
+        { val: 'Scalable Architecture', label: 'Growth foundation', sub: 'Illustrative mobile product framework' }
+      ],
+      visualization: { title: 'Mobile Experience Framework', note: 'Illustrative mobile product framework', type: 'bars', items: ['Performance', 'UX', 'Reliability', 'Scalability'] },
+      roadmap: [
+        { badge: '01 · DEFINE', title: 'Shape the product', desc: 'Clarify user journeys, platform needs, data flows and release priorities.' },
+        { badge: '02 · CONNECT', title: 'Build the system', desc: 'Combine mobile UI, secure APIs, authentication and database connectivity.' },
+        { badge: '03 · RELEASE', title: 'Monitor and improve', desc: 'Prepare store releases, track crashes and use product analytics to guide iteration.' }
+      ]
+    },
+    3: {
+      id: 3, badge: '03', category: 'ORGANIC GROWTH & SEARCH PERFORMANCE', title: 'GROW ORGANICALLY',
+      tagline: 'SEARCH STRATEGY, TECHNICAL SEO & CONTENT PERFORMANCE',
+      overview: 'We improve how your website is discovered, understood and ranked through technical SEO, content strategy and search performance optimization.',
+      highlights: ['Technical SEO', 'Keyword Strategy', 'Content Optimization', 'Search Performance'],
+      deliverables: [
+        { title: 'Technical SEO', desc: 'Crawlability, indexing, site architecture, Core Web Vitals and structured data.' },
+        { title: 'Keyword Strategy', desc: 'Search intent, keyword mapping, topic clusters and competitor analysis.' },
+        { title: 'Content Optimization', desc: 'Helpful content, semantic relevance, internal linking and on-page optimization.' },
+        { title: 'Search Performance', desc: 'Organic traffic, rankings, impressions, CTR and conversion tracking.' }
+      ],
+      tools: ['Technical SEO', 'Search Console', 'Schema Markup', 'GA4', 'Core Web Vitals', 'Content Strategy'],
+      benchmarks: [
+        { val: 'Better Search Visibility', label: 'Discovery', sub: 'Search performance outcome' },
+        { val: 'Stronger Technical Foundation', label: 'Crawl and index', sub: 'Search performance outcome' },
+        { val: 'Qualified Organic Traffic', label: 'Intent-led reach', sub: 'Search performance outcome' },
+        { val: 'Search-Driven Conversions', label: 'Business action', sub: 'Search performance outcome' }
+      ],
+      visualization: { title: 'Organic Search Growth', note: 'Illustrative growth model', type: 'line', items: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'] },
+      roadmap: [
+        { badge: '01 · DISCOVER', title: 'Map search demand', desc: 'Connect audience needs to search intent, keywords and topic opportunities.' },
+        { badge: '02 · OPTIMIZE', title: 'Strengthen the foundation', desc: 'Improve crawlability, page structure, content relevance and internal linking.' },
+        { badge: '03 · MEASURE', title: 'Track search performance', desc: 'Review impressions, CTR, rankings and conversions to guide the next cycle.' }
+      ]
+    },
+    4: {
+      id: 4, badge: '04', category: 'AI-DRIVEN SYSTEMS & AUTOMATION', title: 'BUILD WITH INTELLIGENCE',
+      tagline: 'AI WORKFLOWS, INTELLIGENT AUTOMATION & DATA-DRIVEN SYSTEMS',
+      overview: 'We connect AI, APIs and automation workflows to reduce repetitive work, improve decision-making and create faster business processes.',
+      highlights: ['AI Integration', 'Workflow Automation', 'Data & API Systems', 'Intelligent Analytics'],
+      deliverables: [
+        { title: 'AI Integration', desc: 'LLM APIs, AI assistants, document processing and intelligent search.' },
+        { title: 'Workflow Automation', desc: 'Automated lead routing, notifications, approvals and repetitive business tasks.' },
+        { title: 'Data & API Systems', desc: 'Connect CRMs, databases, SaaS platforms and internal systems through APIs.' },
+        { title: 'Intelligent Analytics', desc: 'Dashboards, reporting pipelines and AI-assisted insights for faster decisions.' }
+      ],
+      tools: ['LLM APIs', 'Python', 'REST APIs', 'Webhooks', 'n8n', 'Databases', 'Cloud Platforms'],
+      benchmarks: [
+        { val: 'Less Manual Work', label: 'Efficiency', sub: 'Automation outcome' },
+        { val: 'Faster Workflows', label: 'Process speed', sub: 'Automation outcome' },
+        { val: 'Connected Systems', label: 'Integration', sub: 'Automation outcome' },
+        { val: 'Actionable Insights', label: 'Decision support', sub: 'Automation outcome' }
+      ],
+      visualization: { title: 'Automation Workflow', note: 'Illustrative process model', type: 'flow', items: ['Input', 'Data', 'AI / Rules', 'Automation', 'Action', 'Insight'] },
+      roadmap: [
+        { badge: '01 · CONNECT', title: 'Map the systems', desc: 'Identify inputs, data sources, business rules and the people involved in each process.' },
+        { badge: '02 · AUTOMATE', title: 'Build the workflow', desc: 'Connect APIs, AI services and notifications around clear approval and action paths.' },
+        { badge: '03 · LEARN', title: 'Improve decisions', desc: 'Monitor workflow signals and turn structured data into useful operational insight.' }
+      ]
+    }
+  });
+
   let currentCapabilityId = 1;
 
   const pillarModal = document.getElementById('pillarModal');
@@ -1540,6 +1670,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pmTitle = document.getElementById('pmTitle');
   const pmTagline = document.getElementById('pmTagline');
   const pmOverview = document.getElementById('pmOverview');
+  const pmOutcomeTitle = document.getElementById('pmOutcomeTitle');
   const pmHighlights = document.getElementById('pmHighlights');
   const pmDeliverables = document.getElementById('pmDeliverables');
   const pmToolStack = document.getElementById('pmToolStack');
@@ -1549,20 +1680,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const pmBtnSchedule = document.getElementById('pmBtnSchedule');
   const pmBtnCaseStudy = document.getElementById('pmBtnCaseStudy');
   const capabilityBackgroundVideo = document.getElementById('capabilityBackgroundVideo');
-  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const pillarBackgroundImage = document.querySelector('.pillar-modal-background-video');
+  const pillarBackgroundImages = {
+    1: '/assets/capability-pillar-01.png',
+    2: '/assets/capability-pillar-02.png',
+    3: '/assets/capability-pillar-03.png',
+    4: '/assets/capability-pillar-04.png'
+  };
 
   function setCapabilityVideoActive(isActive) {
     if (!capabilityBackgroundVideo) return;
-    const shouldPlay = isActive && !reducedMotionQuery.matches;
     capabilityBackgroundVideo.classList.toggle('is-active', isActive);
-
-    if (shouldPlay) {
-      capabilityBackgroundVideo.play().catch(() => {
-        capabilityBackgroundVideo.classList.add('video-fallback');
-      });
-    } else {
-      capabilityBackgroundVideo.pause();
-    }
   }
 
   function syncCapabilityVideoState() {
@@ -1573,6 +1701,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = capabilityData[id];
     if (!data) return;
     currentCapabilityId = id;
+    if (pillarBackgroundImage) {
+      pillarBackgroundImage.src = pillarBackgroundImages[id] || '/assets/capability-pillar-background.png';
+    }
 
     const shortDescription = (text, maxLength = 118) => {
       const sentence = text.split(/(?<=[.!?])\s+/)[0];
@@ -1586,6 +1717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pmTitle) pmTitle.innerText = data.title;
     if (pmTagline) pmTagline.innerText = data.tagline;
     if (pmOverview) pmOverview.innerText = data.overview;
+    if (pmOutcomeTitle) pmOutcomeTitle.innerText = data.visualization.title;
     if (pmFooterPillarName) pmFooterPillarName.innerText = `${data.badge}: ${data.title}`;
 
     // Highlights
@@ -1626,7 +1758,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Benchmarks Grid
     if (pmBenchmarks) {
-      pmBenchmarks.innerHTML = data.benchmarks.map(b => `
+      const visualization = data.visualization;
+      let visualizationMarkup = '';
+      if (visualization.type === 'bars') {
+        visualizationMarkup = `<div class="pm-visualization pm-bars-visualization"><div class="pm-visualization-heading"><span>${visualization.title}</span><small>${visualization.note}</small></div>${visualization.items.map((item, index) => `<div class="pm-bar-row"><span>${item}</span><i><b style="width:${[88, 72, 82, 66][index]}%"></b></i></div>`).join('')}</div>`;
+      } else if (visualization.type === 'line') {
+        visualizationMarkup = `<div class="pm-visualization pm-line-visualization"><div class="pm-visualization-heading"><span>${visualization.title}</span><small>${visualization.note}</small></div><svg viewBox="0 0 640 150" role="img" aria-label="Illustrative organic search growth trend"><path class="pm-chart-axis" d="M12 126H628M12 18V126"/><path class="pm-chart-line" d="M18 116 C90 112 112 106 172 106 S246 88 286 92 S358 70 404 74 S492 44 548 50 S590 32 622 26"/><circle class="pm-chart-dot" cx="622" cy="26" r="5"/></svg><div class="pm-chart-labels">${visualization.items.map(item => `<span>${item}</span>`).join('')}</div></div>`;
+      } else {
+        visualizationMarkup = `<div class="pm-visualization pm-flow-visualization"><div class="pm-visualization-heading"><span>${visualization.title}</span><small>${visualization.note}</small></div><div class="pm-flow-list">${visualization.items.map((item, index) => `<span>${item}</span>${index < visualization.items.length - 1 ? '<b>→</b>' : ''}`).join('')}</div></div>`;
+      }
+      pmBenchmarks.innerHTML = visualizationMarkup + data.benchmarks.map(b => `
         <div class="pm-benchmark-box">
           <div class="pm-bench-val">${b.val}</div>
           <div class="pm-bench-label">${b.label}</div>
@@ -1683,7 +1824,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Attach click events to Capability Cards (.stat-card)
-  document.querySelectorAll('.stat-card[data-pillar-id]').forEach(card => {
+  document.querySelectorAll('.pillar-row[data-pillar-id]').forEach(card => {
     card.addEventListener('click', () => {
       const pid = parseInt(card.getAttribute('data-pillar-id') || '1', 10);
       openCapability(pid);
@@ -2329,5 +2470,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
   smBtnCaseStudy?.addEventListener('click', () => {
     closeService();
+  });
+})();
+
+// ============================================================================
+// 19. PRICING SERVICE ACCORDION
+// ============================================================================
+(function () {
+  const pricingServices = [
+    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 2, name: 'GOOGLE ADS', price: '₹6,999', period: '/ month', description: 'Reach high-intent customers and drive measurable paid conversions.', features: ['Campaign Setup', 'Conversion Tracking', 'Keyword Optimization', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
+    { id: 3, name: 'META ADS', subname: '(Instagram / Facebook)', price: '₹5,999', period: '/ month', description: 'Turn social attention into targeted campaigns and qualified customers.', features: ['Audience Research', 'Campaign Setup', 'Retargeting', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
+    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
+    { id: 5, name: 'WEBSITE DEVELOPMENT', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
+    { id: 6, name: 'APP DEVELOPMENT', price: 'Custom Pricing', period: '', description: 'Build scalable mobile applications for Android and iOS.', note: 'Talk to us for a project estimate.', features: ['Cross-platform app development', 'UI/UX implementation', 'API & backend integration', 'Deployment support'], cta: 'Get a Quote →' },
+    { id: 7, name: 'INTERNATIONAL PACKAGES', price: '$149', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 8, name: 'GROWTH PACKAGES', price: '₹14,999', period: '/ month', description: 'Complete growth plans for startups and growing businesses.', features: [], cta: 'View packages +', packages: [
+      { name: 'LAUNCH', price: '₹14,999', bestFor: 'Early-stage startups', features: ['SEO (Basic)', 'Google Ads (Basic)', 'Meta Ads (Basic)', 'Monthly Report'] },
+      { name: 'GROWTH', price: '₹24,999', bestFor: 'Growing businesses', popular: true, features: ['SEO (Growth)', 'Google Ads (Growth)', 'Meta Ads (Growth)', 'Social Media (Basic)', 'Strategy Call', 'Monthly Dashboard'] },
+      { name: 'SCALE', price: '₹39,999', bestFor: 'Established businesses', features: ['Advanced SEO', 'Google Ads (Performance)', 'Meta Ads (Performance)', 'Social Media (Growth)', 'CRO & Analytics', 'Monthly Strategic Review'] }
+    ] }
+  ];
+
+  const mount = document.getElementById('pricingServices');
+  if (!mount) return;
+
+  const detailsMarkup = (service) => {
+    if (service.packages) {
+      return `<div class="pricing-packages">${service.packages.map(pkg => `
+        <div class="pricing-package${pkg.popular ? ' is-popular' : ''}">
+          ${pkg.popular ? '<span class="pricing-popular">MOST POPULAR</span>' : ''}
+          <h4>${pkg.name}</h4><strong>${pkg.price}<small>/ month</small></strong><span class="pricing-best-for">Best for: ${pkg.bestFor}</span>
+          <ul>${pkg.features.map(feature => `<li>${feature}</li>`).join('')}</ul>
+          <button class="btn btn-amber btn-sm pricing-cta" type="button" data-pricing-cta="${pkg.name}">Get Started →</button>
+        </div>`).join('')}</div>`;
+    }
+    return `<div class="pricing-expanded-content"><div><span class="pricing-included-label">WHAT&apos;S INCLUDED</span><ul class="pricing-features">${service.features.map(feature => `<li>${feature}</li>`).join('')}</ul>${service.note ? `<p class="pricing-note">${service.note}</p>` : ''}</div><button class="btn btn-amber btn-sm pricing-cta" type="button" data-pricing-cta="${service.name}">${service.cta}</button></div>`;
+  };
+
+  mount.innerHTML = pricingServices.map(service => `
+    <article class="pricing-card reveal-up" data-pricing-id="${service.id}">
+      <button class="pricing-card-toggle" type="button">
+        <span class="pricing-number">${String(service.id).padStart(2, '0')}</span>
+        <span class="pricing-summary"><strong>${service.name}</strong>${service.subname ? `<em>${service.subname}</em>` : ''}<span>${service.description}</span></span>
+        <span class="pricing-price"><strong>${service.price}</strong>${service.period ? `<small>${service.period}</small>` : ''}</span>
+        <span class="pricing-expand" aria-hidden="true">+</span>
+      </button>
+    </article>`).join('');
+
+  const cards = [...mount.querySelectorAll('.pricing-card')];
+  const pricingDetailModal = document.getElementById('pricingDetailModal');
+  const pricingDetailBody = document.getElementById('pricingDetailBody');
+  const pricingDetailHeading = document.getElementById('pricingDetailHeading');
+  const pricingDetailNumber = document.getElementById('pricingDetailNumber');
+  const closePricingDetail = document.getElementById('closePricingDetail');
+
+  function openPricingDetail(service) {
+    if (!pricingDetailModal || !pricingDetailBody) return;
+    pricingDetailNumber.textContent = `SERVICE ${String(service.id).padStart(2, '0')}`;
+    pricingDetailHeading.textContent = service.name;
+    pricingDetailBody.innerHTML = `
+      ${service.subname ? `<p class="work-detail-engagement">${service.subname}</p>` : ''}
+      <p class="work-detail-engagement">${service.description} — <strong>${service.price}</strong>${service.period ? ` <small>${service.period}</small>` : ''}</p>
+      ${detailsMarkup(service)}`;
+    pricingDetailBody.querySelectorAll('.pricing-cta').forEach(button => button.addEventListener('click', () => {
+      closePricingDetails();
+      document.getElementById('btnNavSchedule')?.click();
+    }));
+    pricingDetailModal.classList.add('open');
+    pricingDetailModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePricingDetails() {
+    pricingDetailModal?.classList.remove('open');
+    pricingDetailModal?.setAttribute('aria-hidden', 'true');
+    if (!document.querySelector('.modal-overlay.open')) document.body.style.overflow = '';
+  }
+
+  cards.forEach(card => {
+    card.classList.add('in-view');
+    const service = pricingServices.find(item => String(item.id) === card.dataset.pricingId);
+    card.querySelector('.pricing-card-toggle')?.addEventListener('click', () => openPricingDetail(service));
+  });
+
+  closePricingDetail?.addEventListener('click', closePricingDetails);
+  pricingDetailModal?.addEventListener('click', event => { if (event.target === pricingDetailModal) closePricingDetails(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closePricingDetails(); });
+
+  document.querySelectorAll('.mega-service[data-pricing-id]').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      const service = pricingServices.find(item => String(item.id) === link.dataset.pricingId);
+      document.getElementById('services')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (service) window.setTimeout(() => openPricingDetail(service), 450);
+    });
   });
 })();
