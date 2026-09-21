@@ -2254,21 +2254,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
 (function () {
   const services = [
-    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
-    { id: 2, name: 'GOOGLE ADS', price: '₹6,999', period: '/ month', description: 'Reach high-intent customers and drive measurable paid conversions.', features: ['Campaign Setup', 'Conversion Tracking', 'Keyword Optimization', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
-    { id: 3, name: 'META ADS', subname: '(Instagram / Facebook)', price: '₹5,999', period: '/ month', description: 'Turn social attention into targeted campaigns and qualified customers.', features: ['Audience Research', 'Campaign Setup', 'Retargeting', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
-    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
-    { id: 5, name: 'WEBSITE DEVELOPMENT', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
-    { id: 6, name: 'APP DEVELOPMENT', price: 'Custom Pricing', period: '', description: 'Build scalable mobile applications for Android and iOS.', note: 'Talk to us for a project estimate.', features: ['Cross-platform app development', 'UI/UX implementation', 'API & backend integration', 'Deployment support'], cta: 'Get a Quote →' },
-    { id: 7, name: 'INTERNATIONAL PACKAGES', price: '$149', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', displayName: 'SEO', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 2, name: 'GOOGLE ADS', displayName: 'Google Ads', price: '₹6,999', period: '/ month', description: 'Reach high-intent customers and drive measurable paid conversions.', features: ['Campaign Setup', 'Conversion Tracking', 'Keyword Optimization', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
+    { id: 3, name: 'META ADS', displayName: 'Meta Ads', subname: '(Instagram / Facebook)', price: '₹5,999', period: '/ month', description: 'Turn social attention into targeted campaigns and qualified customers.', features: ['Audience Research', 'Campaign Setup', 'Retargeting', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
+    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', displayName: 'Social Media', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
+    { id: 5, name: 'WEBSITE DEVELOPMENT', displayName: 'Website', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
+    { id: 6, name: 'APP DEVELOPMENT', displayName: 'App Development', price: 'Custom Pricing', period: '', description: 'Build scalable mobile applications for Android and iOS.', note: 'Talk to us for a project estimate.', features: ['Cross-platform app development', 'UI/UX implementation', 'API & backend integration', 'Deployment support'], cta: 'Get a Quote →' },
+    { id: 7, name: 'INTERNATIONAL PACKAGES', displayName: 'International', price: '$500', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
     { id: 8, name: 'GROWTH PACKAGES', price: '₹14,999', period: '/ month', description: 'Complete growth plans for startups and growing businesses.', features: [], cta: 'View packages +', packages: [{ name: 'LAUNCH', price: '₹14,999', bestFor: 'Early-stage startups', features: ['SEO (Basic)', 'Google Ads (Basic)', 'Meta Ads (Basic)', 'Monthly Report'] }, { name: 'GROWTH', price: '₹24,999', bestFor: 'Growing businesses', popular: true, features: ['SEO (Growth)', 'Google Ads (Growth)', 'Meta Ads (Growth)', 'Social Media (Basic)', 'Strategy Call', 'Monthly Dashboard'] }, { name: 'SCALE', price: '₹39,999', bestFor: 'Established businesses', features: ['Advanced SEO', 'Google Ads (Performance)', 'Meta Ads (Performance)', 'Social Media (Growth)', 'CRO & Analytics', 'Monthly Strategic Review'] }] }
   ];
   const mount = document.getElementById('pricingServices');
   if (!mount) return;
   const details = service => service.packages ? `<div class="pricing-packages">${service.packages.map(pkg => `<div class="pricing-package${pkg.popular ? ' is-popular' : ''}">${pkg.popular ? '<span class="pricing-popular">MOST POPULAR</span>' : ''}<h4>${pkg.name}</h4><strong>${pkg.price}<small>/ month</small></strong><span class="pricing-best-for">Best for: ${pkg.bestFor}</span><ul>${pkg.features.map(feature => `<li>${feature}</li>`).join('')}</ul><button class="btn btn-amber btn-sm pricing-cta" type="button">Get Started →</button></div>`).join('')}</div>` : `<div class="pricing-expanded-content"><div><span class="pricing-included-label">WHAT&apos;S INCLUDED</span><ul class="pricing-features">${service.features.map(feature => `<li>${feature}</li>`).join('')}</ul>${service.note ? `<p class="pricing-note">${service.note}</p>` : ''}</div><button class="btn btn-amber btn-sm pricing-cta" type="button">${service.cta}</button></div>`;
-  mount.innerHTML = services.map(service => `<article class="pricing-card reveal-up in-view" data-pricing-id="${service.id}"><button class="pricing-card-toggle" type="button" aria-expanded="false" aria-controls="pricing-details-${service.id}"><span class="pricing-number">${String(service.id).padStart(2, '0')}</span><span class="pricing-summary"><strong>${service.name}</strong>${service.subname ? `<em>${service.subname}</em>` : ''}<span>${service.description}</span></span><span class="pricing-price"><strong>${service.price}</strong>${service.period ? `<small>${service.period}</small>` : ''}</span><span class="pricing-expand" aria-hidden="true">+</span></button><div class="pricing-details" id="pricing-details-${service.id}" aria-hidden="true"><div class="pricing-details-inner">${details(service)}</div></div></article>`).join('');
+  const iconMarkup = id => ({
+    1: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.2"></circle><path d="m16 16 4.2 4.2"></path></svg>',
+    2: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 15-6v14L4 13z"></path><path d="M7 14v5"></path><path d="M19 9.5h2v5h-2"></path></svg>',
+    3: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7c2.2-2 4.7-2 7 1s4.8 3 7 1"></path><path d="M5 17c2.2 2 4.7 2 7-1s4.8-3 7-1"></path></svg>',
+    4: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17.3" cy="6.8" r=".8" fill="currentColor" stroke="none"></circle></svg>',
+    5: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"></rect><path d="M8 20h8M12 17v3"></path></svg>',
+    7: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.8 9h16.4M3.8 15h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"></path></svg>'
+  });
+  const featuredServices = services.filter(service => [1, 2, 3, 4, 5, 7].includes(service.id));
+  const growthService = services.find(service => service.id === 8);
+  mount.innerHTML = featuredServices.map(service => `<article class="pricing-card reveal-up in-view" data-pricing-id="${service.id}"><button class="pricing-card-toggle" type="button" aria-expanded="false" aria-controls="pricing-details-${service.id}"><span class="pricing-icon">${iconMarkup(service.id)}</span><span class="pricing-summary"><strong>${service.displayName || service.name}</strong>${service.subname ? `<em>${service.subname}</em>` : ''}<span>${service.description}</span></span><span class="pricing-price"><strong>${service.price}</strong>${service.period ? `<small>${service.period}</small>` : ''}</span><span class="pricing-expand" aria-hidden="true">+</span></button><div class="pricing-details" id="pricing-details-${service.id}" aria-hidden="true"><div class="pricing-details-inner"><div class="pricing-card-details">${details(service)} </div></div></div></article>`).join('');
+  const growthMount = document.getElementById('pricingGrowth');
+  if (growthMount && growthService) growthMount.innerHTML = `<div class="pricing-growth-copy"><span class="pricing-cta-label">BEST VALUE FOR STARTUPS</span><h3>Growth<br>Packages</h3><p>Complete digital growth solutions<br>at a price that makes sense.</p><button class="btn btn-amber btn-sm pricing-compare" type="button">Compare Plans <span aria-hidden="true">→</span></button></div><div class="pricing-packages">${growthService.packages.map(pkg => `<article class="pricing-package${pkg.popular ? ' is-popular' : ''}">${pkg.popular ? '<span class="pricing-popular">MOST POPULAR</span>' : ''}<h4>${pkg.name}</h4><strong>${pkg.price}<small>/ month</small></strong><span class="pricing-best-for">${pkg.bestFor}</span><ul>${pkg.features.map(feature => `<li>${feature}</li>`).join('')}</ul><button class="btn ${pkg.popular ? 'btn-amber' : 'btn-outline'} btn-sm pricing-cta" type="button">Get Started <span aria-hidden="true">→</span></button></article>`).join('')}</div>`;
   const cards = [...mount.querySelectorAll('.pricing-card')];
-  cards.forEach(card => card.querySelector('.pricing-card-toggle')?.addEventListener('click', () => { const open = !card.classList.contains('is-open'); cards.forEach(item => { item.classList.remove('is-open'); item.querySelector('.pricing-card-toggle')?.setAttribute('aria-expanded', 'false'); item.querySelector('.pricing-details')?.setAttribute('aria-hidden', 'true'); }); if (open) { card.classList.add('is-open'); card.querySelector('.pricing-card-toggle')?.setAttribute('aria-expanded', 'true'); card.querySelector('.pricing-details')?.setAttribute('aria-hidden', 'false'); } }));
-  mount.querySelectorAll('.pricing-cta').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); document.getElementById('btnNavSchedule')?.click(); }));
+  const pricingModal = document.getElementById('pricingDetailModal');
+  const pricingBody = document.getElementById('pricingDetailBody');
+  const closePricingModal = () => { pricingModal?.classList.remove('open'); pricingModal?.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; };
+  const openPricingModal = service => {
+    if (!pricingModal || !pricingBody) return;
+    document.getElementById('pricingDetailNumber').textContent = `SERVICE ${String(service.id).padStart(2, '0')}`;
+    document.getElementById('pricingDetailHeading').textContent = service.name;
+    pricingBody.innerHTML = `<p class="work-detail-engagement">${service.description} — <strong>${service.price}</strong>${service.period ? ` <small>${service.period}</small>` : ''}</p>${details(service)}`;
+    pricingModal.classList.add('open'); pricingModal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
+    pricingBody.querySelectorAll('.pricing-cta').forEach(button => button.addEventListener('click', () => { closePricingModal(); document.getElementById('btnNavSchedule')?.click(); }));
+  };
+  cards.forEach(card => card.querySelector('.pricing-card-toggle')?.addEventListener('click', () => {
+    const service = services.find(item => String(item.id) === card.dataset.pricingId);
+    if (service) openPricingModal(service);
+  }));
+  document.getElementById('closePricingDetail')?.addEventListener('click', closePricingModal);
+  pricingModal?.addEventListener('click', event => { if (event.target === pricingModal) closePricingModal(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closePricingModal(); });
+  mount.querySelectorAll('.pricing-card-details .pricing-cta').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation();
+    const card = button.closest('.pricing-card');
+    const service = card && services.find(item => String(item.id) === card.dataset.pricingId);
+    if (service) openPricingModal(service);
+  }));
+  mount.querySelectorAll('.pricing-package .pricing-cta').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation();
+    document.getElementById('btnNavSchedule')?.click();
+  }));
+  document.querySelectorAll('.pricing-compare').forEach(button => button.addEventListener('click', () => document.getElementById('btnNavSchedule')?.click()));
   document.querySelectorAll('.mega-service[data-pricing-id]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); const card = mount.querySelector(`.pricing-card[data-pricing-id="${link.dataset.pricingId}"]`); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (card) window.setTimeout(() => card.querySelector('.pricing-card-toggle')?.click(), 450); }));
 })();

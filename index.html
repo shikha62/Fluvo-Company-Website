@@ -337,13 +337,14 @@
       <div class="services-inner">
         <div class="services-header">
           <div class="reveal-up">
-            <span class="label-tag">OUR SERVICES &amp; PRICING</span>
-            <h2 class="section-heading">Digital growth, built around your needs.</h2>
+            <span class="label-tag">PRICING</span>
+            <h2 class="section-heading">Everything You Need <span class="pricing-heading-accent">to Grow</span></h2>
           </div>
-          <p class="section-subheading reveal-up" data-delay="100">Choose a service or growth package that fits your business. Start with what you need and scale when you&apos;re ready.</p>
+          <p class="section-subheading reveal-up" data-delay="100">Choose the services and growth plans that fit your business.</p>
         </div>
 
         <div class="services-grid pricing-services-grid" id="pricingServices" aria-label="Fluvo services and pricing"></div>
+        <div class="pricing-growth-panel" id="pricingGrowth" aria-label="Growth packages"></div>
       </div>
     </section>
 
@@ -1004,6 +1005,16 @@
 
     </div>
   </footer>
+
+  <div class="modal-overlay work-detail-modal" id="pricingDetailModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pricingDetailHeading">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div><span class="label-tag" id="pricingDetailNumber">SERVICE</span><h2 class="modal-title" id="pricingDetailHeading">Service</h2></div>
+        <button class="modal-close" id="closePricingDetail" type="button" aria-label="Close service detail">&times;</button>
+      </div>
+      <div class="modal-body work-detail-body" id="pricingDetailBody"></div>
+    </div>
+  </div>
 
   <!-- =========================================================================
        14.5 FULL-SCREEN CAPABILITY SHOWCASE MODAL
