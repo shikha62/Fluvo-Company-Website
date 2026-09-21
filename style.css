@@ -3805,7 +3805,7 @@ textarea { resize: vertical; min-height: 90px; }
 .pricing-details { display: block; opacity: 1; }
 .pricing-details-inner { min-height: auto; overflow: visible; }
 .pricing-card-details { min-height: 150px; }
-.pricing-price { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
+.pricing-price { display: none; }
 .pricing-price strong { color: var(--amber); font-family: var(--font-serif); font-size: clamp(20px,2vw,27px); font-weight: 400; }
 .pricing-price small { color: var(--gray-mid); font-size: 11px; }
 .pricing-expand { color: var(--amber); font-size: 26px; font-weight: 300; line-height: 1; transition: transform .25s ease; }
@@ -3835,7 +3835,7 @@ textarea { resize: vertical; min-height: 90px; }
 .pricing-package.is-popular { border-color: var(--amber); }
 .pricing-popular { position: absolute; top: -10px; right: 12px; padding: 3px 7px; background: var(--amber); color: var(--white); border-radius: 3px; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
 .pricing-package h4 { margin: 0 0 8px; color: var(--charcoal); font-size: 13px; letter-spacing: .08em; }
-.pricing-package > strong { display: block; margin-bottom: 4px; color: var(--amber); font-family: var(--font-serif); font-size: 25px; font-weight: 400; }
+.pricing-package > strong { display: none; }
 .pricing-package > strong small { color: var(--gray-mid); font-family: var(--font-sans); font-size: 11px; }
 .pricing-best-for { display: block; min-height: 32px; margin-bottom: 14px; color: var(--gray-mid); font-size: 11px; line-height: 1.45; }
 .pricing-package ul { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }

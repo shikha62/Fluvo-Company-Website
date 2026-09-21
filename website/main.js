@@ -2478,13 +2478,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================================
 (function () {
   const pricingServices = [
-    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', displayName: 'SEO', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', displayName: 'Search Engine Optimization (SEO)', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
     { id: 2, name: 'GOOGLE ADS', displayName: 'Google Ads', price: '₹6,999', period: '/ month', description: 'Reach high-intent customers and drive measurable paid conversions.', features: ['Campaign Setup', 'Conversion Tracking', 'Keyword Optimization', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
     { id: 3, name: 'META ADS', displayName: 'Meta Ads', subname: '(Instagram / Facebook)', price: '₹5,999', period: '/ month', description: 'Turn social attention into targeted campaigns and qualified customers.', features: ['Audience Research', 'Campaign Setup', 'Retargeting', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
-    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', displayName: 'Social Media', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
-    { id: 5, name: 'WEBSITE DEVELOPMENT', displayName: 'Website', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
+    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', displayName: 'Social Media Management', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
+    { id: 5, name: 'WEBSITE DEVELOPMENT', displayName: 'Website Development', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
     { id: 6, name: 'APP DEVELOPMENT', displayName: 'App Development', price: 'Custom Pricing', period: '', description: 'Build scalable mobile applications for Android and iOS.', note: 'Talk to us for a project estimate.', features: ['Cross-platform app development', 'UI/UX implementation', 'API & backend integration', 'Deployment support'], cta: 'Get a Quote →' },
-    { id: 7, name: 'INTERNATIONAL PACKAGES', displayName: 'International', price: '$500', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 7, name: 'INTERNATIONAL PACKAGES', displayName: 'International Packages', price: '$500', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
     { id: 8, name: 'GROWTH PACKAGES', price: '₹14,999', period: '/ month', description: 'Complete growth plans for startups and growing businesses.', features: [], cta: 'View packages +', packages: [
       { name: 'LAUNCH', price: '₹14,999', bestFor: 'Early-stage startups', features: ['SEO (Basic)', 'Google Ads (Basic)', 'Meta Ads (Basic)', 'Monthly Report'] },
       { name: 'GROWTH', price: '₹24,999', bestFor: 'Growing businesses', popular: true, features: ['SEO (Growth)', 'Google Ads (Growth)', 'Meta Ads (Growth)', 'Social Media (Basic)', 'Strategy Call', 'Monthly Dashboard'] },
@@ -2551,7 +2551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pricingDetailHeading.textContent = service.name;
     pricingDetailBody.innerHTML = `
       ${service.subname ? `<p class="work-detail-engagement">${service.subname}</p>` : ''}
-      <p class="work-detail-engagement">${service.description} — <strong>${service.price}</strong>${service.period ? ` <small>${service.period}</small>` : ''}</p>
+      <p class="work-detail-engagement">${service.description}</p>
       ${detailsMarkup(service)}`;
     pricingDetailBody.querySelectorAll('.pricing-cta').forEach(button => button.addEventListener('click', () => {
       closePricingDetails();
@@ -2580,9 +2580,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.pricing-card-details .pricing-cta').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
-    const card = button.closest('.pricing-card');
-    const service = card && pricingServices.find(item => String(item.id) === card.dataset.pricingId);
-    if (service) openPricingDetail(service);
+    closePricingDetails();
+    document.getElementById('btnNavSchedule')?.click();
   }));
   document.querySelectorAll('.pricing-package .pricing-cta').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();

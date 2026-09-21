@@ -2254,13 +2254,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 (function () {
   const services = [
-    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', displayName: 'SEO', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 1, name: 'SEARCH ENGINE OPTIMIZATION (SEO)', displayName: 'Search Engine Optimization (SEO)', price: '₹7,999', period: '/ month', description: 'Improve search visibility and build sustainable organic traffic.', features: ['Technical SEO', 'Keyword Research', 'On-page SEO', 'Monthly Reporting'], cta: 'Get Started →' },
     { id: 2, name: 'GOOGLE ADS', displayName: 'Google Ads', price: '₹6,999', period: '/ month', description: 'Reach high-intent customers and drive measurable paid conversions.', features: ['Campaign Setup', 'Conversion Tracking', 'Keyword Optimization', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
     { id: 3, name: 'META ADS', displayName: 'Meta Ads', subname: '(Instagram / Facebook)', price: '₹5,999', period: '/ month', description: 'Turn social attention into targeted campaigns and qualified customers.', features: ['Audience Research', 'Campaign Setup', 'Retargeting', 'Monthly Reporting'], note: 'Ad spend separate', cta: 'Get Started →' },
-    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', displayName: 'Social Media', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
-    { id: 5, name: 'WEBSITE DEVELOPMENT', displayName: 'Website', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
+    { id: 4, name: 'SOCIAL MEDIA MANAGEMENT', displayName: 'Social Media Management', price: '₹8,999', period: '/ month', description: 'Build a consistent social presence with content, creative and reporting.', features: ['Content Calendar', 'Posts, Reels & Stories', 'Creative Design', 'Monthly Analytics'], cta: 'Get Started →' },
+    { id: 5, name: 'WEBSITE DEVELOPMENT', displayName: 'Website Development', price: '₹24,999', period: 'one-time', description: 'Modern, responsive websites designed for performance and growth.', features: ['Responsive Design', 'SEO-ready Setup', 'Analytics Integration', 'Deployment Support'], cta: 'Get Started →' },
     { id: 6, name: 'APP DEVELOPMENT', displayName: 'App Development', price: 'Custom Pricing', period: '', description: 'Build scalable mobile applications for Android and iOS.', note: 'Talk to us for a project estimate.', features: ['Cross-platform app development', 'UI/UX implementation', 'API & backend integration', 'Deployment support'], cta: 'Get a Quote →' },
-    { id: 7, name: 'INTERNATIONAL PACKAGES', displayName: 'International', price: '$500', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
+    { id: 7, name: 'INTERNATIONAL PACKAGES', displayName: 'International Packages', price: '$500', period: '/ month', description: 'Global digital growth support for businesses targeting international markets.', features: ['SEO + Paid Ads', 'Social Media', 'Conversion Optimization', 'Monthly Reporting'], cta: 'Get Started →' },
     { id: 8, name: 'GROWTH PACKAGES', price: '₹14,999', period: '/ month', description: 'Complete growth plans for startups and growing businesses.', features: [], cta: 'View packages +', packages: [{ name: 'LAUNCH', price: '₹14,999', bestFor: 'Early-stage startups', features: ['SEO (Basic)', 'Google Ads (Basic)', 'Meta Ads (Basic)', 'Monthly Report'] }, { name: 'GROWTH', price: '₹24,999', bestFor: 'Growing businesses', popular: true, features: ['SEO (Growth)', 'Google Ads (Growth)', 'Meta Ads (Growth)', 'Social Media (Basic)', 'Strategy Call', 'Monthly Dashboard'] }, { name: 'SCALE', price: '₹39,999', bestFor: 'Established businesses', features: ['Advanced SEO', 'Google Ads (Performance)', 'Meta Ads (Performance)', 'Social Media (Growth)', 'CRO & Analytics', 'Monthly Strategic Review'] }] }
   ];
   const mount = document.getElementById('pricingServices');
@@ -2287,7 +2287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!pricingModal || !pricingBody) return;
     document.getElementById('pricingDetailNumber').textContent = `SERVICE ${String(service.id).padStart(2, '0')}`;
     document.getElementById('pricingDetailHeading').textContent = service.name;
-    pricingBody.innerHTML = `<p class="work-detail-engagement">${service.description} — <strong>${service.price}</strong>${service.period ? ` <small>${service.period}</small>` : ''}</p>${details(service)}`;
+    pricingBody.innerHTML = `<p class="work-detail-engagement">${service.description}</p>${details(service)}`;
     pricingModal.classList.add('open'); pricingModal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
     pricingBody.querySelectorAll('.pricing-cta').forEach(button => button.addEventListener('click', () => { closePricingModal(); document.getElementById('btnNavSchedule')?.click(); }));
   };
@@ -2300,9 +2300,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', event => { if (event.key === 'Escape') closePricingModal(); });
   mount.querySelectorAll('.pricing-card-details .pricing-cta').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
-    const card = button.closest('.pricing-card');
-    const service = card && services.find(item => String(item.id) === card.dataset.pricingId);
-    if (service) openPricingModal(service);
+    closePricingModal();
+    document.getElementById('btnNavSchedule')?.click();
   }));
   mount.querySelectorAll('.pricing-package .pricing-cta').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
