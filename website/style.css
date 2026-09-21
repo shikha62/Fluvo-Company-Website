@@ -1480,8 +1480,8 @@ ul, ol { list-style: none; }
   align-items: start;
   gap: 12px;
   width: 100%;
-  min-height: 190px;
-  padding: 24px;
+  min-height: 132px;
+  padding: 20px 24px;
   border: 0;
   background: transparent;
   color: inherit;
@@ -1509,7 +1509,7 @@ ul, ol { list-style: none; }
 .pricing-card.is-open .pricing-expand { transform: rotate(45deg); }
 .pricing-card.is-open .pricing-summary > span { display: block; }
 .pricing-inline-details { display: block; flex: 1; }
-.pricing-inline-details .pricing-card-details { min-height: 150px; height: 100%; }
+.pricing-inline-details .pricing-card-details { min-height: 0; height: auto; }
 .pricing-expanded-content, .pricing-packages { padding: 24px 0 0; }
 .pricing-card > [hidden] { display: none; }
 .pricing-card.is-open .pricing-expanded-content,
@@ -1552,7 +1552,7 @@ ul, ol { list-style: none; }
 
 @media (max-width: 767px) {
   .pricing-services-grid { grid-template-columns: 1fr; }
-  .pricing-card-toggle { min-height: 160px; padding: 20px; }
+  .pricing-card-toggle { min-height: 132px; padding: 18px 20px; }
   .pricing-price { align-items: flex-start; }
   .pricing-expanded-content { align-items: stretch; flex-direction: column; padding: 20px 18px 22px; }
   .pricing-card.is-open .pricing-expanded-content,
