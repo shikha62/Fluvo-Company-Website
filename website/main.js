@@ -962,6 +962,88 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chatInput');
   const chatBody = document.getElementById('chatBody');
   const chatUnread = document.getElementById('chatUnread');
+  const chatKeywordHints = document.getElementById('chatKeywordHints');
+  const chatHintsList = document.getElementById('chatHintsList');
+
+  // Centralized service -> pricing-card mapping used for keyword detection and hint chips
+  const serviceKeywordMap = [
+    { id: 1, chip: 'SEO', canonical: 'Search Engine Optimization (SEO)', keywords: ['seo', 'search engine optimization', 'organic growth', 'organic traffic', 'rankings', 'ranking'] },
+    { id: 2, chip: 'Google Ads', canonical: 'Google Ads', keywords: ['google ads', 'google ad', 'google advertising', 'ppc', 'paid search', 'adwords'] },
+    { id: 3, chip: 'Meta Ads', canonical: 'Meta Ads (Instagram / Facebook)', keywords: ['meta ads', 'meta ad', 'facebook ads', 'facebook advertising', 'instagram ads', 'instagram advertising', 'fb ads', 'instagram', 'facebook'] },
+    { id: 4, chip: 'Social Media Management', canonical: 'Social Media Management', keywords: ['social media management', 'social media marketing', 'social media', 'smm', 'manage our instagram', 'manage instagram', 'manage our facebook', 'manage our social'] },
+    { id: 5, chip: 'Website Development', canonical: 'Website Development', keywords: ['website development', 'web development', 'website', 'web design', 'web dev'] },
+    { id: 6, chip: 'App Development', canonical: 'App Development', keywords: ['app development', 'mobile app', 'app dev', 'android app', 'ios app', 'flutter app'] },
+    { id: 7, chip: 'International Packages', canonical: 'International Packages', keywords: ['international packages', 'international package', 'international marketing', 'international'] },
+    { id: 8, chip: 'Growth Packages', canonical: 'Growth Packages', keywords: ['growth packages', 'growth package', 'growth plan', 'launch package', 'scale package', 'growth'] }
+  ];
+  // App Development (id 6) keeps its keyword mapping but is hidden from the visible chip suggestions
+  const chatHintServices = serviceKeywordMap.filter(svc => svc.id !== 6);
+
+  // Detects every service whose keywords appear in the message (used to spot ambiguous queries)
+  function detectServiceFromMessage(text) {
+    const lower = text.toLowerCase().trim();
+    if (!lower) return [];
+    return serviceKeywordMap.filter(svc => svc.keywords.some(kw => lower.includes(kw)));
+  }
+
+  function scrollToPricing() {
+    document.getElementById('services')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function highlightPricingCard(serviceId) {
+    const card = document.querySelector(`#pricingServices .pricing-card[data-pricing-id="${serviceId}"]`);
+    if (!card) return null;
+    card.classList.add('pricing-card-highlight');
+    setTimeout(() => card.classList.remove('pricing-card-highlight'), 1800);
+    return card;
+  }
+
+  // Scrolls to the pricing section, highlights the matching card, then opens its popup (with fallback messaging)
+  function openServicePricing(serviceId) {
+    scrollToPricing();
+    setTimeout(() => {
+      const card = highlightPricingCard(serviceId);
+      if (card && typeof window.__fluvoOpenPricingById === 'function') {
+        window.__fluvoOpenPricingById(serviceId);
+      } else {
+        appendChatMsg("I found the service, but I couldn't open its pricing details right now. Please use the Pricing section below or book a call.", 'agent');
+      }
+    }, 500);
+  }
+
+  function renderChatHints(list) {
+    if (!chatHintsList) return;
+    chatHintsList.innerHTML = list.map(svc => `<button type="button" class="chat-hint-chip" data-service-id="${svc.id}" aria-label="Ask about ${svc.canonical}">${svc.chip}</button>`).join('');
+  }
+
+  function showChatHints(list) {
+    if (!chatKeywordHints) return;
+    if (!list.length) { chatKeywordHints.classList.remove('show'); return; }
+    renderChatHints(list);
+    chatKeywordHints.classList.add('show');
+  }
+
+  // Hints are visible by default and filter live as the visitor types
+  showChatHints(chatHintServices);
+  chatInput?.addEventListener('focus', () => showChatHints(chatHintServices));
+  chatInput?.addEventListener('input', (e) => {
+    const val = e.target.value.toLowerCase().trim();
+    if (!val) { showChatHints(chatHintServices); return; }
+    const filtered = chatHintServices.filter(svc => svc.chip.toLowerCase().includes(val) || svc.keywords.some(kw => kw.includes(val) || val.includes(kw)));
+    showChatHints(filtered.length ? filtered : chatHintServices);
+  });
+  chatHintsList?.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chat-hint-chip');
+    if (!chip) return;
+    const svc = serviceKeywordMap.find(s => String(s.id) === chip.dataset.serviceId);
+    if (!svc || !chatInput) return;
+    chatInput.value = '';
+    appendChatMsg(`You selected: ${svc.chip}`, 'user');
+    setTimeout(() => {
+      appendChatMsg(`Perfect — I found our <strong>${svc.canonical}</strong> package. Opening the pricing details for you 👇`, 'agent');
+      openServicePricing(svc.id);
+    }, 700);
+  });
 
   const botResponses = {
     'schedule': 'You can schedule a strategic growth diagnostic directly using the form on this page or via the "Schedule a Call" button in the header! Would you like me to open the booking dialog for you?',
@@ -989,7 +1071,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleUserMessage(text) {
     appendChatMsg(text, 'user');
 
+    const matches = detectServiceFromMessage(text);
+
     setTimeout(() => {
+      if (matches.length === 1) {
+        const service = matches[0];
+        appendChatMsg(`Perfect — I found our <strong>${service.canonical}</strong> package. Opening the pricing details for you 👇`, 'agent');
+        openServicePricing(service.id);
+        return;
+      }
+      if (matches.length > 1) {
+        appendChatMsg('I can help with several services. Which one would you like to explore? 👇', 'agent');
+        showChatHints(chatHintServices);
+        return;
+      }
       const lower = text.toLowerCase();
       let reply = botResponses.default;
       if (lower.includes('schedule') || lower.includes('call') || lower.includes('book')) reply = botResponses.schedule;
@@ -2593,7 +2688,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pricingDetailModal?.addEventListener('click', event => { if (event.target === pricingDetailModal) closePricingDetails(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape') closePricingDetails(); });
 
-  document.querySelectorAll('.mega-service[data-pricing-id]').forEach(link => {
+  document.querySelectorAll('.mega-service[data-pricing-id], .footer-link[data-pricing-id]').forEach(link => {
     link.addEventListener('click', event => {
       event.preventDefault();
       const service = pricingServices.find(item => String(item.id) === link.dataset.pricingId);
@@ -2601,4 +2696,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (service) window.setTimeout(() => openPricingDetail(service), 450);
     });
   });
+
+  window.__fluvoOpenPricingById = id => {
+    const service = pricingServices.find(item => String(item.id) === String(id));
+    if (service) openPricingDetail(service);
+  };
 })();

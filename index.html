@@ -235,11 +235,9 @@
          2. HERO SECTION — EDITORIAL ASYMMETRIC LAYOUT + BACKGROUND VIDEO
          ========================================================================= -->
     <section class="hero" id="hero">
-      <!-- Single hero background video with transparency -->
+      <!-- Static hero background image -->
       <div class="hero-bg-slider" id="heroBgSlider">
-        <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-          <source src="/hero-background.mp4" type="video/mp4">
-        </video>
+        <div class="hero-bg-image" role="img" aria-label="" style="background-image: url('/assets/images/fluvo-hero-bg.png');"></div>
         <div class="hero-bg-overlay"></div>
       </div>
 
@@ -697,9 +695,7 @@
          11. ABOUT US / FLUVO GROWTH SYSTEM
          ========================================================================= -->
     <section class="about-section" id="about">
-      <video class="about-background-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
-        <source src="/videos/orange-bubbles.mp4" type="video/mp4">
-      </video>
+      <img class="about-background-image" src="/assets/images/about-fluvo-bg.png" alt="" aria-hidden="true">
       <div class="about-inner">
         <!-- Section Hero Intro -->
         <div class="about-hero">
@@ -971,10 +967,14 @@
         <div>
           <div class="footer-col-title">Capabilities</div>
           <div class="footer-links">
-            <a href="#services" class="footer-link">Build Authority (Technical SEO &amp; GEO)</a>
-            <a href="#services" class="footer-link">Expand Reach (Paid Media &amp; CAPI)</a>
-            <a href="#services" class="footer-link">Create Demand (Marketing Automation)</a>
-            <a href="#services" class="footer-link">Convert Traffic (Web &amp; CRO)</a>
+            <a href="#services" class="footer-link" data-pricing-id="1">Search Engine Optimization (SEO)</a>
+            <a href="#services" class="footer-link" data-pricing-id="2">Google Ads</a>
+            <a href="#services" class="footer-link" data-pricing-id="3">Meta Ads (Instagram / Facebook)</a>
+            <a href="#services" class="footer-link" data-pricing-id="4">Social Media Management</a>
+            <a href="#services" class="footer-link" data-pricing-id="5">Website Development</a>
+            <a href="#services" class="footer-link" data-pricing-id="6">App Development</a>
+            <a href="#services" class="footer-link" data-pricing-id="7">International Packages</a>
+            <a href="#services" class="footer-link" data-pricing-id="8">Growth Packages (Launch / Growth / Scale)</a>
           </div>
         </div>
 
@@ -1347,12 +1347,22 @@
         </div>
         <span class="chat-msg-time">Just now</span>
       </div>
+      <div class="chat-msg agent">
+        <div class="chat-bubble-msg">
+          Here’s something useful → click a keyword 👇
+        </div>
+        <span class="chat-msg-time">Just now</span>
+      </div>
     </div>
 
     <div class="chat-suggestions">
       <button class="chat-chip" data-msg="I want to schedule a strategy call">📅 Schedule a Call</button>
       <button class="chat-chip" data-msg="What are your ROAS benchmarks?">📈 ROAS Benchmarks</button>
       <button class="chat-chip" data-msg="How does your 90-day sprint work?">⚡ 90-Day Sprint</button>
+    </div>
+
+    <div class="chat-keyword-hints" id="chatKeywordHints">
+      <div class="chat-hints-list" id="chatHintsList"></div>
     </div>
 
     <form class="chat-footer" id="chatForm">
