@@ -3,7 +3,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ImapFlow } from 'imapflow';
 import { SmtpService, classifySmtpError, loadMailConfig } from '@fluvo/email-provider';
-import { syncInbox } from '../api/email/_service.js';
+import { syncInbox } from '../server-api/email/_service.js';
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const envPath = resolve(directory, '../.env.local');
