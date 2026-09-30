@@ -3,24 +3,18 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "functions": {
-    "api/email/index.js": {
-      "maxDuration": 60
-    },
-    "api/email/worker.js": {
-      "maxDuration": 30
-    },
-    "api/**/*.js": {
-      "maxDuration": 30
-    }
+ "functions": {
+  "api/email/index.js": {
+    "maxDuration": 60
   },
-  "crons": [
-    {
-      "path": "/api/email/worker",
-      "schedule": "* * * * *"
-    }
-  ],
-  "headers": [
+  "api/email/worker.js": {
+    "maxDuration": 30
+  },
+  "api/**/*.js": {
+    "maxDuration": 30
+  }
+},
+"headers": [
     {
       "source": "/(.*)",
       "headers": [
