@@ -28,36 +28,39 @@ function getDevSupabase() {
 
 function resolveApiHandler(pathname) {
   const staticRoutes = new Map([
-    ['/api/auth/login', './api/auth/login.js'],
-    ['/api/auth/logout', './api/auth/logout.js'],
-    ['/api/auth/me', './api/me.js'],
-    ['/api/me', './api/me.js'],
-    ['/api/email', './api/email/index.js'],
-    ['/api/email/campaigns', './api/email/campaigns/index.js'],
-    ['/api/email/leads/validate', './api/email/leads/validate.js'],
-    ['/api/email/leads/import', './api/email/leads/import.js'],
-    ['/api/email/templates', './api/email/templates/index.js'],
-    ['/api/email/settings', './api/email/settings.js'],
-    ['/api/email/test-connection', './api/email/test-connection.js'],
-    ['/api/email/test', './api/email/test.js'],
-    ['/api/email/worker', './api/email/worker.js'],
-    ['/api/email/unsubscribe', './api/email/unsubscribe.js'],
-    ['/api/email/suppress', './api/email/suppress.js'],
-    ['/api/email/unsuppress', './api/email/unsuppress.js'],
-    ['/api/email/activity/all', './api/email/activity-all.js'],
-    ['/api/email/activity/unsuppress', './api/email/activity-unsuppress.js'],
-    ['/api/email/activity/selected', './api/email/activity-selected.js']
+    ['/api/auth/login', './server-api/auth/login.js'],
+    ['/api/auth/logout', './server-api/auth/logout.js'],
+    ['/api/auth/me', './server-api/me.js'],
+    ['/api/me', './server-api/me.js'],
+    ['/api/email', './server-api/email/index.js'],
+    ['/api/email/campaigns', './server-api/email/campaigns/index.js'],
+    ['/api/email/leads/validate', './server-api/email/leads/validate.js'],
+    ['/api/email/leads/import', './server-api/email/leads/import.js'],
+    ['/api/email/templates', './server-api/email/templates/index.js'],
+    ['/api/email/settings', './server-api/email/settings.js'],
+    ['/api/email/test-connection', './server-api/email/test-connection.js'],
+    ['/api/email/test', './server-api/email/test.js'],
+    ['/api/email/worker', './server-api/email/worker.js'],
+    ['/api/email/unsubscribe', './server-api/email/unsubscribe.js'],
+    ['/api/email/suppress', './server-api/email/suppress.js'],
+    ['/api/email/unsuppress', './server-api/email/unsuppress.js'],
+    ['/api/email/activity/all', './server-api/email/activity-all.js'],
+    ['/api/email/activity-all', './server-api/email/activity-all.js'],
+    ['/api/email/activity/unsuppress', './server-api/email/activity-unsuppress.js'],
+    ['/api/email/activity-unsuppress', './server-api/email/activity-unsuppress.js'],
+    ['/api/email/activity/selected', './server-api/email/activity-selected.js'],
+    ['/api/email/activity-selected', './server-api/email/activity-selected.js']
   ]);
   if (staticRoutes.has(pathname)) return { modulePath: staticRoutes.get(pathname), params: {} };
   for (const [pattern, modulePath, paramName] of [
-    [/^\/api\/email\/campaigns\/([^/]+)$/, './api/email/campaigns/[id].js', 'id'],
-    [/^\/api\/email\/templates\/([^/]+)$/, './api/email/templates/[id].js', 'id'],
-    [/^\/api\/email\/recipients\/([^/]+)$/, './api/email/recipients/[id].js', 'id']
+    [/^\/api\/email\/campaigns\/([^/]+)$/, './server-api/email/campaigns/[id].js', 'id'],
+    [/^\/api\/email\/templates\/([^/]+)$/, './server-api/email/templates/[id].js', 'id'],
+    [/^\/api\/email\/recipients\/([^/]+)$/, './server-api/email/recipients/[id].js', 'id']
   ]) {
     const match = pathname.match(pattern);
     if (match) return { modulePath, params: { [paramName]: decodeURIComponent(match[1]) } };
   }
-  if (pathname.startsWith('/api/email/')) return { modulePath: './api/email/index.js', params: {} };
+  if (pathname.startsWith('/api/email/')) return { modulePath: './server-api/email/index.js', params: {} };
   return null;
 }
 
