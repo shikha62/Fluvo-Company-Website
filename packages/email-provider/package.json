@@ -1,0 +1,10 @@
+{
+  "name": "@fluvo/email-provider",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js",
+  "peerDependencies": {
+    "nodemailer": ">=6.10.0 <11"
+  }
+}

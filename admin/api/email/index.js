@@ -6,7 +6,9 @@ import {
   updateMessageState,
   deleteMessage,
   sendEmail,
-  saveEmailConfig
+  saveEmailConfig,
+  checkMailboxConnections,
+  syncInbox
 } from './_service.js';
 
 export default async function handler(req, res) {
@@ -15,10 +17,23 @@ export default async function handler(req, res) {
   // Enforce session authentication
   const authPayload = requireAuth(req, res);
   if (!authPayload) return; // 401 already dispatched
+  if (!['admin', 'executive_owner'].includes(authPayload.role)) {
+    return res.status(403).json({ error: 'Administrator access is required.' });
+  }
 
   const action = req.query.action || (req.method === 'POST' ? 'send' : 'messages');
 
   try {
+    if (req.method === 'GET' && action === 'status') {
+      const result = await checkMailboxConnections();
+      return res.status(result.success ? 200 : 502).json(result);
+    }
+
+    if (req.method === 'POST' && action === 'sync') {
+      const result = await syncInbox();
+      return res.status(result.success ? 200 : 502).json(result);
+    }
+
     // 1. Fetch Folders & Status
     if (req.method === 'GET' && action === 'folders') {
       const result = await fetchFolders();
@@ -78,7 +93,7 @@ export default async function handler(req, res) {
       }
 
       const result = await sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, references });
-      return res.status(200).json(result);
+      return res.status(result.success ? 200 : 502).json(result);
     }
 
     // 5. Update Message State (Read, Star, Move)
@@ -111,7 +126,7 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: `Action or method not supported: ${req.method} ${action}` });
   } catch (err) {
-    console.error('Email API handler error:', err);
+    console.error('Email API handler failed:', String(err?.code || 'EMAIL_API_ERROR'));
     return res.status(500).json({ error: 'Internal email service error.' });
   }
 }

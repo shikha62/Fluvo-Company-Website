@@ -7,10 +7,19 @@
     "api/email/index.js": {
       "maxDuration": 60
     },
+    "api/email/worker.js": {
+      "maxDuration": 30
+    },
     "api/**/*.js": {
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/email/worker",
+      "schedule": "* * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

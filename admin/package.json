@@ -10,15 +10,19 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node --test email-automation/*.test.js",
+    "test:email": "node --test email-automation/*.test.js",
     "generate-hash": "node scripts/generate-hash.js"
   },
   "devDependencies": {
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "@fluvo/email-provider": "file:../packages/email-provider",
     "@supabase/supabase-js": "^2.112.3",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.5.1",
+    "company": "file:..",
     "dompurify": "^3.4.15",
     "imapflow": "^2.0.2",
     "jsonwebtoken": "^9.0.2",

@@ -15,13 +15,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = process.env.ADMIN_EMAIL || 'connect@fluvo.in';
   const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
   const jwtSecret = process.env.JWT_SECRET;
 
   if (!adminEmail || !adminPasswordHash || !jwtSecret) {
-    console.error('Admin auth env vars not configured');
-    return res.status(500).json({ error: 'Server configuration error. Contact administrator.' });
+    const missing = [
+      !adminEmail && 'ADMIN_EMAIL',
+      !adminPasswordHash && 'ADMIN_PASSWORD_HASH',
+      !jwtSecret && 'JWT_SECRET'
+    ].filter(Boolean);
+    console.error('Admin auth configuration is incomplete:', {
+      adminEmail: Boolean(adminEmail),
+      adminPasswordHash: Boolean(adminPasswordHash),
+      jwtSecret: Boolean(jwtSecret)
+    });
+    return res.status(500).json({ error: `Admin login is not configured. Set ${missing.join(' and ')} in the local server environment.` });
   }
 
   // Check email

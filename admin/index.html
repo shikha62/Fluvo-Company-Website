@@ -104,6 +104,11 @@
           <span class="badge-count" id="sidebarInboxCount" style="display:none;">0</span>
         </div>
 
+        <div class="sidebar-link" data-tab="email-automation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/><path d="M8 2v4M16 2v4"/></svg>
+          <span>Email Automation</span>
+        </div>
+
         <div class="nav-label">System</div>
 
         <div class="sidebar-link" data-tab="settings">
@@ -664,26 +669,18 @@
               </div>
               <div style="padding: 20px;">
                 <p style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
-                  Connect <strong>connect@fluvo.in</strong> to synchronize all live emails from GoDaddy Titan and enable real outgoing email delivery.
+                  Mailbox settings are loaded from server-only environment variables. Passwords cannot be entered or stored in the portal.
                 </p>
                 <div style="margin-bottom: 14px;">
                   <label style="display: block; font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Email Account</label>
                   <input type="text" value="connect@fluvo.in" readonly class="auth-input-field" style="width: 100%; box-sizing: border-box;" />
                 </div>
-                <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Titan Password or App Password</label>
-                  <div style="position: relative;">
-                    <input type="password" id="modalEmailPassword" class="auth-input-field" style="width: 100%; box-sizing: border-box; padding-right: 40px;" placeholder="Your Titan / GoDaddy password" />
-                    <button type="button" id="btnToggleModalPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">👁️</button>
-                  </div>
-                  <span style="font-size: 11.5px; color: #94a3b8; margin-top: 5px; display: block;">
-                    The password you use to log into secureserver.titan.email
-                  </span>
-                </div>
+                <p style="font-size: 12px; color: var(--text-secondary);">Connection checks use server-only SMTP and IMAP settings. Mailbox passwords are never requested in this portal.</p>
                 <div id="modalConfigMsg" style="font-size: 12px; margin-bottom: 14px; min-height: 18px;"></div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                   <button type="button" class="btn-action" id="btnConfigModalCancel">Cancel</button>
-                  <button type="button" class="btn-action primary" id="btnModalSaveConfig">Connect &amp; Test Live</button>
+                  <button type="button" class="btn-action" id="btnModalSyncInbox" hidden>Sync Inbox</button>
+                  <button type="button" class="btn-action primary" id="btnModalSaveConfig">Check Connections</button>
                 </div>
               </div>
             </div>
@@ -692,20 +689,326 @@
         </div>
 
         <!-- ===================================================================
+             TAB 6: EMAIL AUTOMATION
+             =================================================================== -->
+        <div class="tab-pane" id="tab-email-automation">
+          <section id="eaWorkspaceView">
+            <div class="ea-toolbar">
+              <div>
+                <h3>Email Automation</h3>
+                <p>Create, personalize and manage outbound Fluvo campaigns.</p>
+              </div>
+              <div class="ea-toolbar-actions">
+                <button class="btn-action" id="eaNewCampaign">New Campaign</button>
+                <button class="btn-action" id="eaImportButton">Import CSV</button>
+                <button class="btn-action" id="eaTestButton">Test Email</button>
+                <button class="btn-action" id="eaHistoryButton">Campaign History</button>
+                <input id="eaCsvInput" type="file" accept=".csv,text/csv" hidden>
+              </div>
+            </div>
+
+            <div id="eaTestModeBanner" class="ea-test-banner" hidden>TEST MODE ACTIVE · Test sends use the configured test recipient. Real campaign launches deliver directly to lead recipients.</div>
+            <div id="eaNotice" class="ea-notice" role="status" hidden></div>
+
+            <div class="ea-layout">
+              <section class="card-panel ea-card">
+                <div class="panel-header">
+                  <div><h3 class="panel-title">Lead Recipients</h3><p class="panel-subtitle">Paste email addresses or import a CSV. Maximum 100 per campaign.</p></div>
+                  <span class="console-pill" id="eaRecipientCount">Recipients: 0 / 100</span>
+                </div>
+                <textarea id="eaLeadInput" class="ea-lead-input" placeholder="shikhamandre31@fluvo.com&#10;rahul@acme.com&#10;marketing@company.in&#10;founder@example.com" spellcheck="false"></textarea>
+                <div class="ea-inline-actions">
+                  <span class="ea-help">One per line, comma-separated, or semicolon-separated</span>
+                  <button class="btn-action" id="eaValidateButton">Validate Recipients</button>
+                </div>
+                <div class="ea-table-wrap">
+                  <table class="ea-table">
+                    <thead><tr><th>#</th><th>Email</th><th>First Name</th><th>Company</th><th>Domain</th><th>Status</th><th></th></tr></thead>
+                    <tbody id="eaLeadRows"><tr><td colspan="7" class="ea-empty">Add recipients to begin.</td></tr></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="card-panel ea-card ea-template-card">
+                <div class="panel-header">
+                  <div><h3 class="panel-title">Email Blueprint</h3><p class="panel-subtitle">Edit the active template. Unresolved variables block campaign creation.</p></div>
+                  <button class="btn-action" id="eaSaveTemplate">Save Template</button>
+                </div>
+                <div class="ea-template-fields">
+                  <label>Template name<input id="eaTemplateName" class="auth-input-field" maxlength="120"></label>
+                  <label>Subject<input id="eaTemplateSubject" class="auth-input-field" maxlength="500"></label>
+                </div>
+                <div class="ea-template-grid">
+                  <label class="ea-editor-label">Template body<textarea id="eaTemplateBody" class="ea-template-body" spellcheck="false"></textarea></label>
+                  <div class="ea-preview-column"><div class="ea-preview-label">Live preview</div><pre id="eaTemplatePreview" class="ea-template-preview"></pre></div>
+                </div>
+                <div class="ea-variables"><span>Available Variables</span><div id="eaVariableButtons"></div></div>
+                <p class="ea-help">Domain-derived company names are display labels, not verified legal names.</p>
+              </section>
+            </div>
+
+            <section class="card-panel ea-card ea-setup-card" id="eaSetupCard">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Campaign Setup</h3>
+                  <p class="panel-subtitle">Configure campaign name, review recipient readiness, and create draft.</p>
+                </div>
+              </div>
+              <div class="ea-setup-form">
+                <div class="ea-setup-field">
+                  <label for="eaCampaignName">Campaign Name</label>
+                  <input id="eaCampaignName" class="auth-input-field" placeholder="e.g. September Enterprise Outreach" maxlength="120">
+                </div>
+                <div class="ea-setup-summary-bar">
+                  <span class="ea-setup-summary-label">Recipient Summary</span>
+                  <div class="ea-setup-badges" id="eaSetupRecipientBadges">
+                    <span class="ea-badge total" id="eaBadgeTotal">0 recipients</span>
+                    <span class="ea-badge ready" id="eaBadgeReady">0 valid</span>
+                    <span class="ea-badge suppressed" id="eaBadgeSuppressed">0 suppressed</span>
+                  </div>
+                </div>
+                <div class="ea-setup-compliance">
+                  <label class="ea-confirm">
+                    <input type="checkbox" id="eaComplianceConfirm">
+                    <span>I confirm these recipients are relevant business contacts and outreach will respect applicable rules and opt-outs.</span>
+                  </label>
+                  <label class="ea-confirm">
+                    <input type="checkbox" id="eaAllowRecontact" checked>
+                    <span>Allow contacting previously reached leads (follow-up / test campaign)</span>
+                  </label>
+                </div>
+                <div class="ea-setup-actions">
+                  <button class="btn-action primary" id="eaCreateDraft" disabled>Create Draft</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="card-panel ea-card" id="eaReviewPanel" hidden>
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Campaign Review</h3>
+                  <p class="panel-subtitle" id="eaReviewStatus">Draft created. No email is sent until you launch.</p>
+                </div>
+                <button class="btn-action" id="eaBackToEditor">Back</button>
+              </div>
+              <div class="ea-summary-grid" id="eaReviewSummary"></div>
+              <div class="ea-preview-box" id="eaReviewPreviewBox">
+                <div class="ea-preview-label">Rendered Campaign Message Preview</div>
+                <pre id="eaReviewPreviewContent" class="ea-template-preview" style="min-height: 140px; max-height: 260px;"></pre>
+              </div>
+              <div class="ea-review-actions">
+                <button class="btn-action" id="eaReviewTest">Send Test</button>
+                <button class="btn-action primary" id="eaLaunchCampaign">Launch Campaign</button>
+              </div>
+              <div class="ea-progress" id="eaProgressPanel" hidden></div>
+            </section>
+
+            <section class="card-panel ea-card" id="eaActivityPanel">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Email Activity</h3>
+                  <p class="panel-subtitle">Campaign recipients, delivery state, attempts, and errors.</p>
+                </div>
+                <div class="ea-setup-actions">
+                  <button class="btn-action" id="eaBulkUnsuppress" disabled>Unsuppress</button>
+                  <button class="btn-action" id="eaRefreshActivity">Refresh</button>
+                  <button class="btn-action danger" id="eaBulkDeleteSelected" disabled>Delete Selected</button>
+                  <button class="btn-action danger" id="eaDeleteAllActivity">Delete All</button>
+                </div>
+              </div>
+              <div class="ea-table-wrap">
+                <table class="ea-table" id="eaActivityTable">
+                  <thead>
+                    <tr>
+                      <th style="width: 36px;"><input type="checkbox" id="eaActivitySelectAll" aria-label="Select all email activity"></th>
+                      <th style="min-width: 190px;">Recipient</th>
+                      <th style="min-width: 130px;">Company</th>
+                      <th style="min-width: 140px;">Campaign</th>
+                      <th style="min-width: 90px;">Status</th>
+                      <th style="min-width: 70px;">Attempts</th>
+                      <th style="min-width: 150px;">Sent At</th>
+                      <th style="min-width: 180px;">Error / Reason</th>
+                      <th style="min-width: 190px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="eaActivityRows">
+                    <tr><td colspan="9" class="ea-empty">No campaign activity yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          <dialog id="eaTestDialog" class="ea-dialog">
+            <form method="dialog" class="ea-dialog-card" id="eaTestForm">
+              <div class="panel-header"><div><h3 class="panel-title">Send Test Email</h3><p class="panel-subtitle">Uses the same rendering and delivery path as campaigns.</p></div><button type="button" class="email-compose-close" data-dialog-close="eaTestDialog" aria-label="Close">&times;</button></div>
+              <label>Test recipient<input class="auth-input-field" id="eaTestAddress" type="email" required placeholder="you@example.com"></label>
+              <p class="ea-help" id="eaTestRoutingNote"></p>
+              <div class="ea-dialog-actions"><button type="button" class="btn-action" data-dialog-close="eaTestDialog">Cancel</button><button type="submit" class="btn-action primary" id="eaSendTest">Send Test</button></div>
+            </form>
+          </dialog>
+
+          <dialog id="eaLeadDialog" class="ea-dialog">
+            <form method="dialog" class="ea-dialog-card" id="eaLeadForm">
+              <div class="panel-header"><div><h3 class="panel-title">Edit Recipient</h3><p class="panel-subtitle" id="eaEditEmail"></p></div><button type="button" class="email-compose-close" data-dialog-close="eaLeadDialog" aria-label="Close">&times;</button></div>
+              <div class="ea-dialog-fields">
+                <label>First name<input class="auth-input-field" id="eaEditFirstName"></label>
+                <label>Company name<input class="auth-input-field" id="eaEditCompany"></label>
+                <label>Industry<input class="auth-input-field" id="eaEditIndustry"></label>
+                <label>Website<input class="auth-input-field" id="eaEditWebsite" type="url"></label>
+                <label>Opportunity 1<input class="auth-input-field" id="eaEditOpportunity1"></label>
+                <label>Opportunity 2<input class="auth-input-field" id="eaEditOpportunity2"></label>
+                <label>Opportunity 3<input class="auth-input-field" id="eaEditOpportunity3"></label>
+              </div>
+              <div class="ea-dialog-actions"><button type="button" class="btn-action" data-dialog-close="eaLeadDialog">Cancel</button><button type="submit" class="btn-action primary">Save Recipient</button></div>
+            </form>
+          </dialog>
+
+          <!-- Email Activity View Modal (Problem 3) -->
+          <dialog id="eaViewDialog" class="ea-dialog">
+            <div class="ea-dialog-card ea-view-modal">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Email Activity Detail</h3>
+                  <p class="panel-subtitle">Complete recipient delivery status and email record.</p>
+                </div>
+                <button type="button" class="email-compose-close" data-dialog-close="eaViewDialog" aria-label="Close">&times;</button>
+              </div>
+              <div class="ea-detail-grid">
+                <div class="ea-detail-item"><label>Recipient</label><div class="ea-detail-val ea-email-val" id="eaViewRecipient">—</div></div>
+                <div class="ea-detail-item"><label>First Name</label><div class="ea-detail-val" id="eaViewFirstName">—</div></div>
+                <div class="ea-detail-item"><label>Company / Domain</label><div class="ea-detail-val" id="eaViewCompany">—</div></div>
+                <div class="ea-detail-item"><label>Campaign</label><div class="ea-detail-val" id="eaViewCampaign">—</div></div>
+                <div class="ea-detail-item"><label>Status</label><div class="ea-detail-val" id="eaViewStatus">—</div></div>
+                <div class="ea-detail-item"><label>Attempts</label><div class="ea-detail-val" id="eaViewAttempts">0</div></div>
+                <div class="ea-detail-item"><label>Created At</label><div class="ea-detail-val" id="eaViewCreatedAt">—</div></div>
+                <div class="ea-detail-item"><label>Sent At</label><div class="ea-detail-val" id="eaViewSentAt">—</div></div>
+                <div class="ea-detail-item"><label>Last Updated</label><div class="ea-detail-val" id="eaViewUpdatedAt">—</div></div>
+                <div class="ea-detail-item"><label>Message ID</label><div class="ea-detail-val ea-mono" id="eaViewMessageId">—</div></div>
+                <div class="ea-detail-item full-width"><label>Error / Diagnostic</label><div class="ea-detail-val" id="eaViewError">None</div></div>
+                <div class="ea-detail-item full-width"><label>Subject</label><div class="ea-detail-val" id="eaViewSubject">—</div></div>
+                <div class="ea-detail-item full-width"><label>Rendered Email Preview</label><pre class="ea-template-preview" id="eaViewBody" style="min-height: 180px; max-height: 320px;"></pre></div>
+              </div>
+              <div class="ea-dialog-actions">
+                <button type="button" class="btn-action" data-dialog-close="eaViewDialog">Close</button>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Email Activity Delete Confirmation Modal (Problem 4 & 22) -->
+          <dialog id="eaDeleteDialog" class="ea-dialog">
+            <div class="ea-dialog-card" style="max-width: 440px;">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Delete Email Activity</h3>
+                  <p class="panel-subtitle">This action permanently removes the selected activity record from the database.</p>
+                </div>
+                <button type="button" class="email-compose-close" data-dialog-close="eaDeleteDialog" aria-label="Close">&times;</button>
+              </div>
+              <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5; margin: 12px 0;">Delete this email activity record for <strong id="eaDeleteEmail" style="color: var(--text-primary);"></strong>?</p>
+              <div class="ea-dialog-actions">
+                <button type="button" class="btn-action" data-dialog-close="eaDeleteDialog">Cancel</button>
+                <button type="button" class="btn-action danger" id="eaConfirmDelete">Delete</button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog id="eaDeleteAllDialog" class="ea-dialog">
+            <div class="ea-dialog-card" style="max-width: 440px;">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Delete all email activity?</h3>
+                  <p class="panel-subtitle">All email activity records will be permanently removed. This action cannot be undone.</p>
+                </div>
+                <button type="button" class="email-compose-close" data-dialog-close="eaDeleteAllDialog" aria-label="Close">&times;</button>
+              </div>
+              <div class="ea-dialog-actions">
+                <button type="button" class="btn-action" data-dialog-close="eaDeleteAllDialog">Cancel</button>
+                <button type="button" class="btn-action danger" id="eaConfirmDeleteAll">Delete All</button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog id="eaDeleteSelectedDialog" class="ea-dialog">
+            <div class="ea-dialog-card" style="max-width: 440px;">
+              <div class="panel-header">
+                <div>
+                  <h3 class="panel-title">Delete selected activity?</h3>
+                  <p class="panel-subtitle" id="eaDeleteSelectedSubtitle">This action cannot be undone.</p>
+                </div>
+                <button type="button" class="email-compose-close" data-dialog-close="eaDeleteSelectedDialog" aria-label="Close">&times;</button>
+              </div>
+              <div class="ea-dialog-actions">
+                <button type="button" class="btn-action" data-dialog-close="eaDeleteSelectedDialog">Cancel</button>
+                <button type="button" class="btn-action danger" id="eaConfirmDeleteSelected">Delete</button>
+              </div>
+            </div>
+          </dialog>
+
+          <section id="eaHistoryView" hidden>
+            <div class="ea-toolbar"><div><h3>Campaign History</h3><p>Review delivery outcomes and reopen campaign details.</p></div><button class="btn-action" id="eaHistoryBack">Back to Automation</button></div>
+            <section class="card-panel ea-card"><div class="ea-table-wrap"><table class="ea-table"><thead><tr><th>Campaign</th><th>Recipients</th><th>Sent</th><th>Failed</th><th>Created</th><th>Status</th></tr></thead><tbody id="eaHistoryRows"><tr><td colspan="6" class="ea-empty">Loading campaign history…</td></tr></tbody></table></div></section>
+          </section>
+        </div>
+
+        <!-- ===================================================================
              TAB 5: SECURITY & WORKSPACE SETTINGS
              =================================================================== -->
         <div class="tab-pane" id="tab-settings">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px;">
+
+            <section class="card-panel" style="grid-column: 1 / -1;" id="emailAutomationSettings">
+              <div class="panel-header"><div><h3 class="panel-title">Email Automation</h3><p class="panel-subtitle">Server-side provider status, test mode, templates, and sending limits.</p></div><span id="eaProviderStatus" class="ea-provider-status">Checking configuration…</span></div>
+              
+              <!-- Environment-managed SMTP parameters -->
+              <div class="ea-smtp-info-grid">
+                <div class="ea-smtp-info-item">
+                  <label>SMTP Provider</label>
+                  <div class="ea-info-value" id="eaSmtpProvider">Environment Managed</div>
+                </div>
+                <div class="ea-smtp-info-item">
+                  <label>SMTP Host</label>
+                  <div class="ea-info-value" id="eaSmtpHost">smtpout.secureserver.net</div>
+                </div>
+                <div class="ea-smtp-info-item">
+                  <label>SMTP Port</label>
+                  <div class="ea-info-value" id="eaSmtpPort">465</div>
+                </div>
+                <div class="ea-smtp-info-item">
+                  <label>Security</label>
+                  <div class="ea-info-value" id="eaSmtpSecurity">SSL</div>
+                </div>
+                <div class="ea-smtp-info-item">
+                  <label>Username</label>
+                  <div class="ea-info-value" id="eaSmtpUser">connect@fluvo.in</div>
+                </div>
+                <div class="ea-smtp-info-item">
+                  <label>Password</label>
+                  <div class="ea-info-value">••••••••••••</div>
+                </div>
+              </div>
+
+              <div class="ea-settings-grid">
+                <label class="ea-setting-toggle"><input type="checkbox" id="eaTestMode"><span>Test Mode</span></label>
+                <label>Test recipient<input id="eaTestRecipient" class="auth-input-field" type="email" placeholder="address reserved for test sends"></label>
+                <label>Maximum emails / hour<input id="eaLimitHour" class="auth-input-field" type="number" min="1" max="500"></label>
+                <label>Maximum emails / day<input id="eaLimitDay" class="auth-input-field" type="number" min="1" max="5000"></label>
+                <label>Delay between messages (seconds)<input id="eaDelaySeconds" class="auth-input-field" type="number" min="0" max="86400"></label>
+                <label>Personalization fallbacks (JSON)<textarea id="eaFallbacks" class="ea-settings-json" spellcheck="false"></textarea></label>
+                <label>Company domain mappings (JSON)<textarea id="eaCompanyMappings" class="ea-settings-json" spellcheck="false"></textarea></label>
+              </div>
+              <div class="ea-inline-actions"><span class="ea-help">SMTP credentials are server-only environment variables and are never displayed or stored here.</span><div><button class="btn-action" id="eaTestConnection">Test Connection</button><button class="btn-action primary" id="eaSaveSettings">Save Settings</button></div></div>
+            </section>
             
             <!-- Titan Mailbox Integration Card (Full Width) -->
             <div class="card-panel" style="grid-column: 1 / -1;">
               <div class="panel-header">
                 <div>
-                  <h3 class="panel-title">Titan / GoDaddy Mailbox Integration</h3>
-                  <p class="panel-subtitle">Direct IMAP/SMTP sync for connect@fluvo.in company communications</p>
+                  <h3 class="panel-title">Mailbox Provider Configuration</h3>
+                  <p class="panel-subtitle">Server-only configuration for connect@fluvo.in inbox and outreach</p>
                 </div>
                 <div id="settingsMailboxStatusBadge" style="display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--font-mono);padding:4px 10px;border-radius:20px;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">
-                  ● Disconnected
+                  ● Environment managed
                 </div>
               </div>
 
@@ -715,30 +1018,21 @@
                   <input type="email" id="cfgEmailAddress" value="connect@fluvo.in" class="auth-input-field" style="width: 100%; box-sizing: border-box;" placeholder="connect@fluvo.in" readonly />
                 </div>
                 <div>
-                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Titan Email Password / App Password</label>
-                  <div style="position: relative;">
-                    <input type="password" id="cfgEmailPassword" class="auth-input-field" style="width: 100%; box-sizing: border-box; padding-right: 40px;" placeholder="Enter your GoDaddy/Titan password" />
-                    <button type="button" id="btnToggleCfgPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px;">👁️</button>
-                  </div>
-                  <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">The password you use on secureserver.titan.email</span>
+                  <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Credentials</label>
+                  <div style="padding: 11px 14px; background: var(--bg-card); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-secondary);">Stored only in server environment variables. Never shown or persisted in Supabase.</div>
                 </div>
                 <div>
                   <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">IMAP Server (Incoming)</label>
-                  <input type="text" id="cfgImapHost" value="imap.secureserver.net:993 (SSL)" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
+                  <input type="text" id="cfgImapHost" value="EMAIL_IMAP_HOST : EMAIL_IMAP_PORT" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
                 </div>
                 <div>
                   <label style="display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">SMTP Server (Outgoing)</label>
-                  <input type="text" id="cfgSmtpHost" value="smtpout.secureserver.net:465 (SSL)" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
+                  <input type="text" id="cfgSmtpHost" value="SMTP_HOST : SMTP_PORT" class="auth-input-field" style="width: 100%; box-sizing: border-box;" readonly />
                 </div>
               </div>
 
               <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-default);">
-                <div id="cfgStatusMessage" style="font-size: 12.5px; color: var(--text-muted);">
-                  Status: Ready to connect.
-                </div>
-                <button type="button" class="btn-action primary" id="btnSaveEmailConfig" style="padding: 10px 20px;">
-                  Connect &amp; Test Live Sync
-                </button>
+                <div id="cfgStatusMessage" style="font-size: 12.5px; color: var(--text-muted);">Set SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, and SMTP_PASSWORD in Vercel.</div>
               </div>
             </div>
             

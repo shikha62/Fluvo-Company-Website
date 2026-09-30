@@ -1,198 +1,137 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
-import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'node:crypto';
+import { SmtpService, classifySmtpError, loadMailConfig } from '@fluvo/email-provider';
 
-let cachedCustomConfig = null;
+const IMAP_AUTH_COOLDOWN_MS = 10 * 60 * 1000;
+const IMAP_AUTH_FAILURES = globalThis[Symbol.for('@fluvo/admin/imap-auth-failures')] || new Map();
+globalThis[Symbol.for('@fluvo/admin/imap-auth-failures')] = IMAP_AUTH_FAILURES;
 
 function getSupabase() {
-  const url = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
-  if (!url || !key) return null;
-  return createClient(url, key);
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) throw new Error('Server-side Supabase credentials are not configured.');
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// GoDaddy / Titan mailbox — verified working servers (imap.secureserver.net / smtpout.secureserver.net)
-// These are the real GoDaddy Workspace email servers, NOT the Titan webmail servers.
-const GODADDY_IMAP_HOST = 'imap.secureserver.net';
-const GODADDY_IMAP_PORT = 993;
-const GODADDY_SMTP_HOST = 'smtpout.secureserver.net';
-const GODADDY_SMTP_PORT = 465;
-const GODADDY_EMAIL = 'connect@fluvo.in';
-const GODADDY_PASS_FALLBACK = 'Fluvo_tech2026'; // verified working credential
-
-// Configuration helper with multi-alias env support + database fallback
+// Mailbox secrets and provider endpoints must be configured in server environment variables.
 export async function getEmailConfig() {
-  const address = process.env.EMAIL_ADDRESS || process.env.EMAIL_USER || GODADDY_EMAIL;
-  let password =
-    process.env.EMAIL_PASSWORD ||
-    process.env.EMAIL_PASS ||
-    process.env.SMTP_PASSWORD ||
-    process.env.SMTP_PASS ||
-    process.env.TITAN_PASSWORD ||
-    process.env.TITAN_PASS ||
-    process.env.MAIL_PASSWORD ||
-    process.env.GODADDY_PASSWORD ||
-    process.env.EMAIL_APP_PASSWORD ||
-    '';
-
-  // GoDaddy actual server hostnames — not imap.titan.email which is for Titan-branded accounts
-  let imapHost = process.env.EMAIL_IMAP_HOST || GODADDY_IMAP_HOST;
-  let imapPort = parseInt(process.env.EMAIL_IMAP_PORT || String(GODADDY_IMAP_PORT), 10);
-  let smtpHost = process.env.EMAIL_SMTP_HOST || GODADDY_SMTP_HOST;
-  let smtpPort = parseInt(process.env.EMAIL_SMTP_PORT || String(GODADDY_SMTP_PORT), 10);
-
-  // If password not in environment, retrieve from Supabase system_config
-  if (!password || password.trim().length < 3) {
-    if (cachedCustomConfig && cachedCustomConfig.password) {
-      password = cachedCustomConfig.password;
-      if (cachedCustomConfig.imapHost) imapHost = cachedCustomConfig.imapHost;
-      if (cachedCustomConfig.smtpHost) smtpHost = cachedCustomConfig.smtpHost;
-    } else {
-      try {
-        const supabase = getSupabase();
-        if (supabase) {
-          const { data } = await supabase
-            .from('queries')
-            .select('*')
-            .eq('type', 'system_config')
-            .eq('full_name', 'email_config')
-            .maybeSingle();
-
-          if (data && data.notes) {
-            const parsed = JSON.parse(data.notes);
-            if (parsed.password) {
-              cachedCustomConfig = parsed;
-              password = parsed.password;
-              if (parsed.imapHost) imapHost = parsed.imapHost;
-              if (parsed.smtpHost) smtpHost = parsed.smtpHost;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Notice checking stored credentials:', e.message);
-      }
-    }
-  }
-
-  // Final fallback: use verified GoDaddy credentials if still empty
-  if (!password || password.trim().length < 3) {
-    password = GODADDY_PASS_FALLBACK;
-  }
-
-  const smtpSecure = smtpPort === 465;
+  const mailConfig = loadMailConfig();
 
   return {
-    address,
-    password,
+    address: mailConfig.email,
+    isConfigured: mailConfig.imap.configured,
+    smtp: mailConfig.smtp,
+    smtpConfigured: mailConfig.smtp.configured,
+    missingConfiguration: mailConfig.missingConfiguration,
     imap: {
-      host: imapHost,
-      port: imapPort,
-      secure: true,
-      auth: { user: address, pass: password },
+      host: mailConfig.imap.host,
+      port: mailConfig.imap.port,
+      secure: mailConfig.imap.secure,
+      auth: { user: mailConfig.imap.user, pass: mailConfig.imap.password },
       logger: false,
       connectionTimeout: 10000,
       socketTimeout: 15000,
       greetingTimeout: 10000,
-      tls: { rejectUnauthorized: false },
+      tls: { rejectUnauthorized: true },
     },
-    smtp: {
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: { user: address, pass: password },
-      connectionTimeout: 10000,
-      socketTimeout: 15000,
-      greetingTimeout: 10000,
-      tls: { rejectUnauthorized: false },
-    },
-    isConfigured: true,
+    imapError: mailConfig.imap.error
   };
 }
 
-/**
- * Validates a Titan email password via live IMAP test,
- * and if valid, saves it securely to the Supabase database.
- */
-export async function saveEmailConfig({ password, address, imapHost, imapPort, smtpHost, smtpPort }) {
-  if (!password || password.trim().length < 3) {
-    return { success: false, error: 'Password is required and must be at least 3 characters.' };
-  }
-
-  const user = address || GODADDY_EMAIL;
-  // Always use GoDaddy's real IMAP server for testing
-  const host = imapHost || GODADDY_IMAP_HOST;
-  const port = parseInt(String(imapPort || GODADDY_IMAP_PORT), 10);
-
-  // Test live connection to GoDaddy IMAP
-  const testClient = new ImapFlow({
-    host,
-    port,
-    secure: true,
-    auth: { user, pass: password.trim() },
-    logger: false,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    tls: { rejectUnauthorized: false },
-  });
-
-  try {
-    await testClient.connect();
-    await testClient.logout();
-  } catch (testErr) {
-    const reason = testErr.authenticationFailed
-      ? `GoDaddy IMAP rejected this password. The correct server is ${GODADDY_IMAP_HOST}. Please verify your GoDaddy mailbox password at godaddy.com → Email & Office → Manage.`
-      : `GoDaddy IMAP connection error: ${testErr.message}`;
-    return { success: false, error: reason };
-  }
-
-  // Save to database
-  const configData = {
-    address: user,
-    password: password.trim(),
-    imapHost: host,
-    imapPort: port,
-    smtpHost: smtpHost || GODADDY_SMTP_HOST,
-    smtpPort: parseInt(String(smtpPort || GODADDY_SMTP_PORT), 10),
-    updatedAt: new Date().toISOString()
+export async function checkMailboxConnections() {
+  const config = await getEmailConfig();
+  const result = {
+    configured: config.smtpConfigured && config.isConfigured,
+    email: config.address,
+    smtpConfigured: config.smtpConfigured,
+    imapConfigured: config.isConfigured,
+    smtpConnection: config.smtpConfigured ? 'failed' : 'not_configured',
+    imapConnection: config.isConfigured ? 'failed' : 'not_configured',
+    missingConfiguration: config.missingConfiguration,
+    smtpError: config.smtp?.error?.message || null,
+    imapError: config.imapError?.message || null
   };
 
-  cachedCustomConfig = configData;
-
-  const supabase = getSupabase();
-  if (supabase) {
+  if (config.smtpConfigured) {
+    let provider;
     try {
-      const { data: existing } = await supabase
-        .from('queries')
-        .select('id')
-        .eq('type', 'system_config')
-        .eq('full_name', 'email_config')
-        .maybeSingle();
-
-      if (existing) {
-        await supabase.from('queries').update({
-          notes: JSON.stringify(configData),
-          updated_at: new Date().toISOString()
-        }).eq('id', existing.id);
-      } else {
-        await supabase.from('queries').insert([{
-          type: 'system_config',
-          full_name: 'email_config',
-          work_email: user,
-          notes: JSON.stringify(configData),
-          status: 'resolved'
-        }]);
-      }
-    } catch (dbErr) {
-      console.warn('Persist error:', dbErr.message);
+      provider = new SmtpService(config.smtp);
+      await provider.verifyConnection();
+      result.smtpConnection = 'ok';
+      result.smtpError = null;
+    } catch (error) {
+      const diagnostic = classifySmtpError(error);
+      result.smtpError = diagnostic.stage === 'authentication'
+        ? 'Mailbox authentication failed. Verify the mailbox password in the server environment.'
+        : 'SMTP connection failed.';
+      console.warn(`MAILBOX_STATUS SMTP failed: ${diagnostic.stage} ${diagnostic.code}`);
+    } finally {
+      provider?.close();
     }
   }
 
+  if (config.isConfigured) {
+    const cooldown = imapAuthCooldownMessage(config.imap);
+    if (cooldown) {
+      result.imapError = 'Mailbox authentication failed. Verify the mailbox password in the server environment.';
+    } else {
+      const client = createImapClient(config.imap);
+      try {
+        await client.connect();
+        await client.logout();
+        result.imapConnection = 'ok';
+        result.imapError = null;
+      } catch (error) {
+        recordImapAuthFailure(config.imap, error);
+        const code = String(error?.code || '').toUpperCase();
+        result.imapError = error?.authenticationFailed || ['AUTHENTICATIONFAILED', 'EAUTH'].includes(code)
+          ? 'Mailbox authentication failed. Verify the mailbox password in the server environment.'
+          : 'IMAP connection failed.';
+        console.warn(`MAILBOX_STATUS IMAP failed: ${code || 'IMAP_ERROR'}`);
+      }
+    }
+  }
+
+  return { success: result.smtpConnection === 'ok' && result.imapConnection === 'ok', ...result };
+}
+
+function imapAuthKey(config) {
+  return createHash('sha256')
+    .update(`${config.host}\0${config.port}\0${config.auth.user}\0${config.auth.pass}`)
+    .digest('hex');
+}
+
+function imapAuthCooldownMessage(config) {
+  const blockedUntil = IMAP_AUTH_FAILURES.get(imapAuthKey(config)) || 0;
+  if (blockedUntil > Date.now()) {
+    return 'IMAP authentication is paused after a previous rejection. Update EMAIL_IMAP_PASSWORD before retrying.';
+  }
+  if (blockedUntil) IMAP_AUTH_FAILURES.delete(imapAuthKey(config));
+  return '';
+}
+
+function recordImapAuthFailure(config, error) {
+  const code = String(error?.code || '').toUpperCase();
+  if (error?.authenticationFailed || code === 'AUTHENTICATIONFAILED' || code === 'EAUTH') {
+    IMAP_AUTH_FAILURES.set(imapAuthKey(config), Date.now() + IMAP_AUTH_COOLDOWN_MS);
+  }
+}
+
+export async function saveEmailConfig() {
   return {
-    success: true,
-    message: 'Titan Mailbox connected successfully! All live company emails are now synchronized.'
+    success: false,
+    error: 'Mailbox credentials cannot be entered or stored in the portal. Configure EMAIL_IMAP_* and SMTP_* server environment variables, then use Test Connection.'
   };
+}
+
+function createImapClient(config) {
+  const client = new ImapFlow(config);
+  client.on('error', error => {
+    console.warn('IMAP client error:', String(error?.code || 'imap_error'));
+  });
+  return client;
 }
 
 // In-memory demo/fallback store for development or when credentials are not yet linked
@@ -317,6 +256,30 @@ export function normalizeFolder(f) {
   return f;
 }
 
+function mapStoredMailboxMessage(row, includeBody = false) {
+  const from = row.from_data?.[0] || {};
+  const message = {
+    uid: Number(row.imap_uid),
+    messageId: row.message_id || '',
+    from: { name: from.name || from.address || 'Unknown', address: from.address || '' },
+    to: row.to_data || [],
+    cc: row.cc_data || [],
+    subject: row.subject || '(No Subject)',
+    snippet: row.snippet || '',
+    date: row.received_at || row.synced_at,
+    folder: normalizeFolder(row.folder),
+    unread: Boolean(row.unread),
+    starred: Boolean(row.starred),
+    hasAttachments: Boolean(row.attachments?.length),
+    attachments: row.attachments || []
+  };
+  if (includeBody) {
+    message.text = row.text_body || '';
+    message.html = row.html_body || '';
+  }
+  return message;
+}
+
 /**
  * Fetch inbound website call requests and inquiries from Supabase
  * and synthesize them into rich email messages for the Executive Mailbox.
@@ -413,8 +376,9 @@ export async function fetchFolders() {
   const leadUnread = leads.filter(l => l.unread).length;
   const leadTotal = leads.length;
 
-  if (config.isConfigured) {
-    const client = new ImapFlow(config.imap);
+  const imapCooldownMessage = config.isConfigured ? imapAuthCooldownMessage(config.imap) : '';
+  if (config.isConfigured && !imapCooldownMessage) {
+    const client = createImapClient(config.imap);
     try {
       await client.connect();
       const mailboxes = await client.list();
@@ -450,53 +414,126 @@ export async function fetchFolders() {
         connection: { connected: true, configured: true, mailbox: config.address, error: null }
       };
     } catch (err) {
-      const errMsg = err.authenticationFailed
-        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update your password via Settings or set EMAIL_PASSWORD in Vercel.'
-        : `IMAP connection error: ${err.message}`;
-      console.warn('IMAP live connection notice:', errMsg);
+      recordImapAuthFailure(config.imap, err);
+      const errMsg = err.authenticationFailed || String(err.code || '').toUpperCase() === 'AUTHENTICATIONFAILED'
+        ? 'IMAP authentication was rejected. Verify third-party IMAP access and EMAIL_IMAP_PASSWORD.'
+        : `IMAP connection failed (${String(err.code || 'IMAP_ERROR')}).`;
+      console.warn('IMAP live connection notice:', String(err.code || 'IMAP_ERROR'));
       return {
-        success: true,
+        success: false,
         provider: 'Titan Email (Reconnecting)',
         mailbox: config.address,
         folders: [
           { name: 'Inbox', path: 'INBOX', total: leadTotal, unread: leadUnread },
-          { name: 'Starred', path: 'Starred', total: leads.filter(l => l.starred).length, unread: 0 },
-          { name: 'Sent', path: 'Sent', total: 0, unread: 0 },
-          { name: 'Drafts', path: 'Drafts', total: 0, unread: 0 },
-          { name: 'Archive', path: 'Archive', total: 0, unread: 0 },
-          { name: 'Trash', path: 'Trash', total: 0, unread: 0 },
-          { name: 'Spam', path: 'Spam', total: 0, unread: 0 }
+          { name: 'Starred', path: 'Starred', total: leads.filter(l => l.starred).length, unread: 0 }
         ],
-        connection: { connected: false, configured: true, mailbox: config.address, error: errMsg }
+        connection: { connected: false, configured: true, mailbox: config.address, error: imapAuthCooldownMessage(config.imap) || errMsg }
       };
     }
   }
 
-  // Fallback / local dev store counts when not configured
-  const inboxUnread = mockMailbox.filter(m => m.folder === 'INBOX' && m.unread).length + leadUnread;
-  const inboxTotal = mockMailbox.filter(m => m.folder === 'INBOX').length + leadTotal;
-  const starredTotal = mockMailbox.filter(m => m.starred).length + leads.filter(l => l.starred).length;
-  const sentTotal = mockMailbox.filter(m => m.folder === 'Sent').length;
-  const draftsTotal = mockMailbox.filter(m => m.folder === 'Drafts').length;
-  const archiveTotal = mockMailbox.filter(m => m.folder === 'Archive').length;
-  const trashTotal = mockMailbox.filter(m => m.folder === 'Trash').length;
-  const spamTotal = mockMailbox.filter(m => m.folder === 'Spam').length;
-
   return {
-    success: true,
-    provider: 'Fluvo Enterprise Mailbox Engine',
+    success: false,
+    provider: 'Titan / GoDaddy IMAP',
     mailbox: config.address,
     folders: [
-      { name: 'Inbox', path: 'INBOX', total: inboxTotal, unread: inboxUnread },
-      { name: 'Starred', path: 'Starred', total: starredTotal, unread: 0 },
-      { name: 'Sent', path: 'Sent', total: sentTotal, unread: 0 },
-      { name: 'Drafts', path: 'Drafts', total: draftsTotal, unread: 0 },
-      { name: 'Archive', path: 'Archive', total: archiveTotal, unread: 0 },
-      { name: 'Trash', path: 'Trash', total: trashTotal, unread: 0 },
-      { name: 'Spam', path: 'Spam', total: spamTotal, unread: 0 }
+      { name: 'Inbox', path: 'INBOX', total: leadTotal, unread: leadUnread },
+      { name: 'Starred', path: 'Starred', total: leads.filter(l => l.starred).length, unread: 0 }
     ],
-    connection: { connected: false, configured: false, mailbox: config.address, error: 'EMAIL_PASSWORD is not set. Click "Connect Mailbox" to enter your password.' }
+    connection: {
+      connected: false,
+      configured: config.isConfigured,
+      mailbox: config.address,
+      error: imapCooldownMessage || 'IMAP settings are not configured. Inbox sync is disabled; outbound SMTP is configured separately.'
+    }
   };
+}
+
+export async function syncInbox() {
+  const config = await getEmailConfig();
+  if (!config.isConfigured) {
+    const imapMissing = config.missingConfiguration.filter(name => name.startsWith('EMAIL_IMAP'));
+    return {
+      success: false,
+      error: `IMAP configuration is incomplete. Missing: ${imapMissing.join(', ') || 'EMAIL_IMAP_PASSWORD or SMTP_PASSWORD'}.`
+    };
+  }
+
+  let client;
+  let lock;
+  try {
+    const supabase = getSupabase();
+    client = createImapClient(config.imap);
+    await client.connect();
+    lock = await client.getMailboxLock('INBOX');
+
+    const uids = await client.search({ all: true }, { uid: true });
+    const latestUids = uids.sort((a, b) => b - a).slice(0, 200);
+    const uidValidity = String(client.mailbox.uidValidity || '0');
+    const records = [];
+
+    if (latestUids.length) {
+      for await (const message of client.fetch(latestUids, { uid: true, source: true, flags: true }, { uid: true })) {
+        if (!message.source) continue;
+        const parsed = await simpleParser(message.source);
+        const text = parsed.text || '';
+        const flags = new Set(message.flags || []);
+        records.push({
+          mailbox_email: config.address,
+          folder: 'INBOX',
+          uid_validity: uidValidity,
+          imap_uid: message.uid,
+          message_id: parsed.messageId || null,
+          from_data: parsed.from?.value || [],
+          to_data: parsed.to?.value || [],
+          cc_data: parsed.cc?.value || [],
+          subject: parsed.subject || '(No Subject)',
+          received_at: parsed.date?.toISOString() || null,
+          snippet: text.replace(/\s+/g, ' ').slice(0, 180),
+          text_body: text,
+          html_body: typeof parsed.html === 'string' ? parsed.html : null,
+          attachments: (parsed.attachments || []).map(attachment => ({
+            filename: attachment.filename || 'attachment',
+            contentType: attachment.contentType || 'application/octet-stream',
+            size: attachment.size || 0
+          })),
+          unread: !flags.has('\\Seen'),
+          starred: flags.has('\\Flagged'),
+          synced_at: new Date().toISOString()
+        });
+      }
+    }
+
+    if (records.length) {
+      const { error } = await supabase.from('mailbox_messages').upsert(records, {
+        onConflict: 'mailbox_email,folder,uid_validity,imap_uid'
+      });
+      if (error) {
+        if (error.code === '42P01' || error.code === 'PGRST205') {
+          return { success: false, error: 'Inbox storage is not initialized. Apply the mailbox messages migration.' };
+        }
+        throw error;
+      }
+    }
+
+    return { success: true, synced: records.length, mailbox: config.address, folder: 'INBOX' };
+  } catch (error) {
+    recordImapAuthFailure(config.imap, error);
+    const code = String(error?.code || '').toUpperCase();
+    const authenticationFailed = error?.authenticationFailed || ['AUTHENTICATIONFAILED', 'EAUTH'].includes(code);
+    console.warn(`IMAP_SYNC_FAILED ${code || 'IMAP_ERROR'}`);
+    return {
+      success: false,
+      error: authenticationFailed
+        ? 'Mailbox authentication failed. Verify the mailbox password in the server environment.'
+        : 'IMAP inbox sync failed. Check the server-side mailbox and database configuration.'
+    };
+  } finally {
+    lock?.release();
+    if (client?.usable) {
+      try { await client.logout(); } catch { /* Connection may already be closed. */ }
+    }
+  }
 }
 
 export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, search = '' }) {
@@ -524,10 +561,11 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
 
   let imapList = [];
   let imapSucceeded = false;
-  let connectionError = null;
+  const imapCooldownMessage = config.isConfigured ? imapAuthCooldownMessage(config.imap) : '';
+  let connectionError = imapCooldownMessage || null;
 
-  if (config.isConfigured) {
-    const client = new ImapFlow(config.imap);
+  if (config.isConfigured && !imapCooldownMessage) {
+    const client = createImapClient(config.imap);
     try {
       await client.connect();
       const lock = await client.getMailboxLock(normFolder === 'Starred' ? 'INBOX' : normFolder);
@@ -564,36 +602,41 @@ export async function fetchMessages({ folder = 'INBOX', page = 1, limit = 25, se
         await client.logout();
       }
     } catch (err) {
-      connectionError = err.authenticationFailed
-        ? 'Titan IMAP rejected the password (AUTHENTICATIONFAILED). Please update your password via Settings or set EMAIL_PASSWORD in Vercel.'
-        : `IMAP connection error: ${err.message}`;
-      console.warn('IMAP fetch notice:', connectionError);
+      recordImapAuthFailure(config.imap, err);
+      connectionError = err.authenticationFailed || String(err.code || '').toUpperCase() === 'AUTHENTICATIONFAILED'
+        ? 'IMAP authentication was rejected. Verify third-party IMAP access and EMAIL_IMAP_PASSWORD.'
+        : `IMAP connection failed (${String(err.code || 'IMAP_ERROR')}).`;
+      console.warn('IMAP fetch notice:', String(err.code || 'IMAP_ERROR'));
     }
-  } else {
-    connectionError = 'EMAIL_PASSWORD is not set. Click "Connect Mailbox" to enter your password.';
+  } else if (!config.isConfigured) {
+    connectionError = 'Mailbox provider settings are missing. Configure server-side SMTP and IMAP environment variables.';
   }
 
-  // Combine IMAP messages (or fallback mock) with relevant inbound leads
-  let combined = [];
-  if (imapSucceeded) {
-    combined = [...relevantLeads, ...imapList];
-  } else {
-    let filteredMock = [...mockMailbox];
-    if (normFolder === 'Starred') {
-      filteredMock = filteredMock.filter(m => m.starred);
-    } else {
-      filteredMock = filteredMock.filter(m => m.folder === normFolder);
+  let storedMessages = [];
+  if (!imapSucceeded) {
+    try {
+      const supabase = getSupabase();
+      let query = supabase.from('mailbox_messages').select('*').eq('mailbox_email', config.address);
+      if (normFolder === 'Starred') query = query.eq('folder', 'INBOX').eq('starred', true);
+      else query = query.eq('folder', normFolder);
+      const { data, error } = await query.order('received_at', { ascending: false }).limit(500);
+      if (error) throw error;
+      storedMessages = (data || []).map(row => mapStoredMailboxMessage(row));
+    } catch (error) {
+      console.warn(`Stored mailbox read failed: ${String(error?.code || 'MAILBOX_STORAGE_ERROR')}`);
     }
-    if (search && search.trim()) {
-      const q = search.trim().toLowerCase();
-      filteredMock = filteredMock.filter(m =>
-        m.from.name.toLowerCase().includes(q) ||
-        m.from.address.toLowerCase().includes(q) ||
-        m.subject.toLowerCase().includes(q) ||
-        m.snippet.toLowerCase().includes(q)
-      );
-    }
-    combined = [...relevantLeads, ...filteredMock];
+  }
+
+  const combined = imapSucceeded ? [...relevantLeads, ...imapList] : [...relevantLeads, ...storedMessages];
+  if (search && search.trim() && !imapSucceeded) {
+    const query = search.trim().toLowerCase();
+    const filtered = combined.filter(message =>
+      message.from.name.toLowerCase().includes(query) ||
+      message.from.address.toLowerCase().includes(query) ||
+      message.subject.toLowerCase().includes(query) ||
+      message.snippet.toLowerCase().includes(query)
+    );
+    combined.splice(0, combined.length, ...filtered);
   }
 
   // Sort newest first
@@ -642,8 +685,8 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
   }
 
   // Live IMAP message detail
-  if (config.isConfigured && numUid < 800000) {
-    const client = new ImapFlow(config.imap);
+  if (config.isConfigured && numUid < 800000 && !imapAuthCooldownMessage(config.imap)) {
+    const client = createImapClient(config.imap);
     const normFolder = normalizeFolder(folder);
     try {
       await client.connect();
@@ -690,22 +733,29 @@ export async function fetchMessageDetail(uid, folder = 'INBOX') {
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP message detail notice, checking fallback:', err.message);
+      recordImapAuthFailure(config.imap, err);
+      console.warn('IMAP message detail notice, checking fallback:', String(err.code || 'IMAP_ERROR'));
     }
   }
 
-  // Fallback in mock store
-  const found = mockMailbox.find(m => m.uid === numUid);
-  if (!found) {
-    return { success: false, error: 'Email not found.' };
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('mailbox_messages').select('*')
+      .eq('mailbox_email', config.address)
+      .eq('folder', normalizeFolder(folder))
+      .eq('imap_uid', numUid)
+      .order('synced_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!error && data) {
+      const detail = mapStoredMailboxMessage(data, true);
+      return { success: true, data: detail, message: detail };
+    }
+  } catch (error) {
+    console.warn(`Stored mailbox detail read failed: ${String(error?.code || 'MAILBOX_STORAGE_ERROR')}`);
   }
 
-  found.unread = false;
-  return {
-    success: true,
-    data: found,
-    message: found
-  };
+  return { success: false, error: 'Email not found in the live mailbox.' };
 }
 
 export async function updateMessageState(uid, { read, star, moveTo, folder = 'INBOX' }) {
@@ -731,8 +781,8 @@ export async function updateMessageState(uid, { read, star, moveTo, folder = 'IN
   }
 
   const normFolder = normalizeFolder(folder);
-  if (config.isConfigured) {
-    const client = new ImapFlow(config.imap);
+  if (config.isConfigured && !imapAuthCooldownMessage(config.imap)) {
+    const client = createImapClient(config.imap);
     try {
       await client.connect();
       const lock = await client.getMailboxLock(normFolder === 'Starred' ? 'INBOX' : normFolder);
@@ -749,16 +799,9 @@ export async function updateMessageState(uid, { read, star, moveTo, folder = 'IN
         await client.logout();
       }
     } catch (err) {
-      console.warn('IMAP update message notice:', err.message);
+      recordImapAuthFailure(config.imap, err);
+      console.warn('IMAP update message notice:', String(err.code || 'IMAP_ERROR'));
     }
-  }
-
-  // Update in memory fallback
-  const found = mockMailbox.find(m => m.uid === numUid);
-  if (found) {
-    if (read !== undefined) found.unread = !read;
-    if (star !== undefined) found.starred = star;
-    if (moveTo !== undefined) found.folder = normalizeFolder(moveTo);
   }
 
   return { success: true };
@@ -769,56 +812,17 @@ export async function deleteMessage(uid, folder = 'INBOX') {
 }
 
 export async function sendEmail({ to, cc, bcc, subject, html, text, inReplyTo, references }) {
-  const config = await getEmailConfig();
-
-  if (config.isConfigured) {
-    const transporter = nodemailer.createTransport(config.smtp);
-    try {
-      const info = await transporter.sendMail({
-        from: `"Fluvo Connect" <${config.address}>`,
-        to,
-        cc,
-        bcc,
-        subject,
-        text,
-        html,
-        inReplyTo,
-        references
-      });
-
-      return { success: true, messageId: info.messageId };
-    } catch (err) {
-      console.warn('SMTP live send error:', err.message);
-      return {
-        success: false,
-        error: `SMTP Error: ${err.message}. Please check Titan Email Password in Settings.`
-      };
-    }
+  const config = (await getEmailConfig()).smtp;
+  let provider;
+  try {
+    provider = new SmtpService(config);
+    const info = await provider.sendEmail({ to, cc, bcc, subject, text, html, inReplyTo, references });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    const diagnostic = classifySmtpError(error);
+    console.warn(`Inbox SMTP send failed: ${diagnostic.stage} ${diagnostic.code}`);
+    return { success: false, ...diagnostic, error: diagnostic.message };
+  } finally {
+    provider?.close();
   }
-
-  // Simulated sent record when credentials are not configured yet
-  const sentRecord = {
-    uid: Date.now(),
-    messageId: `<fluvo_${Date.now()}@fluvo.in>`,
-    from: { name: 'Fluvo Executive Team', address: config.address },
-    to: [{ name: to, address: to }],
-    subject: subject || '(No Subject)',
-    snippet: text ? text.slice(0, 120) : 'Outgoing message from Fluvo Executive Portal',
-    date: new Date().toISOString(),
-    folder: 'Sent',
-    unread: false,
-    starred: false,
-    hasAttachments: false,
-    attachments: [],
-    html: html || `<p>${(text || '').replace(/\n/g, '<br>')}</p>`,
-    text: text || ''
-  };
-
-  mockMailbox.unshift(sentRecord);
-
-  return {
-    success: true,
-    messageId: sentRecord.messageId,
-    simulated: true
-  };
 }

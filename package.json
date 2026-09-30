@@ -20,10 +20,12 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "@fluvo/email-provider": "file:packages/email-provider",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "canvas-confetti": "^1.9.4",
     "chart.js": "^4.5.1",
+    "company": "file:",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jspdf": "^4.2.1",

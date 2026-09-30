@@ -3,6 +3,7 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { createClient } from '@supabase/supabase-js';
+import { initEmailAutomation } from './email-automation.js';
 
 const SUPABASE_URL = 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
@@ -205,6 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
     inbox: {
       title: 'Inbox — connect@fluvo.in',
       subtitle: 'Manage company emails directly from the executive console.'
+    },
+    'email-automation': {
+      title: 'Email Automation',
+      subtitle: 'Create, personalize and manage outbound Fluvo campaigns.'
     }
   };
 
@@ -222,6 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabMeta[tabKey]) {
       if (tabTitle) tabTitle.innerText = tabMeta[tabKey].title;
       if (tabSubtitle) tabSubtitle.innerText = tabMeta[tabKey].subtitle;
+    }
+
+    if (tabKey === 'email-automation' && !window.location.pathname.startsWith('/email-automation')) {
+      window.history.pushState({ emailAutomation: true }, '', '/email-automation');
+    } else if (tabKey !== 'email-automation' && window.location.pathname.startsWith('/email-automation')) {
+      window.history.pushState({}, '', '/');
     }
 
     // Close mobile sidebar if open
@@ -293,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     await loadQueries();
     initEmailCenter();
+    initEmailAutomation();
 
     if (!realtimeSubscribed) {
       realtimeSubscribed = true;
@@ -1450,7 +1462,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Refresh ───────────────────────────────────────────────────────────────
-    btnRefresh?.addEventListener('click', fetchMessages);
+    btnRefresh?.addEventListener('click', async () => {
+      btnRefresh.disabled = true;
+      try {
+        const result = await runInboxSync();
+        showToast(`Inbox synced just now (${result.synced} messages).`, 'success');
+      } catch (error) {
+        showToast(error.message || 'Inbox sync failed.', 'error');
+      } finally {
+        btnRefresh.disabled = false;
+      }
+    });
 
     // ── Message actions ───────────────────────────────────────────────────────
     btnReply?.addEventListener('click', () => {
@@ -1591,22 +1613,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnConfigModalClose = document.getElementById('btnConfigModalClose');
     const btnConfigModalCancel = document.getElementById('btnConfigModalCancel');
     const btnModalSaveConfig = document.getElementById('btnModalSaveConfig');
-    const modalEmailPassword = document.getElementById('modalEmailPassword');
-    const btnToggleModalPassword = document.getElementById('btnToggleModalPassword');
+    const btnModalSyncInbox = document.getElementById('btnModalSyncInbox');
     const modalConfigMsg = document.getElementById('modalConfigMsg');
-
-    const cfgEmailPassword = document.getElementById('cfgEmailPassword');
-    const btnToggleCfgPassword = document.getElementById('btnToggleCfgPassword');
-    const btnSaveEmailConfig = document.getElementById('btnSaveEmailConfig');
-    const cfgStatusMessage = document.getElementById('cfgStatusMessage');
-    const settingsMailboxStatusBadge = document.getElementById('settingsMailboxStatusBadge');
 
     function openConfigModal() {
       if (emailConfigModal) {
         emailConfigModal.style.display = 'flex';
-        if (modalConfigMsg) modalConfigMsg.innerHTML = '';
-        modalEmailPassword?.focus();
+        checkMailboxConnections();
       }
+    }
+
+    async function checkMailboxConnections() {
+      if (!modalConfigMsg || !btnModalSaveConfig) return;
+      modalConfigMsg.textContent = 'Checking SMTP and IMAP connections…';
+      if (btnModalSyncInbox) btnModalSyncInbox.hidden = true;
+      btnModalSaveConfig.disabled = true;
+      try {
+        const response = await fetch('/api/email?action=status', { credentials: 'same-origin' });
+        const result = await response.json();
+        if (result.success) {
+          modalConfigMsg.textContent = `Mailbox Connected · ${result.email} · IMAP: Connected · SMTP: Connected`;
+          modalConfigMsg.style.color = '#22c55e';
+          if (btnModalSyncInbox) btnModalSyncInbox.hidden = false;
+        } else {
+          const missing = result.missingConfiguration?.length
+            ? `Missing: ${result.missingConfiguration.join(', ')}. `
+            : '';
+          const failures = [result.imapError, result.smtpError].filter(Boolean).join(' ');
+          modalConfigMsg.textContent = `${missing}${failures || 'Mailbox connection check failed.'}`;
+          modalConfigMsg.style.color = '#fbbf24';
+        }
+      } catch {
+        modalConfigMsg.textContent = 'Mailbox connection check failed. The server could not be reached.';
+        modalConfigMsg.style.color = '#fca5a5';
+      } finally {
+        btnModalSaveConfig.disabled = false;
+      }
+    }
+
+    async function runInboxSync() {
+      const response = await fetch('/api/email?action=sync', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Inbox sync failed.');
+      await fetchMessages();
+      return result;
     }
 
     function closeConfigModal() {
@@ -1615,92 +1670,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnConfigModalClose?.addEventListener('click', closeConfigModal);
     btnConfigModalCancel?.addEventListener('click', closeConfigModal);
-
-    btnToggleModalPassword?.addEventListener('click', () => {
-      if (!modalEmailPassword) return;
-      modalEmailPassword.type = modalEmailPassword.type === 'password' ? 'text' : 'password';
-    });
-
-    btnToggleCfgPassword?.addEventListener('click', () => {
-      if (!cfgEmailPassword) return;
-      cfgEmailPassword.type = cfgEmailPassword.type === 'password' ? 'text' : 'password';
-    });
-
-    async function executeSaveConfig(password, msgTargetEl, btnEl) {
-      if (!password || password.trim().length < 3) {
-        showToast('Please enter your Titan/GoDaddy email password.', 'error');
-        if (msgTargetEl) {
-          msgTargetEl.innerHTML = '<span style="color:#f87171;">Password is required.</span>';
-        }
-        return;
-      }
-
-      const originalBtnText = btnEl ? btnEl.textContent : '';
-      if (btnEl) {
-        btnEl.disabled = true;
-        btnEl.textContent = 'Testing connection...';
-      }
-      if (msgTargetEl) {
-        msgTargetEl.innerHTML = '<span style="color:#fcd34d;">Testing live IMAP connection to imap.secureserver.net:993...</span>';
-      }
-
+    btnModalSaveConfig?.addEventListener('click', checkMailboxConnections);
+    btnModalSyncInbox?.addEventListener('click', async () => {
+      btnModalSyncInbox.disabled = true;
+      btnModalSyncInbox.textContent = 'Syncing…';
       try {
-        const res = await fetch('/api/email?action=save-config', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            password: password.trim(),
-            address: 'connect@fluvo.in',
-            imapHost: 'imap.secureserver.net',
-            imapPort: 993,
-            smtpHost: 'smtpout.secureserver.net',
-            smtpPort: 465
-          })
-        });
-
-        const json = await res.json();
-        if (res.ok && json.success) {
-          showToast('🎉 ' + json.message, 'success');
-          if (msgTargetEl) {
-            msgTargetEl.innerHTML = '<span style="color:#4ade80;">✅ ' + json.message + '</span>';
-          }
-          if (settingsMailboxStatusBadge) {
-            settingsMailboxStatusBadge.innerHTML = '● Connected (Live IMAP)';
-            settingsMailboxStatusBadge.style.color = '#22c55e';
-            settingsMailboxStatusBadge.style.borderColor = 'rgba(34,197,94,0.3)';
-            settingsMailboxStatusBadge.style.background = 'rgba(34,197,94,0.1)';
-          }
-          setTimeout(() => {
-            closeConfigModal();
-            fetchMessages();
-          }, 1200);
-        } else {
-          showToast(json.error || 'Connection failed', 'error');
-          if (msgTargetEl) {
-            msgTargetEl.innerHTML = `<span style="color:#f87171;">❌ ${json.error || 'Connection failed'}</span>`;
-          }
-        }
-      } catch (err) {
-        console.error('Save config error:', err);
-        showToast('Network error testing credentials.', 'error');
-        if (msgTargetEl) {
-          msgTargetEl.innerHTML = '<span style="color:#f87171;">❌ Network error testing credentials.</span>';
-        }
+        const result = await runInboxSync();
+        modalConfigMsg.textContent = `Synced ${result.synced} inbox messages just now.`;
+        modalConfigMsg.style.color = '#22c55e';
+      } catch (error) {
+        modalConfigMsg.textContent = error.message || 'Inbox sync failed.';
+        modalConfigMsg.style.color = '#fca5a5';
       } finally {
-        if (btnEl) {
-          btnEl.disabled = false;
-          btnEl.textContent = originalBtnText || 'Connect & Test Live Sync';
-        }
+        btnModalSyncInbox.disabled = false;
+        btnModalSyncInbox.textContent = 'Sync Inbox';
       }
-    }
-
-    btnModalSaveConfig?.addEventListener('click', () => {
-      executeSaveConfig(modalEmailPassword?.value, modalConfigMsg, btnModalSaveConfig);
-    });
-
-    btnSaveEmailConfig?.addEventListener('click', () => {
-      executeSaveConfig(cfgEmailPassword?.value, cfgStatusMessage, btnSaveEmailConfig);
     });
   } // end initEmailCenter
 

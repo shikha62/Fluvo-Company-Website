@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import nodemailer from 'nodemailer';
+import { classifySmtpError, loadSmtpConfig, SmtpService } from '@fluvo/email-provider';
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
@@ -32,27 +32,13 @@ function setCorsHeaders(req, res) {
 }
 
 async function sendNotificationEmail(query) {
-  // Support both EMAIL_* and SMTP_* naming conventions
-  const host = process.env.EMAIL_SMTP_HOST || process.env.SMTP_HOST || 'smtp.titan.email';
-  const port = parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '587', 10);
-  const user = process.env.EMAIL_ADDRESS || process.env.EMAIL_USER || process.env.SMTP_USER || 'connect@fluvo.in';
-  const pass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD || '';
-  const recipient = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.EMAIL_ADDRESS || 'connect@fluvo.in';
-
-  if (!pass) {
-    console.log('[Email Notice] No SMTP password configured; record saved in Supabase.');
+  const smtpConfig = loadSmtpConfig();
+  if (!smtpConfig.configured) {
+    const diagnostic = classifySmtpError(smtpConfig.error);
+    console.info(`[Lead notification] skipped: ${diagnostic.stage} ${diagnostic.code}`);
     return;
   }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 8000
-  });
+  const recipient = process.env.ADMIN_NOTIFICATION_EMAIL || 'connect@fluvo.in';
 
   const leadName = query.full_name || query.fullName || 'Inbound Lead';
   const leadEmail = query.work_email || query.workEmail || '—';
@@ -105,14 +91,22 @@ async function sendNotificationEmail(query) {
     </html>
   `;
 
-  await transporter.sendMail({
-    from: `"Fluvo Lead Engine" <${user}>`,
-    to: recipient,
-    replyTo: leadEmail !== '—' ? leadEmail : undefined,
-    subject: `⚡ [Strategy Call Request] ${leadName} (${leadCompany})`,
-    html,
-    text: `New Strategy Call Request:\nName: ${leadName}\nEmail: ${leadEmail}\nPhone: ${leadPhone}\nCompany: ${leadCompany}\nBudget: ${leadAdSpend}\nDate: ${leadDate}\nMessage: ${leadMessage}`
-  });
+  const provider = new SmtpService(smtpConfig);
+  try {
+    await provider.sendEmail({
+      to: recipient,
+      replyTo: leadEmail !== '—' ? leadEmail : undefined,
+      subject: `⚡ [Strategy Call Request] ${leadName} (${leadCompany})`,
+      html,
+      text: `New Strategy Call Request:\nName: ${leadName}\nEmail: ${leadEmail}\nPhone: ${leadPhone}\nCompany: ${leadCompany}\nBudget: ${leadAdSpend}\nDate: ${leadDate}\nMessage: ${leadMessage}`
+    });
+    console.info('Lead notification sent');
+  } catch (error) {
+    const diagnostic = classifySmtpError(error);
+    console.warn(`[Lead notification] failed: ${diagnostic.stage} ${diagnostic.code}`);
+  } finally {
+    provider.close();
+  }
 }
 
 export default async function handler(req, res) {

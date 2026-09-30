@@ -12,7 +12,9 @@ dist
 dist-ssr
 *.local
 .env
+.env.local
 .env.*
+.env.*.local
 !.env.example
 *.env
 

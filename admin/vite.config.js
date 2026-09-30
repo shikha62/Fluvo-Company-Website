@@ -1,11 +1,100 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'node:url';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tafwdnswcrjfaxhbdnlb.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_P8A-ht36tSNNi82E4W7mug_qszJUxl1';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const adminRoot = fs.existsSync(path.resolve(process.cwd(), 'api/email'))
+  ? process.cwd()
+  : path.resolve(process.cwd(), 'admin');
+const envRoot = path.resolve(adminRoot, '..');
+const workspaceEnv = loadEnv('development', envRoot, '');
+const adminEnv = loadEnv('development', adminRoot, '');
+for (const [key, value] of Object.entries({ ...workspaceEnv, ...adminEnv })) {
+  if (Object.hasOwn(adminEnv, key) || process.env[key] === undefined) process.env[key] = value;
+}
+
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY && !/your-|placeholder|\.\.\./i.test(process.env.SUPABASE_SERVICE_ROLE_KEY)
+  ? process.env.SUPABASE_SERVICE_ROLE_KEY
+  : process.env.SUPABASE_ANON_KEY || '';
+let supabase;
+
+function getDevSupabase() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('SUPABASE_URL and a server-side Supabase key are required.');
+  if (!supabase) supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  return supabase;
+}
+
+function resolveApiHandler(pathname) {
+  const staticRoutes = new Map([
+    ['/api/auth/login', './api/auth/login.js'],
+    ['/api/auth/logout', './api/auth/logout.js'],
+    ['/api/auth/me', './api/me.js'],
+    ['/api/me', './api/me.js'],
+    ['/api/email', './api/email/index.js'],
+    ['/api/email/campaigns', './api/email/campaigns/index.js'],
+    ['/api/email/leads/validate', './api/email/leads/validate.js'],
+    ['/api/email/leads/import', './api/email/leads/import.js'],
+    ['/api/email/templates', './api/email/templates/index.js'],
+    ['/api/email/settings', './api/email/settings.js'],
+    ['/api/email/test-connection', './api/email/test-connection.js'],
+    ['/api/email/test', './api/email/test.js'],
+    ['/api/email/worker', './api/email/worker.js'],
+    ['/api/email/unsubscribe', './api/email/unsubscribe.js'],
+    ['/api/email/suppress', './api/email/suppress.js'],
+    ['/api/email/unsuppress', './api/email/unsuppress.js'],
+    ['/api/email/activity/all', './api/email/activity-all.js'],
+    ['/api/email/activity/unsuppress', './api/email/activity-unsuppress.js'],
+    ['/api/email/activity/selected', './api/email/activity-selected.js']
+  ]);
+  if (staticRoutes.has(pathname)) return { modulePath: staticRoutes.get(pathname), params: {} };
+  for (const [pattern, modulePath, paramName] of [
+    [/^\/api\/email\/campaigns\/([^/]+)$/, './api/email/campaigns/[id].js', 'id'],
+    [/^\/api\/email\/templates\/([^/]+)$/, './api/email/templates/[id].js', 'id'],
+    [/^\/api\/email\/recipients\/([^/]+)$/, './api/email/recipients/[id].js', 'id']
+  ]) {
+    const match = pathname.match(pattern);
+    if (match) return { modulePath, params: { [paramName]: decodeURIComponent(match[1]) } };
+  }
+  if (pathname.startsWith('/api/email/')) return { modulePath: './api/email/index.js', params: {} };
+  return null;
+}
+
+async function invokeApiHandler(handlerPath, req, res, url, params) {
+  let rawBody = '';
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    for await (const chunk of req) rawBody += chunk;
+  }
+  let body;
+  if (rawBody) {
+    body = String(req.headers['content-type'] || '').includes('application/x-www-form-urlencoded')
+      ? Object.fromEntries(new URLSearchParams(rawBody))
+      : JSON.parse(rawBody);
+  }
+  const handlerUrl = pathToFileURL(path.resolve(adminRoot, handlerPath)).href;
+  const handler = (await import(`${handlerUrl}?t=${Date.now()}`)).default;
+  const apiRequest = {
+    method: req.method,
+    headers: req.headers,
+    query: { ...Object.fromEntries(url.searchParams), ...params },
+    body
+  };
+  const apiResponse = {
+    statusCode: 200,
+    setHeader(name, value) { res.setHeader(name, value); return this; },
+    status(code) { this.statusCode = code; res.statusCode = code; return this; },
+    json(payload) {
+      res.statusCode = this.statusCode;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify(payload));
+      return this;
+    },
+    send(payload) { res.statusCode = this.statusCode; res.end(payload); return this; }
+  };
+  await handler(apiRequest, apiResponse);
+  if (!res.writableEnded) res.end();
+}
 
 function adminDevApiPlugin() {
   return {
@@ -14,59 +103,26 @@ function adminDevApiPlugin() {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, `http://${req.headers.host}`);
 
-        // 1. Auth: Login
-        if (url.pathname === '/api/auth/login' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => { body += chunk; });
-          req.on('end', () => {
-            try {
-              const { email, password } = JSON.parse(body || '{}');
-              if (
-                email === 'connect@fluvo.in' &&
-                (password === 'Vv@5661850' || password === '1234')
-              ) {
-                res.setHeader('Content-Type', 'application/json');
-                res.setHeader('Set-Cookie', 'fluvo_admin_session=authenticated_dev_token; Path=/; HttpOnly; SameSite=Lax');
-                res.end(JSON.stringify({
-                  success: true,
-                  user: { email: 'connect@fluvo.in', role: 'executive_owner' }
-                }));
-              } else {
-                res.statusCode = 401;
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ success: false, error: 'Invalid executive credentials' }));
-              }
-            } catch (err) {
-              res.statusCode = 400;
-              res.end(JSON.stringify({ success: false, error: 'Malformed request' }));
+        const route = resolveApiHandler(url.pathname);
+        if (route) {
+          try {
+            await invokeApiHandler(route.modulePath, req, res, url, route.params);
+          } catch (error) {
+            console.error('Admin API request failed:', error.message);
+            if (!res.headersSent) res.statusCode = 500;
+            if (!res.writableEnded) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.end(JSON.stringify({ error: 'Admin API request failed. Check local environment and database configuration.' }));
             }
-          });
+          }
           return;
         }
 
-        // 2. Auth: Me (both /api/me and /api/auth/me)
-        if ((url.pathname === '/api/auth/me' || url.pathname === '/api/me') && req.method === 'GET') {
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({
-            authenticated: true,
-            user: { email: 'connect@fluvo.in', role: 'executive_owner' }
-          }));
-          return;
-        }
-
-        // 3. Auth: Logout
-        if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
-          res.setHeader('Set-Cookie', 'fluvo_admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ success: true }));
-          return;
-        }
-
-        // 4. Queries: GET /api/queries
+        // Queries: GET /api/queries
         if (url.pathname === '/api/queries' && req.method === 'GET') {
           res.setHeader('Content-Type', 'application/json');
           try {
-            const { data, error } = await supabase
+            const { data, error } = await getDevSupabase()
               .from('queries')
               .select('*')
               .order('created_at', { ascending: false });
@@ -94,7 +150,7 @@ function adminDevApiPlugin() {
           } catch (err) {
             console.error('Failed to fetch queries from Supabase in dev server:', err);
             // Fallback to local queries.json if any
-            const jsonPath = path.resolve(import.meta.dirname, 'data/queries.json');
+            const jsonPath = path.resolve(adminRoot, 'data/queries.json');
             let fallback = [];
             if (fs.existsSync(jsonPath)) {
               try { fallback = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')); } catch (e) {}
@@ -111,7 +167,7 @@ function adminDevApiPlugin() {
           if (req.method === 'DELETE') {
             res.setHeader('Content-Type', 'application/json');
             try {
-              await supabase.from('queries').delete().eq('id', id);
+              await getDevSupabase().from('queries').delete().eq('id', id);
               res.end(JSON.stringify({ success: true }));
             } catch (err) {
               res.statusCode = 500;
@@ -132,7 +188,7 @@ function adminDevApiPlugin() {
                 if (patchData.starred !== undefined) updatePayload.starred = patchData.starred;
                 if (patchData.notes !== undefined) updatePayload.notes = patchData.notes;
 
-                const { data, error } = await supabase
+                const { data, error } = await getDevSupabase()
                   .from('queries')
                   .update(updatePayload)
                   .eq('id', id)
@@ -145,94 +201,6 @@ function adminDevApiPlugin() {
                 res.end(JSON.stringify({ error: 'Failed to update query' }));
               }
             });
-            return;
-          }
-        }
-
-        // 6. Email API (/api/email)
-        if (url.pathname === '/api/email' || url.pathname.startsWith('/api/email/')) {
-          res.setHeader('Content-Type', 'application/json');
-          const action = url.searchParams.get('action') || (req.method === 'POST' ? 'send' : 'messages');
-
-          try {
-            const {
-              fetchFolders,
-              fetchMessages,
-              fetchMessageDetail,
-              updateMessageState,
-              deleteMessage,
-              sendEmail
-            } = await import('./api/email/_service.js');
-
-            if (req.method === 'GET' && action === 'folders') {
-              const data = await fetchFolders();
-              res.end(JSON.stringify(data));
-              return;
-            }
-
-            if (req.method === 'GET' && (action === 'messages' || action === 'list')) {
-              const folder = url.searchParams.get('folder') || 'INBOX';
-              const page = parseInt(url.searchParams.get('page') || '1', 10);
-              const limit = parseInt(url.searchParams.get('limit') || '25', 10);
-              const search = url.searchParams.get('search') || '';
-              const data = await fetchMessages({ folder, page, limit, search });
-              res.end(JSON.stringify(data));
-              return;
-            }
-
-            if (req.method === 'GET' && (action === 'message' || action === 'detail')) {
-              const id = url.searchParams.get('id') || url.searchParams.get('uid');
-              const folder = url.searchParams.get('folder') || 'INBOX';
-              const data = await fetchMessageDetail(id, folder);
-              res.end(JSON.stringify(data));
-              return;
-            }
-
-            if (req.method === 'POST' && (action === 'send' || action === 'compose')) {
-              let body = '';
-              req.on('data', chunk => { body += chunk; });
-              req.on('end', async () => {
-                try {
-                  const payload = JSON.parse(body || '{}');
-                  const data = await sendEmail(payload);
-                  res.end(JSON.stringify(data));
-                } catch (e) {
-                  res.statusCode = 400;
-                  res.end(JSON.stringify({ error: e.message }));
-                }
-              });
-              return;
-            }
-
-            if (req.method === 'PATCH' || (req.method === 'POST' && action === 'update')) {
-              const id = url.searchParams.get('id') || url.searchParams.get('uid');
-              const folder = url.searchParams.get('folder') || 'INBOX';
-              let body = '';
-              req.on('data', chunk => { body += chunk; });
-              req.on('end', async () => {
-                try {
-                  const payload = JSON.parse(body || '{}');
-                  const data = await updateMessageState(id || payload.id, { ...payload, folder });
-                  res.end(JSON.stringify(data));
-                } catch (e) {
-                  res.statusCode = 400;
-                  res.end(JSON.stringify({ error: e.message }));
-                }
-              });
-              return;
-            }
-
-            if (req.method === 'DELETE' || (req.method === 'POST' && action === 'delete')) {
-              const id = url.searchParams.get('id') || url.searchParams.get('uid');
-              const folder = url.searchParams.get('folder') || 'INBOX';
-              const data = await deleteMessage(id, folder);
-              res.end(JSON.stringify(data));
-              return;
-            }
-          } catch (err) {
-            console.error('Dev Email API error:', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: err.message }));
             return;
           }
         }
