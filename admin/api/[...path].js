@@ -69,7 +69,12 @@ function resolveRoute(pathname) {
 
 export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'http://vercel.local');
-  const route = resolveRoute(url.pathname);
+  const forwardedPath = req.query?.path;
+  const forwardedSegments = Array.isArray(forwardedPath) ? forwardedPath : [forwardedPath];
+  const pathname = url.pathname === '/api' && forwardedPath
+    ? `/api/${forwardedSegments.filter(Boolean).join('/').replace(/^\/+/, '')}`
+    : url.pathname;
+  const route = resolveRoute(pathname);
   if (!route) return res.status(404).json({ error: 'API route not found.' });
 
   const routedReq = Object.create(req);
