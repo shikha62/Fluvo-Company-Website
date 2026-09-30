@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { executeCampaign } from '../server-api/email/campaign-runner.js';
+import { executeCampaign } from '../api/email/campaign-runner.js';
 import { parseLeadEmail } from './personalization.js';
 
 // Mock Supabase client to test all execution scenarios in isolation

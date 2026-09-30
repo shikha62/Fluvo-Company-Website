@@ -25,7 +25,7 @@ for (const line of envContent.split('\n')) {
 const toEmail = process.argv[2] || 'meghamandre@gmail.com';
 
 // Test the sendRenderedEmail function directly
-import('../server-api/email/_automation.js').then(async ({ sendRenderedEmail, getProviderConfig, EmailProvider, getUnsubscribeUrl }) => {
+import('../api/email/_automation.js').then(async ({ sendRenderedEmail, getProviderConfig, EmailProvider, getUnsubscribeUrl }) => {
   const config = getProviderConfig();
   if (!config.configured) {
     console.error('SMTP not configured:', config.error?.message);

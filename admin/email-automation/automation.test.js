@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getAutomationSettings, getProviderConfig, createUnsubscribeToken, sanitizedProviderError, verifyUnsubscribeToken, sendRenderedEmail, SENDER_EMAIL } from '../server-api/email/_automation.js';
-import { summarizeRecipients } from '../server-api/email/leads/validate.js';
+import { getAutomationSettings, getProviderConfig, createUnsubscribeToken, sanitizedProviderError, verifyUnsubscribeToken, sendRenderedEmail, SENDER_EMAIL } from '../api/email/_automation.js';
+import { summarizeRecipients } from '../api/email/leads/validate.js';
 
 test('validation summaries always include numeric zero counts', () => {
   assert.deepEqual(summarizeRecipients([{ status: 'ready' }]), {
