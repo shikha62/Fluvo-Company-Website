@@ -26,7 +26,7 @@
       "destination": "/api?path=:path*"
     },
     {
-      "source": "/((?!api/|assets/|favicon|icons\\.svg).*)",
+      "source": "/((?!api(?:/|$)|assets/|favicon|icons\\.svg).*)",
       "destination": "/index.html"
     }
   ]
