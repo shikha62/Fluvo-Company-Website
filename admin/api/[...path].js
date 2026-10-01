@@ -1,28 +1,6 @@
 import authLogin from '../server-api/auth/login.js';
 import authLogout from '../server-api/auth/logout.js';
 import me from '../server-api/me.js';
-import email from '../server-api/email/index.js';
-import campaigns from '../server-api/email/campaigns/index.js';
-import campaign from '../server-api/email/campaigns/[id].js';
-import leadsValidate from '../server-api/email/leads/validate.js';
-import leadsImport from '../server-api/email/leads/import.js';
-import templates from '../server-api/email/templates/index.js';
-import template from '../server-api/email/templates/[id].js';
-import recipient from '../server-api/email/recipients/[id].js';
-import settings from '../server-api/email/settings.js';
-import testConnection from '../server-api/email/test-connection.js';
-import testEmail from '../server-api/email/test.js';
-import worker from '../server-api/email/worker.js';
-import unsubscribe from '../server-api/email/unsubscribe.js';
-import suppress from '../server-api/email/suppress.js';
-import unsuppress from '../server-api/email/unsuppress.js';
-import activityAll from '../server-api/email/activity-all.js';
-import activitySelected from '../server-api/email/activity-selected.js';
-import activityUnsuppress from '../server-api/email/activity-unsuppress.js';
-import queryList from '../server-api/queries/index.js';
-import queryDetail from '../server-api/queries/[id].js';
-import queryStats from '../server-api/queries/stats.js';
-import csvExport from '../server-api/export/csv.js';
 
 function resolveRoute(pathname) {
   const routes = new Map([
@@ -30,39 +8,39 @@ function resolveRoute(pathname) {
     ['/api/auth/logout', { handler: authLogout }],
     ['/api/auth/me', { handler: me }],
     ['/api/me', { handler: me }],
-    ['/api/email', { handler: email }],
-    ['/api/email/queries', { handler: queryList }],
-    ['/api/email/campaigns', { handler: campaigns }],
-    ['/api/email/leads/validate', { handler: leadsValidate }],
-    ['/api/email/leads/import', { handler: leadsImport }],
-    ['/api/email/templates', { handler: templates }],
-    ['/api/email/settings', { handler: settings }],
-    ['/api/email/test-connection', { handler: testConnection }],
-    ['/api/email/test', { handler: testEmail }],
-    ['/api/email/worker', { handler: worker }],
-    ['/api/email/unsubscribe', { handler: unsubscribe }],
-    ['/api/email/suppress', { handler: suppress }],
-    ['/api/email/unsuppress', { handler: unsuppress }],
-    ['/api/email/activity/all', { handler: activityAll }],
-    ['/api/email/activity-all', { handler: activityAll }],
-    ['/api/email/activity/unsuppress', { handler: activityUnsuppress }],
-    ['/api/email/activity-unsuppress', { handler: activityUnsuppress }],
-    ['/api/email/activity/selected', { handler: activitySelected }],
-    ['/api/email/activity-selected', { handler: activitySelected }],
-    ['/api/queries', { handler: queryList }],
-    ['/api/queries/stats', { handler: queryStats }],
-    ['/api/export/csv', { handler: csvExport }]
+    ['/api/email', { load: () => import('../server-api/email/index.js') }],
+    ['/api/email/queries', { load: () => import('../server-api/queries/index.js') }],
+    ['/api/email/campaigns', { load: () => import('../server-api/email/campaigns/index.js') }],
+    ['/api/email/leads/validate', { load: () => import('../server-api/email/leads/validate.js') }],
+    ['/api/email/leads/import', { load: () => import('../server-api/email/leads/import.js') }],
+    ['/api/email/templates', { load: () => import('../server-api/email/templates/index.js') }],
+    ['/api/email/settings', { load: () => import('../server-api/email/settings.js') }],
+    ['/api/email/test-connection', { load: () => import('../server-api/email/test-connection.js') }],
+    ['/api/email/test', { load: () => import('../server-api/email/test.js') }],
+    ['/api/email/worker', { load: () => import('../server-api/email/worker.js') }],
+    ['/api/email/unsubscribe', { load: () => import('../server-api/email/unsubscribe.js') }],
+    ['/api/email/suppress', { load: () => import('../server-api/email/suppress.js') }],
+    ['/api/email/unsuppress', { load: () => import('../server-api/email/unsuppress.js') }],
+    ['/api/email/activity/all', { load: () => import('../server-api/email/activity-all.js') }],
+    ['/api/email/activity-all', { load: () => import('../server-api/email/activity-all.js') }],
+    ['/api/email/activity/unsuppress', { load: () => import('../server-api/email/activity-unsuppress.js') }],
+    ['/api/email/activity-unsuppress', { load: () => import('../server-api/email/activity-unsuppress.js') }],
+    ['/api/email/activity/selected', { load: () => import('../server-api/email/activity-selected.js') }],
+    ['/api/email/activity-selected', { load: () => import('../server-api/email/activity-selected.js') }],
+    ['/api/queries', { load: () => import('../server-api/queries/index.js') }],
+    ['/api/queries/stats', { load: () => import('../server-api/queries/stats.js') }],
+    ['/api/export/csv', { load: () => import('../server-api/export/csv.js') }]
   ]);
   if (routes.has(pathname)) return routes.get(pathname);
 
-  for (const [pattern, handler, paramName] of [
-    [/^\/api\/email\/campaigns\/([^/]+)$/, campaign, 'id'],
-    [/^\/api\/email\/templates\/([^/]+)$/, template, 'id'],
-    [/^\/api\/email\/recipients\/([^/]+)$/, recipient, 'id'],
-    [/^\/api\/queries\/([^/]+)$/, queryDetail, 'id']
+  for (const [pattern, load, paramName] of [
+    [/^\/api\/email\/campaigns\/([^/]+)$/, () => import('../server-api/email/campaigns/[id].js'), 'id'],
+    [/^\/api\/email\/templates\/([^/]+)$/, () => import('../server-api/email/templates/[id].js'), 'id'],
+    [/^\/api\/email\/recipients\/([^/]+)$/, () => import('../server-api/email/recipients/[id].js'), 'id'],
+    [/^\/api\/queries\/([^/]+)$/, () => import('../server-api/queries/[id].js'), 'id']
   ]) {
     const match = pathname.match(pattern);
-    if (match) return { handler, params: { [paramName]: decodeURIComponent(match[1]) } };
+    if (match) return { load, params: { [paramName]: decodeURIComponent(match[1]) } };
   }
 
   return null;
@@ -87,5 +65,6 @@ export default async function handler(req, res) {
     ...Object.fromEntries(url.searchParams),
     ...(route.params || {})
   };
-  return route.handler(routedReq, res);
+  const routeHandler = route.handler || (await route.load()).default;
+  return routeHandler(routedReq, res);
 }
