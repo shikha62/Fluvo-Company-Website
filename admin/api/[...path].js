@@ -31,6 +31,7 @@ function resolveRoute(pathname) {
     ['/api/auth/me', { handler: me }],
     ['/api/me', { handler: me }],
     ['/api/email', { handler: email }],
+    ['/api/email/queries', { handler: queryList }],
     ['/api/email/campaigns', { handler: campaigns }],
     ['/api/email/leads/validate', { handler: leadsValidate }],
     ['/api/email/leads/import', { handler: leadsImport }],
@@ -69,10 +70,13 @@ function resolveRoute(pathname) {
 
 export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'http://vercel.local');
-  const forwardedPath = req.query?.path;
-  const forwardedSegments = Array.isArray(forwardedPath) ? forwardedPath : [forwardedPath];
-  const pathname = url.pathname === '/api' && forwardedPath
-    ? `/api/${forwardedSegments.filter(Boolean).join('/').replace(/^\/+/, '')}`
+  const forwardedPath = req.query?.path ?? url.searchParams.get('path');
+  const forwardedValue = Array.isArray(forwardedPath)
+    ? forwardedPath.filter(Boolean).join('/')
+    : String(forwardedPath || '');
+  const normalizedForwardedPath = forwardedValue.replace(/^\/+|\/+$/g, '');
+  const pathname = url.pathname === '/api' && normalizedForwardedPath
+    ? `/api/${normalizedForwardedPath}`
     : url.pathname;
   const route = resolveRoute(pathname);
   if (!route) return res.status(404).json({ error: 'API route not found.' });

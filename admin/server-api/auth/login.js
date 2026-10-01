@@ -15,9 +15,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL || 'connect@fluvo.in';
-  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-  const jwtSecret = process.env.JWT_SECRET;
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const jwtSecret = process.env.JWT_SECRET?.trim();
 
   if (!adminEmail || !adminPasswordHash || !jwtSecret) {
     const missing = [
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       adminPasswordHash: Boolean(adminPasswordHash),
       jwtSecret: Boolean(jwtSecret)
     });
-    return res.status(500).json({ error: `Admin login is not configured. Set ${missing.join(' and ')} in the local server environment.` });
+    return res.status(500).json({ error: `Admin login is not configured. Set ${missing.join(' and ')} in the server environment.` });
   }
 
   // Check email
@@ -63,16 +63,16 @@ export default async function handler(req, res) {
     { expiresIn: '8h', issuer: 'fluvo-admin' }
   );
 
-  // Set HttpOnly, Secure, SameSite=Strict cookie
-  const isProd = process.env.NODE_ENV === 'production';
+  // Set an origin-scoped session cookie for both Vercel and local HTTPS deployments.
+  const isSecure = process.env.NODE_ENV === 'production' || req.headers?.['x-forwarded-proto'] === 'https';
   const cookieParts = [
     `fluvo_admin_session=${token}`,
     'HttpOnly',
-    'SameSite=Strict',
+    'SameSite=Lax',
     'Path=/',
     `Max-Age=${8 * 60 * 60}`,
   ];
-  if (isProd) cookieParts.push('Secure');
+  if (isSecure) cookieParts.push('Secure');
 
   res.setHeader('Set-Cookie', cookieParts.join('; '));
   return res.status(200).json({ success: true, message: 'Authenticated successfully.' });

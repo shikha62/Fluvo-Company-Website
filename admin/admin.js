@@ -61,8 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/me', { credentials: 'same-origin' });
       if (res.ok) {
         const data = await res.json();
-        onAuthenticated(data.user);
-        return true;
+        if (data.authenticated && data.user) {
+          onAuthenticated(data.user);
+          return true;
+        }
       }
     } catch (err) {
       console.warn('Session check notice:', err);
@@ -125,10 +127,39 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ email, password })
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      const responseText = await res.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        console.error('API ROUTING ERROR', {
+          status: res.status,
+          contentType,
+          response: responseText.slice(0, 500)
+        });
+        throw new Error('Authentication service returned an invalid response.');
+      }
 
       if (res.ok && data.success) {
-        onAuthenticated(data.user);
+        const sessionRes = await fetch('/api/me', { credentials: 'same-origin' });
+        const sessionType = sessionRes.headers.get('content-type') || '';
+        const sessionText = await sessionRes.text();
+        let sessionData = {};
+        try {
+          sessionData = sessionText ? JSON.parse(sessionText) : {};
+        } catch {
+          console.error('API ROUTING ERROR', {
+            status: sessionRes.status,
+            contentType: sessionType,
+            response: sessionText.slice(0, 500)
+          });
+          throw new Error('Session verification returned an invalid response.');
+        }
+        if (!sessionRes.ok || !sessionData.authenticated || !sessionData.user) {
+          throw new Error(sessionData.error || 'Session verification failed.');
+        }
+        onAuthenticated(sessionData.user);
         showToast('Welcome back. Console authenticated successfully.', 'success');
       } else {
         showAuthError(data.error || 'Authentication failed. Please verify credentials.');
@@ -140,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      showAuthError('Unable to connect to authentication service.');
+      showAuthError(err.message || 'Unable to connect to authentication service.');
     } finally {
       if (btnUnlock) btnUnlock.disabled = false;
       if (btnUnlockText) btnUnlockText.innerText = 'Sign In & Unlock Console';
