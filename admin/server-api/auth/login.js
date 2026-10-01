@@ -2,10 +2,19 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { setSecurityHeaders } from '../_auth.js';
 
-function getRequestBody(req) {
+async function getRequestBody(req) {
   const body = req.body ?? req.rawBody;
-  if (!body) return {};
-  if (typeof body === 'object') return body;
+  if (body) return parseBody(body);
+  if (req.readable && !req.readableEnded) {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    if (chunks.length) return parseBody(Buffer.concat(chunks));
+  }
+  return {};
+}
+
+function parseBody(body) {
+  if (typeof body === 'object' && !Buffer.isBuffer(body)) return body;
   try {
     return JSON.parse(Buffer.isBuffer(body) ? body.toString('utf8') : body);
   } catch {
@@ -20,7 +29,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = getRequestBody(req);
+  const { email, password } = await getRequestBody(req);
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
