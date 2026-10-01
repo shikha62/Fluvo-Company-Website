@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     ? forwardedPath.filter(Boolean).join('/')
     : String(forwardedPath || '');
   const normalizedForwardedPath = forwardedValue.replace(/^\/+|\/+$/g, '');
-  const pathname = url.pathname === '/api' && normalizedForwardedPath
+  const pathname = normalizedForwardedPath
     ? `/api/${normalizedForwardedPath}`
     : url.pathname;
   const route = resolveRoute(pathname);
