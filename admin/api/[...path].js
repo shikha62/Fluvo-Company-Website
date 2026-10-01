@@ -46,6 +46,16 @@ function resolveRoute(pathname) {
   return null;
 }
 
+function normalizeRequestBody(body) {
+  if (body === undefined || body === null || typeof body === 'object') return body;
+  if (typeof body !== 'string') return body;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
+}
+
 export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'http://vercel.local');
   const forwardedPath = req.query?.path ?? url.searchParams.get('path');
@@ -60,6 +70,7 @@ export default async function handler(req, res) {
   if (!route) return res.status(404).json({ error: 'API route not found.' });
 
   const routedReq = Object.create(req);
+  routedReq.body = normalizeRequestBody(req.body ?? req.rawBody);
   routedReq.query = {
     ...(req.query || {}),
     ...Object.fromEntries(url.searchParams),
