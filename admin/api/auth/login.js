@@ -1,0 +1,1 @@
+export { default } from '../../server-api/auth/login.js';

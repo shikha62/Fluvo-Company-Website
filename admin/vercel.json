@@ -22,7 +22,7 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/(?!auth/login$|auth/logout$|auth/me$|me$)(.*)",
       "dest": "/api/[...path].js"
     }
   ],
