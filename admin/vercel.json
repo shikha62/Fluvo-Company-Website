@@ -22,10 +22,6 @@
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api?path=:path*"
-    },
-    {
       "source": "/((?!api(?:/|$)|assets/|favicon|icons\\.svg).*)",
       "destination": "/index.html"
     }
