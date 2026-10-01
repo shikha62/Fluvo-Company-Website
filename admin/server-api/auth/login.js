@@ -2,6 +2,17 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { setSecurityHeaders } from '../_auth.js';
 
+function getRequestBody(req) {
+  const body = req.body ?? req.rawBody;
+  if (!body) return {};
+  if (typeof body === 'object') return body;
+  try {
+    return JSON.parse(Buffer.isBuffer(body) ? body.toString('utf8') : body);
+  } catch {
+    return {};
+  }
+}
+
 export default async function handler(req, res) {
   setSecurityHeaders(res);
 
@@ -9,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body || {};
+  const { email, password } = getRequestBody(req);
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
