@@ -4,6 +4,21 @@ import { setSecurityHeaders } from '../_auth.js';
 
 async function getRequestBody(req) {
   const body = req.body ?? req.rawBody;
+  if (body?.getReader) {
+    const reader = body.getReader();
+    const chunks = [];
+    for (;;) {
+      const result = await reader.read();
+      if (result.done) break;
+      chunks.push(Buffer.from(result.value));
+    }
+    return parseBody(Buffer.concat(chunks));
+  }
+  if (body && typeof body[Symbol.asyncIterator] === 'function' && !isPlainBody(body)) {
+    const chunks = [];
+    for await (const chunk of body) chunks.push(chunk);
+    return parseBody(Buffer.concat(chunks));
+  }
   if (body) return parseBody(body);
   if (req.readable && !req.readableEnded) {
     const chunks = [];
@@ -11,6 +26,10 @@ async function getRequestBody(req) {
     if (chunks.length) return parseBody(Buffer.concat(chunks));
   }
   return {};
+}
+
+function isPlainBody(body) {
+  return Object.getPrototypeOf(body) === Object.prototype;
 }
 
 function parseBody(body) {
